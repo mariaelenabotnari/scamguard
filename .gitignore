@@ -41,6 +41,7 @@ node_modules/
 frontend/dist/
 frontend/dist-ssr/
 frontend/coverage/
+*.tsbuildinfo
 *.local
 .npm
 

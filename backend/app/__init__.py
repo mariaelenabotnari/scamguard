@@ -1,0 +1,2 @@
+"""Scamguard backend package."""
+
