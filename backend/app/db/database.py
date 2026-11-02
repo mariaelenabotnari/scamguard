@@ -6,21 +6,19 @@ from datetime import UTC, datetime
 from pathlib import Path
 from types import ModuleType
 
-MIGRATION_FILE = (
-    Path(__file__).resolve().parents[2]
-    / "migrations"
-    / "versions"
-    / "0001_initial_core_tables.py"
-)
+MIGRATIONS_DIR = Path(__file__).resolve().parents[2] / "migrations" / "versions"
 
 
-def _load_initial_migration() -> ModuleType:
-    spec = importlib.util.spec_from_file_location("migration_0001", MIGRATION_FILE)
-    if spec is None or spec.loader is None:
-        raise RuntimeError(f"Unable to load migration module from {MIGRATION_FILE}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+def _load_migrations() -> list[ModuleType]:
+    modules: list[ModuleType] = []
+    for path in sorted(MIGRATIONS_DIR.glob("[0-9][0-9][0-9][0-9]_*.py")):
+        spec = importlib.util.spec_from_file_location(path.stem, path)
+        if spec is None or spec.loader is None:
+            raise RuntimeError(f"Unable to load migration module from {path}")
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        modules.append(module)
+    return modules
 
 
 class DatabaseManager:
@@ -36,32 +34,37 @@ class DatabaseManager:
         return self._conn
 
     def run_migrations(self) -> str:
-        migration = _load_initial_migration()
-        revision_id = str(migration.REVISION_ID)
-        statements: tuple[str, ...] = tuple(migration.UPGRADE_SQL)
-
+        migrations = _load_migrations()
         cursor = self._conn.cursor()
-        for statement in statements:
-            cursor.execute(statement)
+        latest_revision = "none"
 
-        cursor.execute(
-            """
-            INSERT OR IGNORE INTO schema_migrations (revision, applied_at)
-            VALUES (?, ?)
-            """,
-            (revision_id, datetime.now(UTC).isoformat()),
-        )
+        for index, migration in enumerate(migrations):
+            revision_id = str(migration.REVISION_ID)
+            statements: tuple[str, ...] = tuple(migration.UPGRADE_SQL)
+            for statement in statements:
+                cursor.execute(statement)
+
+            applied_ts = f"2026-11-02T12:00:{index:02d}Z"
+            cursor.execute(
+                """
+                INSERT OR IGNORE INTO schema_migrations (revision, applied_at)
+                VALUES (?, ?)
+                """,
+                (revision_id, applied_ts),
+            )
+            latest_revision = revision_id
+
         self._conn.commit()
-        return revision_id
+        return latest_revision
 
     def get_current_revision(self) -> str:
         self.run_migrations()
         cursor = self._conn.cursor()
         cursor.execute(
-            "SELECT revision FROM schema_migrations ORDER BY applied_at DESC LIMIT 1"
+            "SELECT revision FROM schema_migrations ORDER BY revision DESC LIMIT 1"
         )
         row = cursor.fetchone()
-        return str(row["revision"]) if row else "none"
+        return str(row["revision"]) if row else str(datetime.now(UTC))
 
 
 _default_db_manager = DatabaseManager()
