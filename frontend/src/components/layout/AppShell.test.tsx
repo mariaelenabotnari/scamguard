@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../../app/router';
 
 describe('AppShell Layout (Sidebar, Topbar, RightPanel)', () => {
-  it('renders 3-column shell with brand logo, nav items, Statics widget, Topbar, and RightPanel', () => {
+  it('renders 3-column shell with brand logo, nav items, Statics widget, Topbar, and RightPanel', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <AppRoutes />
@@ -13,7 +13,7 @@ describe('AppShell Layout (Sidebar, Topbar, RightPanel)', () => {
 
     // Brand & Main Hero
     expect(screen.getByText('Scamguard')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /hello analyst/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /hello elena botnari/i })).toBeInTheDocument();
 
     // Sidebar Statics mini widget
     expect(screen.getByText('Statics')).toBeInTheDocument();

@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../components/layout';
 import { Badge, Button, Card } from '../components/ui';
+import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { StyleguidePage } from '../features/styleguide/pages/StyleguidePage';
 
 interface SectionPlaceholderProps {
@@ -12,7 +13,11 @@ function SectionPlaceholder({ title, subtitle }: SectionPlaceholderProps) {
   return (
     <AppShell>
       <div className="space-y-6">
-        <Card tone="banner" padding="lg" className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <Card
+          tone="banner"
+          padding="lg"
+          className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
+        >
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">{title}</h1>
             <p className="mt-1 text-xs font-medium text-ink-muted">{subtitle}</p>
@@ -42,15 +47,7 @@ function SectionPlaceholder({ title, subtitle }: SectionPlaceholderProps) {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <SectionPlaceholder
-            title="Hello Analyst"
-            subtitle="Coordinated Telegram channel activity overview for Moldova"
-          />
-        }
-      />
+      <Route path="/" element={<DashboardPage />} />
       <Route
         path="/channels"
         element={
