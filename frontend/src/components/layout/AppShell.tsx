@@ -1,0 +1,109 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type {
+  ShellSummaryDto,
+  SupportedLocale,
+  TimeRangeOption,
+} from '../../dtos/layout.dto';
+import { MOCK_SHELL_SUMMARY } from '../../mocks/layout.mock';
+import { layoutService } from '../../services/layout.service';
+import { RightPanel } from './RightPanel';
+import { Sidebar } from './Sidebar';
+import { Topbar } from './Topbar';
+
+export interface AppShellProps {
+  children: React.ReactNode;
+  selectedRange?: TimeRangeOption;
+  onRangeChange?: (range: TimeRangeOption) => void;
+}
+
+export function AppShell({
+  children,
+  selectedRange: controlledRange,
+  onRangeChange,
+}: AppShellProps) {
+  const navigate = useNavigate();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [internalRange, setInternalRange] = useState<TimeRangeOption>('7d');
+  const [locale, setLocale] = useState<SupportedLocale>('EN');
+  const [summary, setSummary] = useState<ShellSummaryDto>(MOCK_SHELL_SUMMARY);
+
+  const activeRange = controlledRange ?? internalRange;
+  const navItems = layoutService.getNavItems();
+
+  useEffect(() => {
+    let isMounted = true;
+    layoutService
+      .getShellSummary()
+      .then((data) => {
+        if (isMounted) {
+          setSummary(data);
+        }
+      })
+      .catch(() => {
+        // Fallback to initial summary state on error
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleRangeChange = (nextRange: TimeRangeOption) => {
+    setInternalRange(nextRange);
+    onRangeChange?.(nextRange);
+  };
+
+  const handleSearchSubmit = (query: string) => {
+    const trimmed = query.trim();
+    if (trimmed) {
+      navigate(`/search?q=${encodeURIComponent(trimmed)}`);
+    } else {
+      navigate('/search');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-surface-canvas p-2 sm:p-5 lg:p-8">
+      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1440px] flex-col overflow-hidden rounded-shell bg-surface-app shadow-shell lg:flex-row">
+        {/* Left Navigation Column */}
+        <Sidebar
+          items={navItems}
+          pulseBars={summary.pulseBars}
+          isCollapsed={isSidebarCollapsed}
+          onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
+          isMobileOpen={isMobileMenuOpen}
+          onCloseMobile={() => setIsMobileMenuOpen(false)}
+        />
+
+        {/* Center Main Workspace Column */}
+        <div className="flex min-w-0 flex-1 flex-col px-5 py-6 sm:px-8">
+          <Topbar
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onSearchSubmit={handleSearchSubmit}
+            lastCollectionLabel={summary.lastCollectionLabel}
+            selectedRange={activeRange}
+            onRangeChange={handleRangeChange}
+            locale={locale}
+            onLocaleChange={setLocale}
+            unreadAlertsCount={summary.unreadAlertsCount}
+            onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+            onOpenAlerts={() => navigate('/alerts')}
+          />
+
+          <main className="flex-1">{children}</main>
+        </div>
+
+        {/* Right Context & Audit Panel */}
+        <RightPanel
+          user={summary.user}
+          quickCards={summary.quickCards}
+          calendarDays={summary.calendarDays}
+          audit={summary.audit}
+        />
+      </div>
+    </div>
+  );
+}
