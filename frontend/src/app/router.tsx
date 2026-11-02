@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../components/layout';
 import { Badge, Button, Card } from '../components/ui';
+import { ClustersListPage } from '../features/clusters/pages/ClustersListPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { RiskRankingPage } from '../features/ranking/pages/RiskRankingPage';
 import { StyleguidePage } from '../features/styleguide/pages/StyleguidePage';
@@ -67,12 +68,13 @@ export function AppRoutes() {
           />
         }
       />
+      <Route path="/clusters" element={<ClustersListPage />} />
       <Route
-        path="/clusters"
+        path="/clusters/:clusterId"
         element={
           <SectionPlaceholder
-            title="Coordinated Clusters"
-            subtitle="Near-duplicate and semantically equivalent message groups"
+            title="Cluster Message Comparison"
+            subtitle="Side-by-side diff of coordinated messages, timestamps, and source availability"
           />
         }
       />

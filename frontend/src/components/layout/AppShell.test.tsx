@@ -63,7 +63,7 @@ describe('AppShell Layout (Sidebar, Topbar, RightPanel)', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('navigates across routes from sidebar links and search bar submission', () => {
+  it('navigates across routes from sidebar links and search bar submission', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <AppRoutes />
@@ -74,7 +74,7 @@ describe('AppShell Layout (Sidebar, Topbar, RightPanel)', () => {
     const clustersLink = screen.getByRole('link', { name: /clusters/i });
     fireEvent.click(clustersLink);
     expect(
-      screen.getByRole('heading', { name: /coordinated clusters/i }),
+      await screen.findByRole('heading', { name: /detected coordinated clusters/i }),
     ).toBeInTheDocument();
 
     // Submit search query in Topbar
