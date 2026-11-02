@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../components/layout';
 import { Badge, Button, Card } from '../components/ui';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import { RiskRankingPage } from '../features/ranking/pages/RiskRankingPage';
 import { StyleguidePage } from '../features/styleguide/pages/StyleguidePage';
 
 interface SectionPlaceholderProps {
@@ -58,6 +59,15 @@ export function AppRoutes() {
         }
       />
       <Route
+        path="/channels/:channelId"
+        element={
+          <SectionPlaceholder
+            title="Channel Coordination Profile"
+            subtitle="Score history, participating clusters, co-moving channels, and evidence explanation"
+          />
+        }
+      />
+      <Route
         path="/clusters"
         element={
           <SectionPlaceholder
@@ -84,15 +94,7 @@ export function AppRoutes() {
           />
         }
       />
-      <Route
-        path="/ranking"
-        element={
-          <SectionPlaceholder
-            title="Coordination Risk Ranking"
-            subtitle="Channels ordered by composite coordination risk score and explanations"
-          />
-        }
-      />
+      <Route path="/ranking" element={<RiskRankingPage />} />
       <Route
         path="/alerts"
         element={
