@@ -54,10 +54,10 @@ export class ChannelService implements IChannelService {
     const response = await this.client.get<
       readonly WatchlistChannelDto[] | { items: readonly WatchlistChannelDto[] }
     >('/watchlist?page=1&pageSize=300');
-    if (Array.isArray(response)) {
-      return response;
+    if ('items' in response) {
+      return response.items;
     }
-    return response.items;
+    return response;
   }
 
   async addWatchlistChannel(
