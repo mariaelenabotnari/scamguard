@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { AppShell } from '../../../components/layout';
-import { Button, Card, CardHeader, EmptyState, Skeleton, Tabs } from '../../../components/ui';
+import { Button, EmptyState, Skeleton } from '../../../components/ui';
 import type { TimeRangeOption } from '../../../dtos/layout.dto';
 import type { IDashboardService } from '../../../services/dashboard.service';
+import { ActivityTimelineChart } from '../components/ActivityTimelineChart';
 import { OverviewBanner } from '../components/OverviewBanner';
 import { StatCardsGrid } from '../components/StatCardsGrid';
 import { useDashboardOverview } from '../hooks/useDashboardOverview';
@@ -10,12 +11,6 @@ import { useDashboardOverview } from '../hooks/useDashboardOverview';
 export interface DashboardPageProps {
   service?: IDashboardService;
 }
-
-const RANGE_TABS: readonly { value: TimeRangeOption; label: string }[] = [
-  { value: '24h', label: '24h' },
-  { value: '7d', label: '7d' },
-  { value: '30d', label: '30d' },
-];
 
 export function DashboardPage({ service }: DashboardPageProps) {
   const [selectedRange, setSelectedRange] = useState<TimeRangeOption>('7d');
@@ -51,25 +46,12 @@ export function DashboardPage({ service }: DashboardPageProps) {
             {/* Top Hero Greeting Banner */}
             <OverviewBanner banner={data.banner} />
 
-            {/* Center Activity Timeline Section (full chart added in feat/fe-timeline-chart) */}
-            <Card tone="chart" className="flex-1">
-              <CardHeader
-                title="Coordination Activity Growth"
-                subtitle="Overall Information"
-                action={
-                  <Tabs
-                    ariaLabel="Timeline range switcher"
-                    items={RANGE_TABS}
-                    value={selectedRange}
-                    onChange={setSelectedRange}
-                  />
-                }
-              />
-              <div className="flex h-48 items-center justify-center rounded-badge border border-brand-200/70 bg-surface-card/40 px-4 text-center text-xs font-medium text-ink-muted">
-                Activity timeline for {selectedRange} window ({data.banner.activeChannelsCount}{' '}
-                channels monitored • Parameter {data.banner.parameterVersion})
-              </div>
-            </Card>
+            {/* Center Activity Timeline Chart */}
+            <ActivityTimelineChart
+              timeline={data.timeline}
+              selectedRange={selectedRange}
+              onRangeChange={setSelectedRange}
+            />
 
             {/* Bottom 4 KPI Stat Cards Grid */}
             <StatCardsGrid stats={data.stats} />
@@ -79,4 +61,3 @@ export function DashboardPage({ service }: DashboardPageProps) {
     </AppShell>
   );
 }
-

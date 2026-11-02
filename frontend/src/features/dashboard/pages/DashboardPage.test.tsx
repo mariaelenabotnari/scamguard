@@ -4,8 +4,8 @@ import { describe, expect, it } from 'vitest';
 import type { IDashboardService } from '../../../services/dashboard.service';
 import { DashboardPage } from './DashboardPage';
 
-describe('DashboardPage (feat/fe-dashboard-overview)', () => {
-  it('renders greeting banner and all 4 KPI stat cards with mock metrics and trend deltas', async () => {
+describe('DashboardPage (Overview & Timeline Chart)', () => {
+  it('renders greeting banner, timeline chart with callout, and all 4 KPI stat cards', async () => {
     render(
       <MemoryRouter>
         <DashboardPage />
@@ -17,6 +17,19 @@ describe('DashboardPage (feat/fe-dashboard-overview)', () => {
         screen.getByRole('heading', { name: /hello elena botnari/i }),
       ).toBeInTheDocument();
     });
+
+    // Timeline chart title, SVG plot, and default highlighted callout
+    expect(screen.getByRole('heading', { name: /profile growth/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('img', { name: /coordinated activity timeline chart/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId('timeline-callout')).toHaveTextContent('11 of September');
+    expect(screen.getByTestId('timeline-callout')).toHaveTextContent('12,301 msgs');
+
+    // Click another timeline axis bucket (Sat) and verify callout updates
+    fireEvent.click(screen.getByRole('button', { name: 'Sat' }));
+    expect(screen.getByTestId('timeline-callout')).toHaveTextContent('15 of September');
+    expect(screen.getByTestId('timeline-callout')).toHaveTextContent('14,200 msgs');
 
     // Verify all 4 stat cards and values for default 7d range
     expect(screen.getByText('Watched Channels')).toBeInTheDocument();
@@ -36,7 +49,7 @@ describe('DashboardPage (feat/fe-dashboard-overview)', () => {
     expect(screen.getByText('+4.46%')).toBeInTheDocument();
   });
 
-  it('updates KPI stat card values when switching range between 7d, 24h, and 30d', async () => {
+  it('updates timeline chart and KPI stat card values when switching range between 7d, 24h, and 30d', async () => {
     render(
       <MemoryRouter>
         <DashboardPage />
@@ -52,7 +65,8 @@ describe('DashboardPage (feat/fe-dashboard-overview)', () => {
 
     await waitFor(() => {
       expect(screen.getByText('6,840')).toBeInTheDocument();
-      expect(screen.getByText('+12.40%')).toBeInTheDocument();
+      expect(screen.getByTestId('timeline-callout')).toHaveTextContent('Today 04:00');
+      expect(screen.getByTestId('timeline-callout')).toHaveTextContent('890 msgs • 4 clusters');
     });
 
     // Switch to 30d tab
@@ -60,7 +74,8 @@ describe('DashboardPage (feat/fe-dashboard-overview)', () => {
 
     await waitFor(() => {
       expect(screen.getByText('194,310')).toBeInTheDocument();
-      expect(screen.getByText('+74.50%')).toBeInTheDocument();
+      expect(screen.getByTestId('timeline-callout')).toHaveTextContent('Week 4 (Oct)');
+      expect(screen.getByTestId('timeline-callout')).toHaveTextContent('42,800 msgs • 41 clusters');
     });
   });
 
@@ -83,4 +98,3 @@ describe('DashboardPage (feat/fe-dashboard-overview)', () => {
     });
   });
 });
-
