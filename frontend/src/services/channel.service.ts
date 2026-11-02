@@ -51,7 +51,13 @@ export class ChannelService implements IChannelService {
     if (isMockMode()) {
       return Promise.resolve([...this.watchlistStore]);
     }
-    return this.client.get<readonly WatchlistChannelDto[]>('/watchlist');
+    const response = await this.client.get<
+      readonly WatchlistChannelDto[] | { items: readonly WatchlistChannelDto[] }
+    >('/watchlist?page=1&pageSize=300');
+    if (Array.isArray(response)) {
+      return response;
+    }
+    return response.items;
   }
 
   async addWatchlistChannel(

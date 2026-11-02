@@ -7,6 +7,7 @@ from app.api.routes.admin_routes import router as admin_router
 from app.api.routes.auth_routes import router as auth_router
 from app.api.routes.health_routes import router as health_router
 from app.api.routes.health_routes import v1_system_router
+from app.api.routes.watchlist_routes import router as watchlist_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
@@ -37,6 +38,7 @@ def create_app() -> FastAPI:
     application.include_router(v1_system_router)
     application.include_router(auth_router)
     application.include_router(admin_router)
+    application.include_router(watchlist_router)
 
     return application
 

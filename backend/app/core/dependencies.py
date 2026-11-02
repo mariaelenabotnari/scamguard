@@ -8,9 +8,11 @@ from app.core.config import Settings, get_settings
 from app.core.security import LoginRateLimiter, PasswordHasher, TokenManager
 from app.db.database import DatabaseManager, get_database_manager
 from app.repositories.user_repository import SqliteParameterRepository, SqliteUserRepository
+from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.admin_service import AdminService, IAdminService
 from app.services.auth_service import AuthService, IAuthService
 from app.services.health_service import HealthService, IHealthService
+from app.services.watchlist_service import IWatchlistService, WatchlistService
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
 DatabaseDep = Annotated[DatabaseManager, Depends(get_database_manager)]
@@ -39,6 +41,11 @@ def get_admin_service(db_manager: DatabaseDep) -> IAdminService:
     return AdminService(param_repo=param_repo)
 
 
+def get_watchlist_service(db_manager: DatabaseDep) -> IWatchlistService:
+    watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager)
+    return WatchlistService(repo=watchlist_repo)
+
+
 def extract_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str | None:
@@ -52,4 +59,5 @@ def extract_bearer_token(
 HealthServiceDep = Annotated[IHealthService, Depends(get_health_service)]
 AuthServiceDep = Annotated[IAuthService, Depends(get_auth_service)]
 AdminServiceDep = Annotated[IAdminService, Depends(get_admin_service)]
+WatchlistServiceDep = Annotated[IWatchlistService, Depends(get_watchlist_service)]
 BearerTokenDep = Annotated[str | None, Depends(extract_bearer_token)]
