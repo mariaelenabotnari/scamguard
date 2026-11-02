@@ -1,4 +1,47 @@
-import type { ChannelDetailDto } from '../dtos/channel.dto';
+import type { ChannelDetailDto, WatchlistChannelDto } from '../dtos/channel.dto';
+
+export const MOCK_WATCHLIST_CHANNELS: readonly WatchlistChannelDto[] = [
+  {
+    id: 'ch-moldova-pulse',
+    handle: '@moldova_news_pulse',
+    title: 'Moldova News Pulse 24/7',
+    language: 'RU',
+    status: 'active',
+    addedBy: 'elena.botnari',
+    addedAt: '2026-09-01',
+    subscribersCount: 48200,
+  },
+  {
+    id: 'ch-gagauzia-voice',
+    handle: '@gagauzia_voice_md',
+    title: 'Голос Гагаузии • Инфо',
+    language: 'RU',
+    status: 'active',
+    addedBy: 'elena.botnari',
+    addedAt: '2026-09-03',
+    subscribersCount: 31900,
+  },
+  {
+    id: 'ch-chisinau-radar',
+    handle: '@chisinau_insider_ro',
+    title: 'Chișinău Insider • Știri',
+    language: 'RO',
+    status: 'active',
+    addedBy: 'ion.rusu',
+    addedAt: '2026-09-10',
+    subscribersCount: 27400,
+  },
+  {
+    id: 'ch-agro-journal',
+    handle: '@agro_journal_md',
+    title: 'Agro & Economie Moldova',
+    language: 'RO',
+    status: 'paused',
+    addedBy: 'elena.botnari',
+    addedAt: '2026-09-14',
+    subscribersCount: 41200,
+  },
+];
 
 export const MOCK_CHANNEL_DETAILS: Readonly<Record<string, ChannelDetailDto>> = {
   'ch-moldova-pulse': {
@@ -94,4 +137,3 @@ export const MOCK_CHANNEL_DETAILS: Readonly<Record<string, ChannelDetailDto>> = 
 
 export const DEFAULT_MOCK_CHANNEL_DETAIL: ChannelDetailDto =
   MOCK_CHANNEL_DETAILS['ch-moldova-pulse'];
-

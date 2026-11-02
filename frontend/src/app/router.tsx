@@ -7,7 +7,9 @@ import { ClusterComparePage } from '../features/clusters/pages/ClusterComparePag
 import { ClustersListPage } from '../features/clusters/pages/ClustersListPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { RiskRankingPage } from '../features/ranking/pages/RiskRankingPage';
+import { SearchPage } from '../features/search/pages/SearchPage';
 import { StyleguidePage } from '../features/styleguide/pages/StyleguidePage';
+import { WatchlistPage } from '../features/watchlist/pages/WatchlistPage';
 
 interface SectionPlaceholderProps {
   title: string;
@@ -53,15 +55,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<DashboardPage />} />
-      <Route
-        path="/channels"
-        element={
-          <SectionPlaceholder
-            title="Monitored Channels"
-            subtitle="Watchlist management and channel coordination profiles"
-          />
-        }
-      />
+      <Route path="/channels" element={<WatchlistPage />} />
       <Route path="/channels/:channelId" element={<ChannelDetailPage />} />
       <Route path="/clusters" element={<ClustersListPage />} />
       <Route path="/clusters/:clusterId" element={<ClusterComparePage />} />
@@ -74,15 +68,7 @@ export function AppRoutes() {
           />
         }
       />
-      <Route
-        path="/search"
-        element={
-          <SectionPlaceholder
-            title="Messages & Narrative Search"
-            subtitle="Full-text and semantic query across monitored Telegram posts"
-          />
-        }
-      />
+      <Route path="/search" element={<SearchPage />} />
       <Route path="/ranking" element={<RiskRankingPage />} />
       <Route path="/alerts" element={<AlertsPage />} />
       <Route path="/styleguide" element={<StyleguidePage />} />

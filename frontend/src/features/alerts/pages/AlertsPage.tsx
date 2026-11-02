@@ -10,6 +10,7 @@ import {
 } from '../../../components/ui';
 import type { AlertSeverity } from '../../../dtos/alert.dto';
 import type { IAlertService } from '../../../services/alert.service';
+import { ExportModal } from '../../export/components/ExportModal';
 import { AlertCard } from '../components/AlertCard';
 import { useAlertsFeed } from '../hooks/useAlertsFeed';
 
@@ -48,9 +49,12 @@ export function AlertsPage({ service }: AlertsPageProps) {
               channels
             </p>
           </div>
-          <Badge variant="brand" icon="bell">
-            {alerts.length} Active Alerts
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <Badge variant="brand" icon="bell">
+              {alerts.length} Active Alerts
+            </Badge>
+            <ExportModal defaultEntity="clusters" />
+          </div>
         </Card>
 
         <Card padding="sm" className="flex flex-wrap items-center justify-between gap-4">

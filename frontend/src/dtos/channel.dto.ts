@@ -1,5 +1,24 @@
 import type { RiskBand, ScoreExplanationDto } from './ranking.dto';
 
+export type WatchlistStatus = 'active' | 'paused';
+
+export interface WatchlistChannelDto {
+  id: string;
+  handle: string;
+  title: string;
+  language: 'RO' | 'RU' | 'MIXED';
+  status: WatchlistStatus;
+  addedBy: string;
+  addedAt: string;
+  subscribersCount: number;
+}
+
+export interface AddWatchlistChannelInputDto {
+  handleOrUrl: string;
+  title: string;
+  language: 'RO' | 'RU' | 'MIXED';
+}
+
 export interface CoMovingChannelDto {
   channelId: string;
   handle: string;
@@ -29,7 +48,7 @@ export interface ChannelDetailDto {
   title: string;
   language: 'RO' | 'RU' | 'MIXED';
   subscribersCount: number;
-  status: 'active' | 'paused';
+  status: WatchlistStatus;
   addedAt: string;
   addedBy: string;
   score: number;
@@ -39,4 +58,3 @@ export interface ChannelDetailDto {
   coMovingChannels: readonly CoMovingChannelDto[];
   joinedClusters: readonly ChannelJoinedClusterDto[];
 }
-
