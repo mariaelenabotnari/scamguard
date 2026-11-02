@@ -38,9 +38,12 @@ build/
 
 # Node / Frontend
 node_modules/
+.vite/
+frontend/.vite/
 frontend/dist/
 frontend/dist-ssr/
 frontend/coverage/
+*.tsbuildinfo
 *.local
 .npm
 
