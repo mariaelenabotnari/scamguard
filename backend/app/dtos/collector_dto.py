@@ -5,6 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 DetectedLanguage = Literal["RO", "RU", "OTHER"]
+CollectionRunStatus = Literal["completed", "partial", "failed"]
 
 
 class RawTelegramPostDto(BaseModel):
@@ -49,7 +50,7 @@ class CollectionRunDto(BaseModel):
     id: str
     started_at: str = Field(..., alias="startedAt")
     finished_at: str = Field(..., alias="finishedAt")
-    status: Literal["completed", "partial", "failed"]
+    status: CollectionRunStatus
     channels_polled: int = Field(..., alias="channelsPolled")
     messages_saved: int = Field(..., alias="messagesSaved")
     flood_waits_count: int = Field(default=0, alias="floodWaitsCount")

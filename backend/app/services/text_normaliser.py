@@ -1,4 +1,4 @@
-"""Text normalisation, Romanian diacritic unification, Russian transliteration, and language detection."""
+"""Text normalisation, Romanian diacritic unification, and language detection."""
 
 import hashlib
 import re

@@ -7,11 +7,18 @@ from fastapi import Depends, Header
 from app.core.config import Settings, get_settings
 from app.core.security import LoginRateLimiter, PasswordHasher, TokenManager
 from app.db.database import DatabaseManager, get_database_manager
+from app.repositories.message_repository import SqliteMessageRepository
 from app.repositories.user_repository import SqliteParameterRepository, SqliteUserRepository
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.admin_service import AdminService, IAdminService
 from app.services.auth_service import AuthService, IAuthService
+from app.services.collector_service import (
+    FakeTelegramClientAdapter,
+    ICollectorService,
+    TelegramCollectorService,
+)
 from app.services.health_service import HealthService, IHealthService
+from app.services.text_normaliser import TextNormaliser
 from app.services.watchlist_service import IWatchlistService, WatchlistService
 
 SettingsDep = Annotated[Settings, Depends(get_settings)]
@@ -46,6 +53,20 @@ def get_watchlist_service(db_manager: DatabaseDep) -> IWatchlistService:
     return WatchlistService(repo=watchlist_repo)
 
 
+def get_collector_service(db_manager: DatabaseDep) -> ICollectorService:
+    watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager)
+    message_repo = SqliteMessageRepository(db_manager=db_manager)
+    normaliser = TextNormaliser()
+    client = FakeTelegramClientAdapter()
+    return TelegramCollectorService(
+        watchlist_repo=watchlist_repo,
+        message_repo=message_repo,
+        normaliser=normaliser,
+        telegram_client=client,
+        sleep_fn=lambda _s: None,
+    )
+
+
 def extract_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str | None:
@@ -60,4 +81,5 @@ HealthServiceDep = Annotated[IHealthService, Depends(get_health_service)]
 AuthServiceDep = Annotated[IAuthService, Depends(get_auth_service)]
 AdminServiceDep = Annotated[IAdminService, Depends(get_admin_service)]
 WatchlistServiceDep = Annotated[IWatchlistService, Depends(get_watchlist_service)]
+CollectorServiceDep = Annotated[ICollectorService, Depends(get_collector_service)]
 BearerTokenDep = Annotated[str | None, Depends(extract_bearer_token)]

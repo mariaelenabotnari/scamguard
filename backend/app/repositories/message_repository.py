@@ -6,6 +6,7 @@ from typing import Protocol, cast
 from app.db.database import DatabaseManager
 from app.dtos.collector_dto import (
     CollectionRunDto,
+    CollectionRunStatus,
     DetectedLanguage,
     NormalisedTextDto,
     PurgeDeletedPostReceiptDto,
@@ -32,7 +33,7 @@ class IMessageRepository(Protocol):
 
 
 class SqliteMessageRepository:
-    """Stores Telegram messages with separated raw text (`message_texts`) and normalised text (`message_norm`)."""
+    """Stores Telegram messages with separated raw text and normalised text."""
 
     def __init__(self, db_manager: DatabaseManager) -> None:
         self._db = db_manager
@@ -55,7 +56,9 @@ class SqliteMessageRepository:
             INSERT INTO channel_checkpoints (channel_id, last_telegram_message_id, updated_at)
             VALUES (?, ?, ?)
             ON CONFLICT(channel_id) DO UPDATE SET
-                last_telegram_message_id = MAX(last_telegram_message_id, excluded.last_telegram_message_id),
+                last_telegram_message_id = MAX(
+                    last_telegram_message_id, excluded.last_telegram_message_id
+                ),
                 updated_at = excluded.updated_at
             """,
             (channel_id, last_id, now_iso),
@@ -243,7 +246,7 @@ class SqliteMessageRepository:
                     startedAt=str(mapping["started_at"]),
                     finishedAt=str(mapping["finished_at"]),
                     status=cast(
-                        "CollectionRunDto.__annotations__['status']",
+                        CollectionRunStatus,
                         str(mapping["status"]),
                     ),
                     channelsPolled=int(str(mapping["channels_polled"])),
