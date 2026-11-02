@@ -1,14 +1,19 @@
-"""FastAPI entry point for Scamguard."""
+"""FastAPI entry point and application factory for Scamguard."""
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.health_routes import router as health_router
+from app.api.routes.health_routes import v1_system_router
 from app.core.config import get_settings
+from app.core.errors import register_error_handlers
+from app.core.logging import configure_logging
 
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    configure_logging(settings.log_level)
+
     application = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
@@ -19,13 +24,15 @@ def create_app() -> FastAPI:
 
     application.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"],
+        allow_origins=settings.cors_origins,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
 
+    register_error_handlers(application)
     application.include_router(health_router)
+    application.include_router(v1_system_router)
 
     return application
 
