@@ -66,3 +66,4 @@ uvicorn app.main:app --reload
 - Monitors **only public Telegram channels**.
 - Enforces **data minimisation**: raw text of source-deleted posts is purged, retaining only normalised text and hashes.
 - Provides **coordination and narrative similarity indicators with full evidence**, keeping human researchers and journalists in the loop rather than claiming automated truth/falsehood judgments.
+

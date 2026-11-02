@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "scamguard-backend"
 version = "0.1.0"
 description = "Scamguard backend API for coordinated Telegram activity detection"
-readme = "../README.md"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115.0",
@@ -30,6 +29,7 @@ include = ["app*"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+asyncio_default_fixture_loop_scope = "function"
 
 [tool.ruff]
 line-length = 100

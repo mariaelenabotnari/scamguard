@@ -3,12 +3,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.health_routes import router as health_router
+from app.core.config import get_settings
+
 
 def create_app() -> FastAPI:
+    settings = get_settings()
     application = FastAPI(
-        title="Scamguard API",
-        version="0.1.0",
-        description="Detects coordinated activity and narrative propagation across Telegram channels.",
+        title=settings.app_name,
+        version=settings.app_version,
+        description=(
+            "Detects coordinated activity and narrative propagation across Telegram channels."
+        ),
     )
 
     application.add_middleware(
@@ -19,9 +25,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    @application.get("/health", tags=["system"])
-    async def health_check() -> dict[str, str]:
-        return {"status": "ok"}
+    application.include_router(health_router)
 
     return application
 

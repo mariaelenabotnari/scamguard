@@ -8,3 +8,4 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: /scamguard/i })).toBeInTheDocument();
   });
 });
+

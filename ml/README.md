@@ -10,3 +10,4 @@ This directory holds offline data collection, exploratory notebooks, label mappi
 - `scripts/`: Reproducible CLI scripts (`download`, `clean`, `label_map.yaml`, `train`, `evaluate`).
 
 > **Rule**: The backend (`backend/app/ml/`) only loads trained artifacts for inference. Training code never runs inside the FastAPI server.
+
