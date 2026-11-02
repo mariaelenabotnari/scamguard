@@ -20,6 +20,10 @@ from app.services.collector_service import (
     TelegramCollectorService,
 )
 from app.services.health_service import HealthService, IHealthService
+from app.services.narrative_classifier_service import (
+    INarrativeClassifierService,
+    NarrativeClassifierService,
+)
 from app.services.similarity_service import SimilarityService
 from app.services.text_normaliser import TextNormaliser
 from app.services.watchlist_service import IWatchlistService, WatchlistService
@@ -83,6 +87,12 @@ def get_clustering_service(db_manager: DatabaseDep) -> IClusteringService:
     )
 
 
+def get_narrative_classifier_service(
+    db_manager: DatabaseDep,
+) -> INarrativeClassifierService:
+    return NarrativeClassifierService(db_manager=db_manager)
+
+
 def extract_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str | None:
@@ -99,4 +109,7 @@ AdminServiceDep = Annotated[IAdminService, Depends(get_admin_service)]
 WatchlistServiceDep = Annotated[IWatchlistService, Depends(get_watchlist_service)]
 CollectorServiceDep = Annotated[ICollectorService, Depends(get_collector_service)]
 ClusteringServiceDep = Annotated[IClusteringService, Depends(get_clustering_service)]
+NarrativeClassifierServiceDep = Annotated[
+    INarrativeClassifierService, Depends(get_narrative_classifier_service)
+]
 BearerTokenDep = Annotated[str | None, Depends(extract_bearer_token)]
