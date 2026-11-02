@@ -1,55 +1,18 @@
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
-import { AppShell } from '../components/layout';
-import { Badge, Button, Card } from '../components/ui';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { AdminSettingsPage } from '../features/admin/pages/AdminSettingsPage';
 import { AlertsPage } from '../features/alerts/pages/AlertsPage';
+import { LoginPage } from '../features/auth/pages/LoginPage';
+import { RegisterPage } from '../features/auth/pages/RegisterPage';
+import { UnauthorizedPage } from '../features/auth/pages/UnauthorizedPage';
 import { ChannelDetailPage } from '../features/channels/pages/ChannelDetailPage';
 import { ClusterComparePage } from '../features/clusters/pages/ClusterComparePage';
 import { ClustersListPage } from '../features/clusters/pages/ClustersListPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
+import { NotFoundPage } from '../features/misc/pages/NotFoundPage';
 import { RiskRankingPage } from '../features/ranking/pages/RiskRankingPage';
 import { SearchPage } from '../features/search/pages/SearchPage';
 import { StyleguidePage } from '../features/styleguide/pages/StyleguidePage';
 import { WatchlistPage } from '../features/watchlist/pages/WatchlistPage';
-
-interface SectionPlaceholderProps {
-  title: string;
-  subtitle: string;
-}
-
-function SectionPlaceholder({ title, subtitle }: SectionPlaceholderProps) {
-  return (
-    <AppShell>
-      <div className="space-y-6">
-        <Card
-          tone="banner"
-          padding="lg"
-          className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
-        >
-          <div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">{title}</h1>
-            <p className="mt-1 text-xs font-medium text-ink-muted">{subtitle}</p>
-          </div>
-          <Badge variant="brand" icon="shield-halved">
-            Scamguard Monitor
-          </Badge>
-        </Card>
-
-        <Card className="space-y-3">
-          <p className="text-sm text-ink-secondary">
-            Coordinated Telegram channel activity detection and narrative analysis workspace.
-          </p>
-          <div>
-            <Link to="/styleguide">
-              <Button variant="secondary" size="sm" rightIcon="arrow-right">
-                View Design System Styleguide
-              </Button>
-            </Link>
-          </div>
-        </Card>
-      </div>
-    </AppShell>
-  );
-}
 
 export function AppRoutes() {
   return (
@@ -59,19 +22,15 @@ export function AppRoutes() {
       <Route path="/channels/:channelId" element={<ChannelDetailPage />} />
       <Route path="/clusters" element={<ClustersListPage />} />
       <Route path="/clusters/:clusterId" element={<ClusterComparePage />} />
-      <Route
-        path="/admin"
-        element={
-          <SectionPlaceholder
-            title="Threshold & System Settings"
-            subtitle="Versioned similarity parameters and collection intervals"
-          />
-        }
-      />
+      <Route path="/admin" element={<AdminSettingsPage />} />
       <Route path="/search" element={<SearchPage />} />
       <Route path="/ranking" element={<RiskRankingPage />} />
       <Route path="/alerts" element={<AlertsPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/styleguide" element={<StyleguidePage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }
