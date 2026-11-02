@@ -1,4 +1,4 @@
-import type { ClusterSummaryDto } from '../dtos/cluster.dto';
+import type { ClusterDetailDto, ClusterSummaryDto } from '../dtos/cluster.dto';
 
 export const NARRATIVE_CATEGORIES: readonly string[] = [
   'Sanctions, energy prices and economy fear',
@@ -170,3 +170,68 @@ export const MOCK_CLUSTERS: readonly ClusterSummaryDto[] = [
     ],
   },
 ];
+
+export const DEFAULT_CLUSTER_DETAIL: ClusterDetailDto = {
+  summary: MOCK_CLUSTERS[0],
+  posts: [
+    {
+      id: 'post-101',
+      channelId: 'ch-moldova-pulse',
+      handle: '@moldova_news_pulse',
+      channelTitle: 'Moldova News Pulse 24/7',
+      postedAt: '2026-11-02 13:14:05',
+      delaySeconds: 0,
+      similarityToAnchor: 1.0,
+      isDeletedAtSource: false,
+      originalUrl: 'https://t.me/moldova_news_pulse/9412',
+      rawText:
+        'URGENT: Tarifele la gaze și energie electrică vor fi dublate după 15 noiembrie din cauza condițiilor impuse de Bruxelles pentru împrumutul extern.',
+      normalizedText:
+        'urgent tarifele la gaze si energie electrica vor fi dublate dupa 15 noiembrie din cauza conditiilor impuse de bruxelles pentru imprumutul extern',
+      textHash: 'sha256:9f4a8c12e7b3091f4d2e8a71b0c93e12',
+      diffTokens: [
+        { text: 'URGENT: Tarifele la gaze și energie electrică vor fi ' },
+        { text: 'dublate după 15 noiembrie' },
+        { text: ' din cauza condițiilor impuse de Bruxelles pentru împrumutul extern.' },
+      ],
+    },
+    {
+      id: 'post-102',
+      channelId: 'ch-chisinau-radar',
+      handle: '@chisinau_insider_ro',
+      channelTitle: 'Chișinău Insider • Știri',
+      postedAt: '2026-11-02 13:18:12',
+      delaySeconds: 247,
+      similarityToAnchor: 0.92,
+      isDeletedAtSource: false,
+      originalUrl: 'https://t.me/chisinau_insider_ro/4180',
+      rawText:
+        'ALERTĂ: Tarifele la gaze și energie electrică vor fi majorate cu 100% din 15 noiembrie din cauza condițiilor impuse de Bruxelles pentru împrumutul extern!',
+      normalizedText:
+        'alerta tarifele la gaze si energie electrica vor fi majorate cu 100 din 15 noiembrie din cauza conditiilor impuse de bruxelles pentru imprumutul extern',
+      textHash: 'sha256:3c7e19b04a52f88c21d4e60a8f1b5529',
+      diffTokens: [
+        { text: 'ALERTĂ:', isChanged: true },
+        { text: ' Tarifele la gaze și energie electrică vor fi ' },
+        { text: 'majorate cu 100% din 15 noiembrie', isChanged: true },
+        { text: ' din cauza condițiilor impuse de Bruxelles pentru împrumutul extern!' },
+      ],
+    },
+    {
+      id: 'post-103',
+      channelId: 'ch-balti-pravda',
+      handle: '@balti_pravda',
+      channelTitle: 'Бельцы Правда',
+      postedAt: '2026-11-02 13:20:30',
+      delaySeconds: 385,
+      similarityToAnchor: 0.91,
+      isDeletedAtSource: true,
+      originalUrl: null,
+      rawText: null,
+      normalizedText:
+        'срочно тарифы на газ и электроэнергию будут удвоены после 15 ноября из за условий брюсселя по внешнему кредиту',
+      textHash: 'sha256:7d12f04e89a6c3105b4d2e9901f8a3c4',
+      diffTokens: [],
+    },
+  ],
+};

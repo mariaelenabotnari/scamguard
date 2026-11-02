@@ -1,6 +1,9 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
 import { AppShell } from '../components/layout';
 import { Badge, Button, Card } from '../components/ui';
+import { AlertsPage } from '../features/alerts/pages/AlertsPage';
+import { ChannelDetailPage } from '../features/channels/pages/ChannelDetailPage';
+import { ClusterComparePage } from '../features/clusters/pages/ClusterComparePage';
 import { ClustersListPage } from '../features/clusters/pages/ClustersListPage';
 import { DashboardPage } from '../features/dashboard/pages/DashboardPage';
 import { RiskRankingPage } from '../features/ranking/pages/RiskRankingPage';
@@ -59,25 +62,9 @@ export function AppRoutes() {
           />
         }
       />
-      <Route
-        path="/channels/:channelId"
-        element={
-          <SectionPlaceholder
-            title="Channel Coordination Profile"
-            subtitle="Score history, participating clusters, co-moving channels, and evidence explanation"
-          />
-        }
-      />
+      <Route path="/channels/:channelId" element={<ChannelDetailPage />} />
       <Route path="/clusters" element={<ClustersListPage />} />
-      <Route
-        path="/clusters/:clusterId"
-        element={
-          <SectionPlaceholder
-            title="Cluster Message Comparison"
-            subtitle="Side-by-side diff of coordinated messages, timestamps, and source availability"
-          />
-        }
-      />
+      <Route path="/clusters/:clusterId" element={<ClusterComparePage />} />
       <Route
         path="/admin"
         element={
@@ -97,15 +84,7 @@ export function AppRoutes() {
         }
       />
       <Route path="/ranking" element={<RiskRankingPage />} />
-      <Route
-        path="/alerts"
-        element={
-          <SectionPlaceholder
-            title="Alerts & Data Export"
-            subtitle="Real-time coordination triggers and CSV/JSON evidence export"
-          />
-        }
-      />
+      <Route path="/alerts" element={<AlertsPage />} />
       <Route path="/styleguide" element={<StyleguidePage />} />
     </Routes>
   );
