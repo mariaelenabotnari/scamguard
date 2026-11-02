@@ -3,9 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { App } from './App';
 
 describe('App', () => {
-  it('renders Scamguard heading', () => {
+  it('renders Scamguard shell and navigation', () => {
     render(<App />);
-    expect(screen.getByRole('heading', { name: /scamguard/i })).toBeInTheDocument();
+    expect(screen.getByText('Scamguard')).toBeInTheDocument();
+    expect(screen.getByRole('navigation', { name: /main navigation/i })).toBeInTheDocument();
   });
 });
-

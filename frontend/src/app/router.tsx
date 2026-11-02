@@ -1,20 +1,30 @@
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { AppShell } from '../components/layout';
 import { Badge, Button, Card } from '../components/ui';
 import { StyleguidePage } from '../features/styleguide/pages/StyleguidePage';
 
-function HomePlaceholderPage() {
+interface SectionPlaceholderProps {
+  title: string;
+  subtitle: string;
+}
+
+function SectionPlaceholder({ title, subtitle }: SectionPlaceholderProps) {
   return (
-    <main className="min-h-screen bg-surface-canvas p-8">
-      <div className="mx-auto max-w-4xl">
-        <Card className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold text-ink-primary">Scamguard</h1>
-            <Badge variant="brand" icon="shield-halved">
-              Moldova Telegram Monitor
-            </Badge>
+    <AppShell>
+      <div className="space-y-6">
+        <Card tone="banner" padding="lg" className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">{title}</h1>
+            <p className="mt-1 text-xs font-medium text-ink-muted">{subtitle}</p>
           </div>
+          <Badge variant="brand" icon="shield-halved">
+            Scamguard Monitor
+          </Badge>
+        </Card>
+
+        <Card className="space-y-3">
           <p className="text-sm text-ink-secondary">
-            Coordinated Telegram channel activity detection and narrative analysis platform.
+            Coordinated Telegram channel activity detection and narrative analysis workspace.
           </p>
           <div>
             <Link to="/styleguide">
@@ -25,14 +35,76 @@ function HomePlaceholderPage() {
           </div>
         </Card>
       </div>
-    </main>
+    </AppShell>
   );
 }
 
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<HomePlaceholderPage />} />
+      <Route
+        path="/"
+        element={
+          <SectionPlaceholder
+            title="Hello Analyst"
+            subtitle="Coordinated Telegram channel activity overview for Moldova"
+          />
+        }
+      />
+      <Route
+        path="/channels"
+        element={
+          <SectionPlaceholder
+            title="Monitored Channels"
+            subtitle="Watchlist management and channel coordination profiles"
+          />
+        }
+      />
+      <Route
+        path="/clusters"
+        element={
+          <SectionPlaceholder
+            title="Coordinated Clusters"
+            subtitle="Near-duplicate and semantically equivalent message groups"
+          />
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <SectionPlaceholder
+            title="Threshold & System Settings"
+            subtitle="Versioned similarity parameters and collection intervals"
+          />
+        }
+      />
+      <Route
+        path="/search"
+        element={
+          <SectionPlaceholder
+            title="Messages & Narrative Search"
+            subtitle="Full-text and semantic query across monitored Telegram posts"
+          />
+        }
+      />
+      <Route
+        path="/ranking"
+        element={
+          <SectionPlaceholder
+            title="Coordination Risk Ranking"
+            subtitle="Channels ordered by composite coordination risk score and explanations"
+          />
+        }
+      />
+      <Route
+        path="/alerts"
+        element={
+          <SectionPlaceholder
+            title="Alerts & Data Export"
+            subtitle="Real-time coordination triggers and CSV/JSON evidence export"
+          />
+        }
+      />
       <Route path="/styleguide" element={<StyleguidePage />} />
     </Routes>
   );
@@ -45,4 +117,3 @@ export function AppRouter() {
     </BrowserRouter>
   );
 }
-
