@@ -50,3 +50,4 @@ export const MOCK_ALERTS: readonly AlertItemDto[] = [
     parameterVersion: 'v3',
   },
 ];
+

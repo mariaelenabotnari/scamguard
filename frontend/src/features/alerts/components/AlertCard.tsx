@@ -56,3 +56,4 @@ export function AlertCard({ alert, onDismiss }: AlertCardProps) {
     </Card>
   );
 }
+

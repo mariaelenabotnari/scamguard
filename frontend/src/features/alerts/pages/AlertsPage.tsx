@@ -99,3 +99,4 @@ export function AlertsPage({ service }: AlertsPageProps) {
     </AppShell>
   );
 }
+

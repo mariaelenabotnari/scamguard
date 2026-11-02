@@ -38,7 +38,7 @@ describe('ClustersListPage (feat/fe-clusters-list)', () => {
     const compareButtons = screen.getAllByRole('button', { name: /compare messages/i });
     fireEvent.click(compareButtons[0]);
     expect(
-      screen.getByRole('heading', { name: /cluster message comparison/i }),
+      await screen.findByLabelText(/side-by-side message comparison/i),
     ).toBeInTheDocument();
   });
 
@@ -89,6 +89,7 @@ describe('ClustersListPage (feat/fe-clusters-list)', () => {
     const failingService: IClusterService = {
       getNarrativeCategories: () => [],
       getClusters: () => Promise.reject(new Error('Cluster service unavailable')),
+      getClusterDetail: () => Promise.reject(new Error('Cluster service unavailable')),
     };
 
     render(

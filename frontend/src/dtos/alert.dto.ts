@@ -12,3 +12,4 @@ export interface AlertItemDto {
   narrativeCategory: string;
   parameterVersion: string;
 }
+

@@ -40,7 +40,9 @@ describe('RiskRankingPage (feat/fe-risk-ranking)', () => {
     // Navigate to channel profile from explanation modal
     fireEvent.click(screen.getByRole('button', { name: /open channel profile/i }));
     expect(
-      screen.getByRole('heading', { name: /channel coordination profile/i }),
+      await screen.findByRole('heading', {
+        name: /why was this channel flagged\?/i,
+      }),
     ).toBeInTheDocument();
   });
 

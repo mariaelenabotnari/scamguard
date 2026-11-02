@@ -195,3 +195,4 @@ export function ChannelDetailPage({ service }: ChannelDetailPageProps) {
     </AppShell>
   );
 }
+

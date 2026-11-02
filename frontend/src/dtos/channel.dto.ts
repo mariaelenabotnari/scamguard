@@ -39,3 +39,4 @@ export interface ChannelDetailDto {
   coMovingChannels: readonly CoMovingChannelDto[];
   joinedClusters: readonly ChannelJoinedClusterDto[];
 }
+

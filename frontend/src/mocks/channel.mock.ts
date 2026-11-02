@@ -94,3 +94,4 @@ export const MOCK_CHANNEL_DETAILS: Readonly<Record<string, ChannelDetailDto>> = 
 
 export const DEFAULT_MOCK_CHANNEL_DETAIL: ChannelDetailDto =
   MOCK_CHANNEL_DETAILS['ch-moldova-pulse'];
+

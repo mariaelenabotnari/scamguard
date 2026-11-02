@@ -25,3 +25,4 @@ export class ChannelService implements IChannelService {
 }
 
 export const channelService: IChannelService = new ChannelService();
+

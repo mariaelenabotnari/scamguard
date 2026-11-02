@@ -62,3 +62,4 @@ export function useAlertsFeed(
     reload: load,
   };
 }
+
