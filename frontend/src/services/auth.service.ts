@@ -5,7 +5,12 @@ import type {
   RegisterInputDto,
   UserRole,
 } from '../dtos/auth.dto';
-import { httpClient, isMockMode, type IHttpClient } from '../lib/api/http-client';
+import {
+  httpClient,
+  isMockMode,
+  setAuthAccessToken,
+  type IHttpClient,
+} from '../lib/api/http-client';
 
 const DEFAULT_MOCK_USER: AuthUserDto = {
   id: 'usr-elena-01',
@@ -56,13 +61,16 @@ export class AuthService implements IAuthService {
         accountAgeDays: 14,
       };
       this.currentUser = user;
+      setAuthAccessToken('mock-jwt-token-scamguard');
       return Promise.resolve({
         accessToken: 'mock-jwt-token-scamguard',
         user,
       });
     }
 
-    return this.client.post<LoginInputDto, AuthSessionDto>('/auth/login', input);
+    const session = await this.client.post<LoginInputDto, AuthSessionDto>('/auth/login', input);
+    setAuthAccessToken(session.accessToken);
+    return session;
   }
 
   async register(input: RegisterInputDto): Promise<AuthSessionDto> {
@@ -86,13 +94,19 @@ export class AuthService implements IAuthService {
         accountAgeDays: 0,
       };
       this.currentUser = user;
+      setAuthAccessToken('mock-jwt-token-registered');
       return Promise.resolve({
         accessToken: 'mock-jwt-token-registered',
         user,
       });
     }
 
-    return this.client.post<RegisterInputDto, AuthSessionDto>('/auth/register', input);
+    const session = await this.client.post<RegisterInputDto, AuthSessionDto>(
+      '/auth/register',
+      input,
+    );
+    setAuthAccessToken(session.accessToken);
+    return session;
   }
 
   async switchMockRole(role: UserRole): Promise<AuthUserDto> {
@@ -108,9 +122,11 @@ export class AuthService implements IAuthService {
   async logout(): Promise<void> {
     if (isMockMode()) {
       this.currentUser = null;
+      setAuthAccessToken(null);
       return Promise.resolve();
     }
     await this.client.post<Record<string, never>, unknown>('/auth/logout', {});
+    setAuthAccessToken(null);
   }
 }
 
