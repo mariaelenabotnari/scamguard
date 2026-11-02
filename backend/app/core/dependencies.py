@@ -7,17 +7,20 @@ from fastapi import Depends, Header
 from app.core.config import Settings, get_settings
 from app.core.security import LoginRateLimiter, PasswordHasher, TokenManager
 from app.db.database import DatabaseManager, get_database_manager
+from app.repositories.cluster_repository import SqliteClusterRepository
 from app.repositories.message_repository import SqliteMessageRepository
 from app.repositories.user_repository import SqliteParameterRepository, SqliteUserRepository
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.admin_service import AdminService, IAdminService
 from app.services.auth_service import AuthService, IAuthService
+from app.services.clustering_service import ClusteringService, IClusteringService
 from app.services.collector_service import (
     FakeTelegramClientAdapter,
     ICollectorService,
     TelegramCollectorService,
 )
 from app.services.health_service import HealthService, IHealthService
+from app.services.similarity_service import SimilarityService
 from app.services.text_normaliser import TextNormaliser
 from app.services.watchlist_service import IWatchlistService, WatchlistService
 
@@ -67,6 +70,19 @@ def get_collector_service(db_manager: DatabaseDep) -> ICollectorService:
     )
 
 
+def get_clustering_service(db_manager: DatabaseDep) -> IClusteringService:
+    message_repo = SqliteMessageRepository(db_manager=db_manager)
+    cluster_repo = SqliteClusterRepository(db_manager=db_manager)
+    param_repo = SqliteParameterRepository(db_manager=db_manager)
+    similarity_service = SimilarityService()
+    return ClusteringService(
+        message_repo=message_repo,
+        cluster_repo=cluster_repo,
+        param_repo=param_repo,
+        similarity_service=similarity_service,
+    )
+
+
 def extract_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str | None:
@@ -82,4 +98,5 @@ AuthServiceDep = Annotated[IAuthService, Depends(get_auth_service)]
 AdminServiceDep = Annotated[IAdminService, Depends(get_admin_service)]
 WatchlistServiceDep = Annotated[IWatchlistService, Depends(get_watchlist_service)]
 CollectorServiceDep = Annotated[ICollectorService, Depends(get_collector_service)]
+ClusteringServiceDep = Annotated[IClusteringService, Depends(get_clustering_service)]
 BearerTokenDep = Annotated[str | None, Depends(extract_bearer_token)]
