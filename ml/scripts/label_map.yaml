@@ -1,0 +1,65 @@
+version: "1.0"
+model_version: "scamguard-xlmr-proto-v1.0"
+confidence_threshold: 0.55
+
+categories:
+  - id: 1
+    name: "War in Ukraine and Russia justification"
+    external_topics:
+      - "ukraine_war_justification"
+      - "special_military_operation"
+      - "donbas_escalation"
+  - id: 2
+    name: 'Anti-EU / "Europe is falling apart"'
+    external_topics:
+      - "eu_collapse"
+      - "brussels_dictatorship"
+      - "eu_sovereignty_loss"
+  - id: 3
+    name: "Anti-NATO / anti-West"
+    external_topics:
+      - "nato_encirclement"
+      - "western_warmongering"
+      - "nato_bases_moldova"
+  - id: 4
+    name: "Moldova government and elections delegitimisation"
+    external_topics:
+      - "moldova_election_rigging"
+      - "diaspora_vote_fraud"
+      - "chisinau_regime_illegitimate"
+  - id: 5
+    name: "Russophobia, language and identity"
+    external_topics:
+      - "russian_language_ban"
+      - "russophobia"
+      - "romanian_annexation_fear"
+  - id: 6
+    name: "Sanctions, energy prices and economy fear"
+    external_topics:
+      - "gas_price_collapse"
+      - "energy_poverty"
+      - "sanctions_backfire"
+  - id: 7
+    name: "Transnistria / Gagauzia and separatism"
+    external_topics:
+      - "transnistria_blockade"
+      - "gagauzia_autonomy_threat"
+      - "tiraspol_comrat_conflict"
+  - id: 8
+    name: "Health, vaccines and conspiracy"
+    external_topics:
+      - "vaccine_conspiracy"
+      - "who_pandemic_treaty"
+      - "biolab_rumours"
+  - id: 9
+    name: "Traditional values, religion, anti-LGBT narratives"
+    external_topics:
+      - "traditional_family_threat"
+      - "orthodox_church_attack"
+      - "gender_ideology_imposition"
+  - id: 10
+    name: "Other / not disinformation"
+    external_topics:
+      - "general_news"
+      - "weather_sports_culture"
+      - "verified_official_report"
