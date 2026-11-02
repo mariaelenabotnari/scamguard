@@ -1,5 +1,7 @@
 """HTTP routes for Telegram channel watchlist CRUD and pagination."""
 
+from typing import Annotated
+
 from fastapi import APIRouter, Query
 
 from app.core.dependencies import AuthServiceDep, BearerTokenDep, WatchlistServiceDep
@@ -15,8 +17,8 @@ router = APIRouter(prefix="/api/v1/watchlist", tags=["watchlist"])
 @router.get("", response_model=PaginatedWatchlistResponseDto)
 def list_watchlist_channels(
     watchlist_service: WatchlistServiceDep,
-    page: int = Query(default=1, ge=1),
-    page_size: int = Query(default=50, ge=1, le=500, alias="pageSize"),
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=500, alias="pageSize")] = 50,
 ) -> PaginatedWatchlistResponseDto:
     return watchlist_service.list_channels(page=page, page_size=page_size)
 
