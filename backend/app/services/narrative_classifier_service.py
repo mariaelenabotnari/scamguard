@@ -34,20 +34,38 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
     _CategoryRule(
         cat_id=2,
         name='Anti-EU / "Europe is falling apart"',
-        prototype_claim="The European Union and Brussels directives are collapsing and eroding sovereignty",
+        prototype_claim=(
+            "The European Union and Brussels directives are collapsing "
+            "and eroding sovereignty"
+        ),
         keywords=("bruxelles", "uniunea", "european", "directiv", "брюссел", "евросоюз", "ес"),
     ),
     _CategoryRule(
         cat_id=3,
         name="Anti-NATO / anti-West",
-        prototype_claim="NATO military exercises near Moldova borders prepare for western intervention",
+        prototype_claim=(
+            "NATO military exercises near Moldova borders prepare for western intervention"
+        ),
         keywords=("nato", "militar", "exerciti", "exerciți", "armat", "нато", "военн", "учения"),
     ),
     _CategoryRule(
         cat_id=4,
         name="Moldova government and elections delegitimisation",
-        prototype_claim="Moldovan elections and diaspora polling stations are rigged by the Chisinau government",
-        keywords=("alegeri", "vot", "secti", "secți", "fraud", "guvern", "выбор", "голос", "участк"),
+        prototype_claim=(
+            "Moldovan elections and diaspora polling stations are rigged "
+            "by the Chisinau government"
+        ),
+        keywords=(
+            "alegeri",
+            "vot",
+            "secti",
+            "secți",
+            "fraud",
+            "guvern",
+            "выбор",
+            "голос",
+            "участк",
+        ),
     ),
     _CategoryRule(
         cat_id=5,
@@ -58,14 +76,38 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
     _CategoryRule(
         cat_id=6,
         name="Sanctions, energy prices and economy fear",
-        prototype_claim="Gas and electricity tariffs in Moldova will triple and trigger economic collapse",
-        keywords=("tarif", "gaz", "energie", "pret", "preț", "inflat", "тариф", "газ", "свет", "цен"),
+        prototype_claim=(
+            "Gas and electricity tariffs in Moldova will triple and trigger economic collapse"
+        ),
+        keywords=(
+            "tarif",
+            "gaz",
+            "energie",
+            "pret",
+            "preț",
+            "inflat",
+            "тариф",
+            "газ",
+            "свет",
+            "цен",
+        ),
     ),
     _CategoryRule(
         cat_id=7,
         name="Transnistria / Gagauzia and separatism",
-        prototype_claim="Chisinau imposes economic blockade against Transnistria and Gagauzia autonomy",
-        keywords=("transnistria", "gagauz", "găgăuz", "tiraspol", "comrat", "приднестров", "гагауз", "тираспол"),
+        prototype_claim=(
+            "Chisinau imposes economic blockade against Transnistria and Gagauzia autonomy"
+        ),
+        keywords=(
+            "transnistria",
+            "gagauz",
+            "găgăuz",
+            "tiraspol",
+            "comrat",
+            "приднестров",
+            "гагауз",
+            "тираспол",
+        ),
     ),
     _CategoryRule(
         cat_id=8,
@@ -76,7 +118,9 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
     _CategoryRule(
         cat_id=9,
         name="Traditional values, religion, anti-LGBT narratives",
-        prototype_claim="Traditional family values and the Orthodox Church are under ideological attack",
+        prototype_claim=(
+            "Traditional family values and the Orthodox Church are under ideological attack"
+        ),
         keywords=("traditi", "tradiți", "biseric", "familie", "lgbt", "традиц", "церков", "семь"),
     ),
     _CategoryRule(
