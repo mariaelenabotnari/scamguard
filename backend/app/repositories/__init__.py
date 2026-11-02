@@ -1,2 +1,1 @@
-"""Repositories package for database persistence abstraction."""
-
+"""Data access repositories for Scamguard."""
