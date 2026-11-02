@@ -42,3 +42,4 @@ export const MOCK_SEARCH_MESSAGES: readonly SearchMessageHitDto[] = [
     explanation: MOCK_RANKED_CHANNELS[1].explanation,
   },
 ];
+

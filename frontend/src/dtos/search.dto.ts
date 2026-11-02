@@ -20,3 +20,4 @@ export interface UnifiedSearchResultsDto {
   messages: readonly SearchMessageHitDto[];
   clusters: readonly ClusterSummaryDto[];
 }
+

@@ -280,3 +280,4 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
     </AppShell>
   );
 }
+

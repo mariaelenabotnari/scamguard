@@ -53,3 +53,4 @@ export class SearchService implements ISearchService {
 }
 
 export const searchService: ISearchService = new SearchService();
+
