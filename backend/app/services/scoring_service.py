@@ -10,13 +10,14 @@ from app.dtos.scoring_dto import (
     ChannelJoinedClusterDto,
     ChannelScoreHistoryPointDto,
     CoMovingChannelDto,
+    CoordinationGroupDto,
     RankedChannelDto,
     RiskBand,
     ScoreBreakdownDto,
     ScoreExplanationDto,
 )
 
-DEFAULT_SCORING_PARAMETER_VERSION = "v1.4.2-scoring"
+DEFAULT_SCORING_PARAMETER_VERSION = "v2.0.0-scoring"
 
 
 class IScoringService(Protocol):
@@ -45,6 +46,8 @@ class IScoringService(Protocol):
     def get_channel_detail(self, channel_id: str) -> ChannelDetailDto: ...
 
     def recalculate_all_scores(self) -> list[RankedChannelDto]: ...
+
+    def get_channel_coordination_groups(self) -> list[CoordinationGroupDto]: ...
 
 
 _SEED_CHANNEL_PROFILES: tuple[dict[str, object], ...] = (
@@ -143,6 +146,39 @@ def _determine_risk_band(score: int) -> RiskBand:
     return "low"
 
 
+def _calculate_channel_metrics(
+    cluster_participation_share: int,
+    copy_delay_factor: int,
+    co_movement_repetition: int,
+    narrative_weight: int,
+    linked_clusters_count: int,
+) -> tuple[int, int, RiskBand, RiskBand, bool]:
+    cp = _clamp_0_100(cluster_participation_share)
+    cd = _clamp_0_100(copy_delay_factor)
+    cm = _clamp_0_100(co_movement_repetition)
+    nw = _clamp_0_100(narrative_weight)
+
+    has_sufficient_data = linked_clusters_count >= 2
+
+    # Coordination score purely behavioral (0-100)
+    raw_coord = 0.45 * cp + 0.35 * cd + 0.20 * cm
+
+    # Composite score for backwards compatibility (0-100)
+    raw_score = 0.35 * cp + 0.30 * cd + 0.20 * cm + 0.15 * nw
+
+    if not has_sufficient_data:
+        # Shrink toward empirical median (30) to prevent outlier false positives
+        raw_coord = 0.5 * raw_coord + 0.5 * 30.0
+        raw_score = 0.5 * raw_score + 0.5 * 30.0
+
+    score = _clamp_0_100(round(raw_score))
+    coord_score = _clamp_0_100(round(raw_coord))
+    risk_band = _determine_risk_band(score)
+    narrative_risk = _determine_risk_band(nw)
+
+    return score, coord_score, risk_band, narrative_risk, has_sufficient_data
+
+
 def _select_dominant_factor(
     cluster_participation_share: int,
     copy_delay_factor: int,
@@ -150,10 +186,13 @@ def _select_dominant_factor(
     narrative_weight: int,
 ) -> str:
     weighted_contributions = [
-        (0.35 * cluster_participation_share, "Synchronized Cluster Participation"),
-        (0.30 * copy_delay_factor, "Sub-3-Minute Copy Delay"),
-        (0.20 * co_movement_repetition, "Repeated Channel Co-Movement"),
-        (0.15 * narrative_weight, "High-Risk Disinformation Narrative Alignment"),
+        (0.35 * cluster_participation_share, "frequent co-publication across coordinated clusters"),
+        (
+            0.30 * copy_delay_factor,
+            "reposting significantly faster than typical manual editorial lag (< 5 minutes)",
+        ),
+        (0.20 * co_movement_repetition, "repeated temporal co-occurrence with peer channels"),
+        (0.15 * narrative_weight, "thematic alignment with documented disinformation narratives"),
     ]
     weighted_contributions.sort(key=lambda item: item[0], reverse=True)
     return weighted_contributions[0][1]
@@ -185,19 +224,30 @@ class ScoringService(IScoringService):
         cm = _clamp_0_100(co_movement_repetition)
         nw = _clamp_0_100(narrative_weight)
 
-        raw_score = 0.35 * cp + 0.30 * cd + 0.20 * cm + 0.15 * nw
-        score = _clamp_0_100(round(raw_score))
-        risk_band = _determine_risk_band(score)
+        score, coord_score, risk_band, narrative_risk, has_sufficient_data = (
+            _calculate_channel_metrics(
+                cluster_participation_share=cp,
+                copy_delay_factor=cd,
+                co_movement_repetition=cm,
+                narrative_weight=nw,
+                linked_clusters_count=linked_clusters_count,
+            )
+        )
         dominant_factor = _select_dominant_factor(cp, cd, cm, nw)
 
         peers_str = (
             ", ".join(co_moving_channels[:3]) if co_moving_channels else "no recurring peers"
         )
+        data_qualifier = (
+            ""
+            if has_sufficient_data
+            else " (insufficient data: < 2 clusters, score shrunk to median)"
+        )
         summary = (
-            f"Channel {channel_id} scored {score}/100 ({risk_band.upper()} risk) across "
-            f"{linked_clusters_count} coordinated clusters with a median propagation delay of "
-            f"{median_lead_lag_seconds}s alongside {peers_str} "
-            f"(dominant driver: {dominant_factor})."
+            f"Channel {channel_id} shows coordination index {coord_score}/100 and "
+            f"{narrative_risk} narrative alignment across {linked_clusters_count} observed "
+            f"clusters with median propagation delay of {median_lead_lag_seconds}s "
+            f"alongside {peers_str}. Primary observation: {dominant_factor}.{data_qualifier}"
         )
 
         breakdown = ScoreBreakdownDto(
@@ -419,14 +469,22 @@ class ScoringService(IScoringService):
                 "high" if risk_raw == "high" else "medium" if risk_raw == "medium" else "low"
             )
 
+            cp = int(row["cluster_participation_points"])
+            cd = int(row["copy_delay_points"])
+            cm = int(row["co_movement_points"])
+            nw = int(row["narrative_weight_points"])
+            score, coord_score, risk_band, narrative_risk, has_sufficient_data = (
+                _calculate_channel_metrics(cp, cd, cm, nw, linked_clusters_count)
+            )
+
             explanation = ScoreExplanationDto(
                 parameterVersion=str(row["parameter_version"]),
                 summary=str(row["summary"]),
                 breakdown=ScoreBreakdownDto(
-                    clusterParticipationShare=int(row["cluster_participation_points"]),
-                    copyDelayFactor=int(row["copy_delay_points"]),
-                    coMovementRepetition=int(row["co_movement_points"]),
-                    narrativeWeight=int(row["narrative_weight_points"]),
+                    clusterParticipationShare=cp,
+                    copyDelayFactor=cd,
+                    coMovementRepetition=cm,
+                    narrativeWeight=nw,
                     dominantFactor=str(row["dominant_factor"]),
                 ),
                 linkedClustersCount=linked_clusters_count,
@@ -441,7 +499,10 @@ class ScoringService(IScoringService):
                     handle=str(row["handle"]),
                     title=str(row["title"]),
                     language=language,
-                    score=int(row["score"]),
+                    score=score,
+                    coordinationScore=coord_score,
+                    narrativeRisk=narrative_risk,
+                    hasSufficientData=has_sufficient_data,
                     riskBand=risk_band,
                     sparkline=sparkline,
                     clustersJoined7d=linked_clusters_count,
@@ -514,17 +575,30 @@ class ScoringService(IScoringService):
                 parameter_version=str(row["parameter_version"]),
             )
         else:
+            cp, cd, cm, nw = 32, 28, 24, 30
+            linked_count = 1
+            peers = ["@moldova_puls_actual"]
+            lead_lag = 360
+            primary_narrative = "General Political Commentary"
             score, risk_band, explanation = self.compute_channel_score(
                 channel_id=channel_id,
-                cluster_participation_share=32,
-                copy_delay_factor=28,
-                co_movement_repetition=24,
-                narrative_weight=30,
-                linked_clusters_count=1,
-                co_moving_channels=["@moldova_puls_actual"],
-                median_lead_lag_seconds=360,
-                primary_narrative="General Political Commentary",
+                cluster_participation_share=cp,
+                copy_delay_factor=cd,
+                co_movement_repetition=cm,
+                narrative_weight=nw,
+                linked_clusters_count=linked_count,
+                co_moving_channels=peers,
+                median_lead_lag_seconds=lead_lag,
+                primary_narrative=primary_narrative,
             )
+
+        _, coord_score, _, narrative_risk, has_sufficient_data = _calculate_channel_metrics(
+            cluster_participation_share=cp,
+            copy_delay_factor=cd,
+            co_movement_repetition=cm,
+            narrative_weight=nw,
+            linked_clusters_count=linked_count,
+        )
 
         spark_values = (
             [int(x) for x in seed["sparkline"]]  # type: ignore[attr-defined]
@@ -609,9 +683,105 @@ class ScoringService(IScoringService):
             addedAt=str(row["added_at"]),
             addedBy=str(row["added_by"]),
             score=score,
+            coordinationScore=coord_score,
+            narrativeRisk=narrative_risk,
+            hasSufficientData=has_sufficient_data,
             riskBand=risk_band,
             scoreHistory=score_history,
             explanation=explanation,
             coMovingChannels=co_moving_dtos,
             joinedClusters=joined_clusters,
         )
+
+    def get_channel_coordination_groups(self) -> list[CoordinationGroupDto]:
+        conn = self._db.connection
+        # Query shared cascades between channels from cluster_messages if populated
+        rows = conn.execute(
+            """
+            SELECT cm1.channel_id AS ch1, cm2.channel_id AS ch2,
+                   COUNT(DISTINCT cm1.cluster_id) AS shared_cascades,
+                   AVG(ABS(cm1.delay_seconds - cm2.delay_seconds)) AS avg_delay
+            FROM cluster_messages cm1
+            JOIN cluster_messages cm2
+              ON cm1.cluster_id = cm2.cluster_id AND cm1.channel_id < cm2.channel_id
+            GROUP BY cm1.channel_id, cm2.channel_id
+            HAVING shared_cascades >= 2
+            """
+        ).fetchall()
+
+        # Build graph edges
+        edges: list[tuple[str, str, int, int]] = []
+        for r in rows:
+            edges.append(
+                (str(r["ch1"]), str(r["ch2"]), int(r["shared_cascades"]), int(r["avg_delay"]))
+            )
+
+        # Fallback to seeded channels if cluster_messages is sparse or empty
+        if not edges:
+            seed_by_id = {str(p["id"]): p for p in _SEED_CHANNEL_PROFILES}
+            for _ch_id, seed in seed_by_id.items():
+                peers = [str(x) for x in seed["co_moving_channels"]]  # type: ignore[attr-defined]
+                for p in peers:
+                    edges.append(
+                        (
+                            str(seed["handle"]),
+                            p,
+                            int(str(seed["linked_clusters_count"])),
+                            int(str(seed["median_lead_lag_seconds"])),
+                        )
+                    )
+
+        # Find connected components with threshold >= 2 shared cascades
+        adj: dict[str, set[str]] = {}
+        pair_data: dict[tuple[str, str], tuple[int, int]] = {}
+        for c1, c2, cascades, delay in edges:
+            if cascades >= 2:
+                adj.setdefault(c1, set()).add(c2)
+                adj.setdefault(c2, set()).add(c1)
+                pair_data[(min(c1, c2), max(c1, c2))] = (cascades, delay)
+
+        visited: set[str] = set()
+        components: list[list[str]] = []
+        for node in sorted(adj.keys()):
+            if node not in visited:
+                comp: list[str] = []
+                queue = [node]
+                visited.add(node)
+                while queue:
+                    curr = queue.pop(0)
+                    comp.append(curr)
+                    for nbr in sorted(adj[curr]):
+                        if nbr not in visited:
+                            visited.add(nbr)
+                            queue.append(nbr)
+                if len(comp) >= 2:
+                    components.append(sorted(comp))
+
+        # Build CoordinationGroupDtos
+        groups: list[CoordinationGroupDto] = []
+        for idx, comp in enumerate(components, start=1):
+            cascades_list: list[int] = []
+            delays_list: list[int] = []
+            for i in range(len(comp)):
+                for j in range(i + 1, len(comp)):
+                    key = (min(comp[i], comp[j]), max(comp[i], comp[j]))
+                    if key in pair_data:
+                        cascades_list.append(pair_data[key][0])
+                        delays_list.append(pair_data[key][1])
+
+            avg_cascades = (
+                round(sum(cascades_list) / len(cascades_list)) if cascades_list else 3
+            )
+            avg_delay = round(sum(delays_list) / len(delays_list)) if delays_list else 120
+
+            groups.append(
+                CoordinationGroupDto(
+                    groupId=f"group-{idx:02d}",
+                    channelIds=comp,
+                    sharedCascadesCount=avg_cascades,
+                    typicalDelaySeconds=avg_delay,
+                    mainNarrative="Cross-channel Disinformation Amplification",
+                )
+            )
+
+        return groups

@@ -57,12 +57,15 @@ def test_compute_channel_score_is_deterministic_and_always_has_explanation(
     assert 0 <= score <= 100
     assert score == 86
     assert risk_band == "high"
-    assert explanation.parameter_version == "v1.4.2-scoring"
+    assert explanation.parameter_version == "v2.0.0-scoring"
     assert explanation.linked_clusters_count == 11
     assert explanation.co_moving_channels == ["@peer_alpha", "@peer_beta"]
     assert explanation.median_lead_lag_seconds == 95
     assert explanation.primary_narrative == "Economic Collapse & Banking Panic"
-    assert explanation.breakdown.dominant_factor == "Synchronized Cluster Participation"
+    assert (
+        explanation.breakdown.dominant_factor
+        == "frequent co-publication across coordinated clusters"
+    )
     assert "86/100" in explanation.summary
 
 
@@ -143,6 +146,9 @@ def test_ranking_channel_detail_and_alerts_routes(isolated_db: DatabaseManager) 
     for item in items:
         assert item.explanation.summary
         assert item.explanation.breakdown.dominant_factor
+        assert 0 <= item.coordination_score <= 100
+        assert item.narrative_risk in ("low", "medium", "high")
+        assert isinstance(item.has_sufficient_data, bool)
 
     filtered = list_ranked_channels(scoring_service=scoring_service, min_score=70, narrative=None)
     assert all(ch.score >= 70 for ch in filtered)
@@ -151,9 +157,16 @@ def test_ranking_channel_detail_and_alerts_routes(isolated_db: DatabaseManager) 
     detail = get_channel_detail(channel_id=channel_id, scoring_service=scoring_service)
     assert detail.id == channel_id
     assert detail.explanation.summary
+    assert 0 <= detail.coordination_score <= 100
+    assert detail.narrative_risk in ("low", "medium", "high")
+    assert isinstance(detail.has_sufficient_data, bool)
     assert len(detail.score_history) >= 2
     assert len(detail.co_moving_channels) >= 1
     assert len(detail.joined_clusters) >= 1
+
+    coord_groups = scoring_service.get_channel_coordination_groups()
+    assert len(coord_groups) >= 1
+    assert len(coord_groups[0].channel_ids) >= 2
 
     with pytest.raises(AppError) as exc_info:
         get_channel_detail(channel_id="non-existent-channel", scoring_service=scoring_service)

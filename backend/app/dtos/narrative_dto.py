@@ -42,5 +42,22 @@ class NarrativePredictionDto(BaseModel):
     matched_claim: str = Field(..., alias="matchedClaim")
     model_version: str = Field(..., alias="modelVersion")
     fake_news_score: float = Field(default=0.85, alias="fakeNewsScore")
+    narrative_match_confidence: float = Field(default=0.85, alias="narrativeMatchConfidence")
     is_disinformation: bool = Field(default=True, alias="isDisinformation")
     sub_narrative: str | None = Field(default=None, alias="subNarrative")
+    secondary_categories: list[str] = Field(default_factory=list, alias="secondaryCategories")
+    nearest_debunk_claim: str | None = Field(default=None, alias="nearestDebunkClaim")
+    debunk_source: str | None = Field(default=None, alias="debunkSource")
+    debunk_url: str | None = Field(default=None, alias="debunkUrl")
+
+
+class NarrativeFeedbackDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    target_id: str = Field(..., alias="targetId")
+    target_type: TargetType = Field(default="message", alias="targetType")
+    feedback_type: Literal["wrong_category", "false_positive", "correct"] = Field(
+        ..., alias="feedbackType"
+    )
+    suggested_category: str | None = Field(default=None, alias="suggestedCategory")
+    notes: str | None = None
