@@ -39,9 +39,7 @@ def test_12_narrative_categories_batch_inference_unknown_threshold_and_model_ver
         assert len(cat.sub_narratives) >= 1
 
     admin_session = login_user(
-        payload=LoginInputDto(
-            email="elena.botnari@scamguard.md", password="scamguard2026"
-        ),
+        payload=LoginInputDto(email="elena.botnari@scamguard.md", password="scamguard2026"),
         auth_service=auth_service,
     )
     token = admin_session.access_token
@@ -129,36 +127,21 @@ def test_12_narrative_categories_batch_inference_unknown_threshold_and_model_ver
     assert by_id["msg-cat-01"].category == "War in Ukraine and Russia justification"
     assert by_id["msg-cat-02"].category == 'Anti-EU / "Europe is falling apart"'
     assert by_id["msg-cat-03"].category == "Anti-NATO / anti-West"
-    assert (
-        by_id["msg-cat-04"].category
-        == "Moldova government and elections delegitimisation"
-    )
+    assert by_id["msg-cat-04"].category == "Moldova government and elections delegitimisation"
     assert by_id["msg-cat-05"].category == "Russophobia, language and identity"
-    assert (
-        by_id["msg-cat-06"].category
-        == "Sanctions, energy prices and economy fear"
-    )
+    assert by_id["msg-cat-06"].category == "Sanctions, energy prices and economy fear"
     assert by_id["msg-cat-07"].category == "Transnistria / Gagauzia and separatism"
     assert by_id["msg-cat-08"].category == "Health, vaccines and conspiracy"
-    assert (
-        by_id["msg-cat-09"].category
-        == "Traditional values, religion, anti-LGBT narratives"
-    )
+    assert by_id["msg-cat-09"].category == "Traditional values, religion, anti-LGBT narratives"
     assert by_id["msg-cat-10"].category == "Other / not disinformation"
     assert by_id["msg-cat-10"].is_disinformation is False
     assert by_id["msg-cat-10"].fake_news_score < 0.20
 
-    assert (
-        by_id["msg-cat-11"].category
-        == "Financial panic, bank runs and currency devaluation"
-    )
+    assert by_id["msg-cat-11"].category == "Financial panic, bank runs and currency devaluation"
     assert by_id["msg-cat-11"].is_disinformation is True
     assert by_id["msg-cat-11"].fake_news_score >= 0.70
 
-    assert (
-        by_id["msg-cat-12"].category
-        == "Forced mobilization and border militarization"
-    )
+    assert by_id["msg-cat-12"].category == "Forced mobilization and border militarization"
     assert by_id["msg-cat-12"].is_disinformation is True
 
     # Below confidence threshold returns "unknown"

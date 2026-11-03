@@ -1,12 +1,19 @@
-"""Three-stage cross-channel similarity engine: Exact Hash, MinHash+LSH, and Embeddings."""
+"""Three-stage cross-channel similarity engine v2.
+
+Combines Exact Hash, MinHash+LSH (Adaptive & Verified), and Embeddings with Detail Guard.
+"""
 
 import hashlib
 import math
+import re
 from datetime import datetime
 from typing import Protocol
 
 from app.dtos.cluster_dto import MatchStage, SimilarityEdgeDto
 from app.dtos.collector_dto import StoredMessageDto
+
+_NUM_PATTERN = re.compile(r"\b\d+(?:[\.,]\d+)?%?\b")
+_NEG_TOKENS = frozenset({"nu", "nici", "fara", "fără", "deloc", "не", "нет", "без"})
 
 # Shared multilingual concept lexicon (Romanian & Russian stems mapped to canonical concept IDs)
 _CONCEPT_GROUPS: tuple[tuple[str, ...], ...] = (
@@ -163,33 +170,33 @@ _CONCEPT_GROUPS: tuple[tuple[str, ...], ...] = (
 
 
 class IMultilingualEmbedder(Protocol):
-    def embed(self, normalised_text: str) -> list[float]: ...
+    def embed(self, text: str) -> list[float]: ...
 
 
 class DeterministicMultilingualEmbedder:
-    """Projects Romanian and Russian normalised text into a shared concept vector space."""
+    """Projects Romanian and Russian text into a shared concept vector space."""
 
     def __init__(self, dim: int = 48) -> None:
         self._dim = dim
 
-    def embed(self, normalised_text: str) -> list[float]:
+    def embed(self, text: str) -> list[float]:
         vec = [0.0] * self._dim
-        tokens = normalised_text.split()
+        tokens = text.lower().split()
         if not tokens:
             return vec
 
         for token in tokens:
             matched_concept = False
             for idx, group in enumerate(_CONCEPT_GROUPS):
-                if any(token.startswith(stem) for stem in group):
-                    vec[idx % self._dim] += 2.5
+                if any(token.startswith(stem) or stem in token for stem in group):
+                    vec[idx % self._dim] += 2.8
                     matched_concept = True
             if not matched_concept and len(token) >= 4:
                 slot = (
                     int(hashlib.md5(token[:4].encode("utf-8")).hexdigest()[:8], 16)
                     % (self._dim - len(_CONCEPT_GROUPS))
                 ) + len(_CONCEPT_GROUPS)
-                vec[slot] += 0.6
+                vec[slot] += 0.5
 
         norm = math.sqrt(sum(v * v for v in vec))
         if norm > 0:
@@ -208,35 +215,59 @@ def cosine_similarity(vec_a: list[float], vec_b: list[float]) -> float:
     return max(0.0, min(1.0, dot / (norm_a * norm_b)))
 
 
-def build_word_shingles(normalised_text: str) -> set[str]:
+def build_adaptive_shingles(normalised_text: str) -> set[str]:
+    """Adaptive shingling: character 4/5-grams for short posts, word n-grams for longer posts."""
     tokens = [t for t in normalised_text.split() if len(t) > 1]
-    if not tokens:
-        return set()
+    if len(tokens) <= 12 or len(normalised_text) < 80:
+        compact = "".join(normalised_text.split())
+        if len(compact) < 4:
+            return set(tokens)
+        shingles = {compact[i : i + 4] for i in range(len(compact) - 3)}
+        if len(compact) >= 5:
+            shingles.update(compact[i : i + 5] for i in range(len(compact) - 4))
+        return shingles
+
     shingles = set(tokens)
     for i in range(len(tokens) - 1):
         shingles.add(f"{tokens[i]} {tokens[i + 1]}")
+    for i in range(len(tokens) - 2):
+        shingles.add(f"{tokens[i]} {tokens[i + 1]} {tokens[i + 2]}")
     return shingles
 
 
-def compute_minhash_signature(shingles: set[str], num_hashes: int = 64) -> list[int]:
+_MERSENNE_PRIME = 2147483647
+# Deterministic universal hash coefficients for 128 permutations
+_MINHASH_COEFFS: tuple[tuple[int, int], ...] = tuple(
+    (
+        ((i * 10007 + 104729) % (_MERSENNE_PRIME - 1)) + 1,
+        (i * 32452843 + 49979) % _MERSENNE_PRIME,
+    )
+    for i in range(128)
+)
+
+
+def compute_minhash_signature(shingles: set[str], num_hashes: int = 128) -> list[int]:
     if not shingles:
         return [0] * num_hashes
+    # Hash each shingle once
+    base_hashes = [
+        int(hashlib.blake2b(s.encode(), digest_size=4).hexdigest(), 16) for s in shingles
+    ]
     sig: list[int] = []
-    for seed in range(num_hashes):
-        min_hash = min(
-            int(
-                hashlib.blake2b(
-                    f"{seed}:{shingle}".encode(), digest_size=4
-                ).hexdigest(),
-                16,
-            )
-            for shingle in shingles
-        )
-        sig.append(min_hash)
+    for a, b in _MINHASH_COEFFS[:num_hashes]:
+        min_val = min((a * h + b) % _MERSENNE_PRIME for h in base_hashes)
+        sig.append(min_val)
     return sig
 
 
-def lsh_shares_band(sig_a: list[int], sig_b: list[int], bands: int = 16) -> bool:
+def estimate_minhash_jaccard(sig_a: list[int], sig_b: list[int]) -> float:
+    if not sig_a or not sig_b or len(sig_a) != len(sig_b):
+        return 0.0
+    matches = sum(1 for a, b in zip(sig_a, sig_b, strict=True) if a == b)
+    return matches / len(sig_a)
+
+
+def lsh_shares_band(sig_a: list[int], sig_b: list[int], bands: int = 32) -> bool:
     rows_per_band = max(1, len(sig_a) // bands)
     for band_idx in range(bands):
         start = band_idx * rows_per_band
@@ -253,6 +284,28 @@ def jaccard_similarity(shingles_a: set[str], shingles_b: set[str]) -> float:
     if union_len == 0:
         return 0.0
     return len(shingles_a & shingles_b) / union_len
+
+
+def check_detail_conflict(text_a: str, text_b: str) -> tuple[bool, str | None]:
+    """Detail guard: detects conflicting numbers, dates, or negation flips."""
+    clean_a = re.sub(r"(?:https?://\S+|www\.\S+|t\.me/\S+)", " ", text_a)
+    clean_b = re.sub(r"(?:https?://\S+|www\.\S+|t\.me/\S+)", " ", text_b)
+    words_a = set(clean_a.lower().split())
+    words_b = set(clean_b.lower().split())
+
+    # 1. Negation mismatch
+    has_neg_a = bool(words_a & _NEG_TOKENS)
+    has_neg_b = bool(words_b & _NEG_TOKENS)
+    if has_neg_a != has_neg_b:
+        return True, "negation_conflict"
+
+    # 2. Number/date mismatch (excluding URLs)
+    nums_a = sorted(set(_NUM_PATTERN.findall(clean_a)))
+    nums_b = sorted(set(_NUM_PATTERN.findall(clean_b)))
+    if nums_a and nums_b and nums_a != nums_b:
+        return True, "number_date_conflict"
+
+    return False, None
 
 
 def _parse_iso_seconds(iso_str: str) -> int:
@@ -272,35 +325,67 @@ class ISimilarityService(Protocol):
         messages: list[StoredMessageDto],
         threshold: float = 0.85,
         time_window_minutes: int = 60,
-        parameter_version: str = "v1.4",
+        parameter_version: str = "v2.0",
     ) -> list[SimilarityEdgeDto]: ...
 
 
 class SimilarityService:
-    """Executes 3-stage cross-channel similarity detection inside a configurable time window."""
+    """Similarity Engine v2 with verified LSH, adaptive n-grams, and detail guards."""
 
     def __init__(self, embedder: IMultilingualEmbedder | None = None) -> None:
         self._embedder = embedder or DeterministicMultilingualEmbedder()
 
+    def get_calibrated_threshold(
+        self, lang_a: str, lang_b: str, default_thresh: float = 0.85
+    ) -> float:
+        """Calibrated similarity thresholds by language pair."""
+        if lang_a == "RO" and lang_b == "RO":
+            return min(default_thresh, 0.82)
+        if lang_a == "RU" and lang_b == "RU":
+            return min(default_thresh, 0.82)
+        if (lang_a == "RO" and lang_b == "RU") or (lang_a == "RU" and lang_b == "RO"):
+            return min(default_thresh, 0.78)
+        return default_thresh
+
     def score_pair(
         self, msg_a: StoredMessageDto, msg_b: StoredMessageDto
     ) -> tuple[float, MatchStage]:
+        # 1. Exact SHA-256 hash
         if msg_a.text_hash and msg_a.text_hash == msg_b.text_hash:
             return 1.0, "exact_hash"
 
-        shingles_a = build_word_shingles(msg_a.normalised_text)
-        shingles_b = build_word_shingles(msg_b.normalised_text)
-        sig_a = compute_minhash_signature(shingles_a)
-        sig_b = compute_minhash_signature(shingles_b)
+        # Check detail conflict before accepting near-duplicate or embedding match
+        raw_a = msg_a.raw_text or msg_a.normalised_text
+        raw_b = msg_b.raw_text or msg_b.normalised_text
+        has_conflict, _ = check_detail_conflict(raw_a, raw_b)
 
-        jaccard = jaccard_similarity(shingles_a, shingles_b)
-        if lsh_shares_band(sig_a, sig_b) and jaccard >= 0.55:
-            scaled_minhash = min(0.99, 0.85 + (jaccard - 0.55) * 0.30)
+        # 2. Adaptive MinHash + LSH with Verification Step
+        shingles_a = build_adaptive_shingles(msg_a.normalised_text)
+        shingles_b = build_adaptive_shingles(msg_b.normalised_text)
+        sig_a = compute_minhash_signature(shingles_a, num_hashes=128)
+        sig_b = compute_minhash_signature(shingles_b, num_hashes=128)
+
+        # Explicit verification: band collision AND estimated Jaccard >= 0.65
+        estimated_j = estimate_minhash_jaccard(sig_a, sig_b)
+        actual_j = jaccard_similarity(shingles_a, shingles_b)
+
+        if lsh_shares_band(sig_a, sig_b, bands=32) and estimated_j >= 0.65 and actual_j >= 0.65:
+            if has_conflict:
+                return 0.40, "semantic_embedding"
+            scaled_minhash = min(0.99, 0.85 + (actual_j - 0.65) * 0.35)
             return round(scaled_minhash, 4), "minhash_lsh"
 
-        vec_a = self._embedder.embed(msg_a.normalised_text)
-        vec_b = self._embedder.embed(msg_b.normalised_text)
+        # 3. Multilingual concept vector embeddings (using clean text_model when available)
+        embed_input_a = msg_a.text_model or raw_a or msg_a.normalised_text
+        embed_input_b = msg_b.text_model or raw_b or msg_b.normalised_text
+        vec_a = self._embedder.embed(embed_input_a)
+        vec_b = self._embedder.embed(embed_input_b)
         cos_sim = cosine_similarity(vec_a, vec_b)
+
+        if has_conflict:
+            # Penalize semantic similarity when facts/dates/numbers or negations directly conflict
+            cos_sim = min(0.40, cos_sim * 0.50)
+
         return round(cos_sim, 4), "semantic_embedding"
 
     def detect_similar_pairs(
@@ -308,18 +393,28 @@ class SimilarityService:
         messages: list[StoredMessageDto],
         threshold: float = 0.85,
         time_window_minutes: int = 60,
-        parameter_version: str = "v1.4",
+        parameter_version: str = "v2.0",
     ) -> list[SimilarityEdgeDto]:
         max_delta_sec = max(1, time_window_minutes) * 60
         ordered = sorted(messages, key=lambda m: (m.posted_at, m.id))
         edges: list[SimilarityEdgeDto] = []
+
+        # Precompute shingles, signatures, and vectors once per message
+        shingles_cache: dict[str, set[str]] = {}
+        sig_cache: dict[str, list[int]] = {}
+        vec_cache: dict[str, list[float]] = {}
+        for m in ordered:
+            sh = build_adaptive_shingles(m.normalised_text)
+            shingles_cache[m.id] = sh
+            sig_cache[m.id] = compute_minhash_signature(sh, num_hashes=128)
+            embed_text = m.text_model or m.raw_text or m.normalised_text
+            vec_cache[m.id] = self._embedder.embed(embed_text)
 
         for i in range(len(ordered)):
             msg_a = ordered[i]
             ts_a = _parse_iso_seconds(msg_a.posted_at)
             for j in range(i + 1, len(ordered)):
                 msg_b = ordered[j]
-                # Never compare messages from the same channel
                 if msg_a.channel_id == msg_b.channel_id:
                     continue
 
@@ -328,8 +423,42 @@ class SimilarityService:
                 if time_diff > max_delta_sec:
                     continue
 
-                score, stage = self.score_pair(msg_a, msg_b)
-                if score >= threshold:
+                # Calibrated threshold per language pair
+                eff_threshold = self.get_calibrated_threshold(
+                    msg_a.language, msg_b.language, default_thresh=threshold
+                )
+
+                # 1. Exact hash
+                stage: MatchStage = "semantic_embedding"
+                if msg_a.text_hash and msg_a.text_hash == msg_b.text_hash:
+                    score, stage = 1.0, "exact_hash"
+                else:
+                    raw_a = msg_a.raw_text or msg_a.normalised_text
+                    raw_b = msg_b.raw_text or msg_b.normalised_text
+                    has_conflict, _ = check_detail_conflict(raw_a, raw_b)
+
+                    # 2. MinHash with cached signatures
+                    sh_a = shingles_cache[msg_a.id]
+                    sh_b = shingles_cache[msg_b.id]
+                    s_a = sig_cache[msg_a.id]
+                    s_b = sig_cache[msg_b.id]
+
+                    est_j = estimate_minhash_jaccard(s_a, s_b)
+                    act_j = jaccard_similarity(sh_a, sh_b)
+                    if lsh_shares_band(s_a, s_b, bands=32) and est_j >= 0.65 and act_j >= 0.65:
+                        if has_conflict:
+                            score, stage = 0.40, "semantic_embedding"
+                        else:
+                            scaled = min(0.99, 0.85 + (act_j - 0.65) * 0.35)
+                            score, stage = round(scaled, 4), "minhash_lsh"
+                    else:
+                        # 3. Embedding cosine
+                        cos_sim = cosine_similarity(vec_cache[msg_a.id], vec_cache[msg_b.id])
+                        if has_conflict:
+                            cos_sim = min(0.40, cos_sim * 0.50)
+                        score, stage = round(cos_sim, 4), "semantic_embedding"
+
+                if score >= eff_threshold:
                     edge_id = f"edge-{msg_a.id}-{msg_b.id}"
                     edges.append(
                         SimilarityEdgeDto(

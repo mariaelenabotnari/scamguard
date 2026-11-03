@@ -161,9 +161,7 @@ class SearchService(ISearchService):
         ch2 = ranked_channels[1] if len(ranked_channels) > 1 else ch1
         ch3 = ranked_channels[2] if len(ranked_channels) > 2 else ch1
 
-        ch_radar_expl = (
-            ch3.explanation if ch3 else self._default_explanation("ch-chisinau-radar")
-        )
+        ch_radar_expl = ch3.explanation if ch3 else self._default_explanation("ch-chisinau-radar")
 
         seed_items = [
             SearchMessageHitDto(
@@ -176,9 +174,7 @@ class SearchService(ISearchService):
                     " din cauza conditiilor impuse de Bruxelles pentru imprumutul extern."
                 ),
                 narrativeCategory=(
-                    ch1.primary_narrative
-                    if ch1
-                    else "Sanctions, energy prices and economy fear"
+                    ch1.primary_narrative if ch1 else "Sanctions, energy prices and economy fear"
                 ),
                 clusterId="CL-20261102-01",
                 channelScore=ch1.score if ch1 else 90,
@@ -195,9 +191,7 @@ class SearchService(ISearchService):
                     "din 15 noiembrie din cauza conditiilor impuse de Bruxelles!"
                 ),
                 narrativeCategory=(
-                    ch2.primary_narrative
-                    if ch2
-                    else "Sanctions, energy prices and economy fear"
+                    ch2.primary_narrative if ch2 else "Sanctions, energy prices and economy fear"
                 ),
                 clusterId="CL-20261102-01",
                 channelScore=ch2.score if ch2 else 83,

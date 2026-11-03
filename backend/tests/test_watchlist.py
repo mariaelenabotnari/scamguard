@@ -27,9 +27,7 @@ def _build_watchlist_services(
     token_manager = TokenManager(secret_key="test-watchlist-secret")
     rate_limiter = LoginRateLimiter(max_attempts=5)
     user_repo = SqliteUserRepository(db_manager=db_manager, hasher=hasher)
-    watchlist_repo = SqliteWatchlistRepository(
-        db_manager=db_manager, seed_defaults=seed_defaults
-    )
+    watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager, seed_defaults=seed_defaults)
     auth_service = AuthService(
         user_repo=user_repo,
         hasher=hasher,
@@ -42,10 +40,7 @@ def _build_watchlist_services(
 
 def test_telegram_handle_normalization_and_validation() -> None:
     assert normalize_telegram_handle("@moldova_news_md") == "@moldova_news_md"
-    assert (
-        normalize_telegram_handle("https://t.me/chisinau_alert_24/")
-        == "@chisinau_alert_24"
-    )
+    assert normalize_telegram_handle("https://t.me/chisinau_alert_24/") == "@chisinau_alert_24"
     assert normalize_telegram_handle("t.me/balti_monitor") == "@balti_monitor"
     assert normalize_telegram_handle("bad") is None
     assert normalize_telegram_handle("https://example.com/channel") is None
@@ -55,9 +50,7 @@ def test_watchlist_crud_duplicate_protection_and_rbac() -> None:
     auth_service, watchlist_service = _build_watchlist_services(seed_defaults=False)
 
     journalist_session = login_user(
-        payload=LoginInputDto(
-            email="ion.rusu@scamguard.md", password="journalist2026"
-        ),
+        payload=LoginInputDto(email="ion.rusu@scamguard.md", password="journalist2026"),
         auth_service=auth_service,
     )
     token = journalist_session.access_token
@@ -136,9 +129,7 @@ def test_watchlist_crud_duplicate_protection_and_rbac() -> None:
 def test_add_300_channels_and_list_with_pagination() -> None:
     auth_service, watchlist_service = _build_watchlist_services(seed_defaults=False)
     admin_session = login_user(
-        payload=LoginInputDto(
-            email="elena.botnari@scamguard.md", password="scamguard2026"
-        ),
+        payload=LoginInputDto(email="elena.botnari@scamguard.md", password="scamguard2026"),
         auth_service=auth_service,
     )
     token = admin_session.access_token
@@ -155,15 +146,9 @@ def test_add_300_channels_and_list_with_pagination() -> None:
             watchlist_service=watchlist_service,
         )
 
-    page_1 = list_watchlist_channels(
-        watchlist_service=watchlist_service, page=1, page_size=50
-    )
-    page_6 = list_watchlist_channels(
-        watchlist_service=watchlist_service, page=6, page_size=50
-    )
-    page_7 = list_watchlist_channels(
-        watchlist_service=watchlist_service, page=7, page_size=50
-    )
+    page_1 = list_watchlist_channels(watchlist_service=watchlist_service, page=1, page_size=50)
+    page_6 = list_watchlist_channels(watchlist_service=watchlist_service, page=6, page_size=50)
+    page_7 = list_watchlist_channels(watchlist_service=watchlist_service, page=7, page_size=50)
 
     assert page_1.total == 300
     assert len(page_1.items) == 50

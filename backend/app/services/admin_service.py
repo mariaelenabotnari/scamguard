@@ -26,10 +26,7 @@ class AdminService:
     def update_parameters(
         self, payload: UpdateSystemParametersInputDto, updated_by: str
     ) -> SystemParametersDto:
-        if (
-            payload.collection_interval_minutes < 1
-            or payload.collection_interval_minutes > 10
-        ):
+        if payload.collection_interval_minutes < 1 or payload.collection_interval_minutes > 10:
             raise AppError(
                 code="INVALID_COLLECTION_INTERVAL",
                 message=(
@@ -40,10 +37,7 @@ class AdminService:
                 details={"max_collection_interval_minutes": 10},
             )
 
-        if (
-            payload.similarity_threshold < 0.50
-            or payload.similarity_threshold > 0.99
-        ):
+        if payload.similarity_threshold < 0.50 or payload.similarity_threshold > 0.99:
             raise AppError(
                 code="INVALID_SIMILARITY_THRESHOLD",
                 message="Similarity threshold must be between 0.50 and 0.99.",
@@ -75,4 +69,3 @@ class AdminService:
         if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
             return f"v{parts[0]}.{int(parts[1]) + 1}"
         return "v1.5"
-

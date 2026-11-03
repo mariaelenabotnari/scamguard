@@ -183,9 +183,7 @@ class SqliteParameterRepository:
 
     def get_latest(self) -> SystemParametersDto:
         cursor = self._db.connection.cursor()
-        cursor.execute(
-            "SELECT * FROM parameter_sets ORDER BY rowid DESC LIMIT 1"
-        )
+        cursor.execute("SELECT * FROM parameter_sets ORDER BY rowid DESC LIMIT 1")
         row = cursor.fetchone()
         if not row:
             return SystemParametersDto(
@@ -250,4 +248,3 @@ class SqliteParameterRepository:
             updatedAt=now_iso,
             updatedBy=updated_by,
         )
-

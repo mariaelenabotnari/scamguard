@@ -403,9 +403,7 @@ class ScoringService(IScoringService):
                 if seed is not None
                 else ["@moldova_puls_actual"]
             )
-            median_lead_lag = (
-                int(str(seed["median_lead_lag_seconds"])) if seed is not None else 300
-            )
+            median_lead_lag = int(str(seed["median_lead_lag_seconds"])) if seed is not None else 300
             sparkline = (
                 [int(x) for x in seed["sparkline"]]  # type: ignore[attr-defined]
                 if seed is not None
@@ -414,19 +412,11 @@ class ScoringService(IScoringService):
 
             lang_raw = str(row["language"]).upper()
             language: Literal["RO", "RU", "MIXED"] = (
-                "RO"
-                if lang_raw == "RO"
-                else "RU"
-                if lang_raw == "RU"
-                else "MIXED"
+                "RO" if lang_raw == "RO" else "RU" if lang_raw == "RU" else "MIXED"
             )
             risk_raw = str(row["risk_band"]).lower()
             risk_band: RiskBand = (
-                "high"
-                if risk_raw == "high"
-                else "medium"
-                if risk_raw == "medium"
-                else "low"
+                "high" if risk_raw == "high" else "medium" if risk_raw == "medium" else "low"
             )
 
             explanation = ScoreExplanationDto(

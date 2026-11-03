@@ -96,9 +96,7 @@ class TokenManager:
         sig_b64 = self._b64_encode(signature)
         return f"{header_b64}.{payload_b64}.{sig_b64}"
 
-    def verify_token(
-        self, token: str, expected_type: TokenType = "access"
-    ) -> dict[str, object]:
+    def verify_token(self, token: str, expected_type: TokenType = "access") -> dict[str, object]:
         parts = token.split(".")
         if len(parts) != 3:
             raise AppError(
@@ -190,4 +188,3 @@ class LoginRateLimiter:
     def reset(self, key: str) -> None:
         normalized = key.strip().lower()
         self._failures.pop(normalized, None)
-

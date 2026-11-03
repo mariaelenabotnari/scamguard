@@ -96,9 +96,7 @@ class SqliteWatchlistRepository:
         )
         self._db.connection.commit()
 
-    def list_paginated(
-        self, page: int, page_size: int
-    ) -> tuple[list[WatchlistChannelDto], int]:
+    def list_paginated(self, page: int, page_size: int) -> tuple[list[WatchlistChannelDto], int]:
         cursor = self._db.connection.cursor()
         cursor.execute("SELECT COUNT(*) AS cnt FROM watchlist_channels")
         count_row = cursor.fetchone()
@@ -174,9 +172,7 @@ class SqliteWatchlistRepository:
             subscribersCount=subscribers_count,
         )
 
-    def update_status(
-        self, channel_id: str, status: WatchlistStatus
-    ) -> WatchlistChannelDto | None:
+    def update_status(self, channel_id: str, status: WatchlistStatus) -> WatchlistChannelDto | None:
         cursor = self._db.connection.cursor()
         cursor.execute(
             "UPDATE watchlist_channels SET status = ? WHERE id = ?",

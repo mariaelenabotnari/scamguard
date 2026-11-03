@@ -203,12 +203,8 @@ def test_32_romanian_and_russian_normalisation_examples(
 
 def test_cedilla_and_comma_romanian_diacritics_produce_identical_hash() -> None:
     normaliser = TextNormaliser()
-    legacy_cedilla = normaliser.normalise(
-        "Preţurile în Chişinău cresc! https://t.me/ch1/10"
-    )
-    modern_comma = normaliser.normalise(
-        "  PREȚURILE în CHIȘINĂU cresc... "
-    )
+    legacy_cedilla = normaliser.normalise("Preţurile în Chişinău cresc! https://t.me/ch1/10")
+    modern_comma = normaliser.normalise("  PREȚURILE în CHIȘINĂU cresc... ")
     assert legacy_cedilla.normalised_text == modern_comma.normalised_text
     assert legacy_cedilla.text_hash == modern_comma.text_hash
     assert normaliser.normalise("Кишинёв").transliterated_text == "kishinev"
@@ -272,9 +268,7 @@ def test_collector_runs_on_5_public_channels_handles_floodwait_and_prevents_dupl
     )
 
     admin_session = login_user(
-        payload=LoginInputDto(
-            email="elena.botnari@scamguard.md", password="scamguard2026"
-        ),
+        payload=LoginInputDto(email="elena.botnari@scamguard.md", password="scamguard2026"),
         auth_service=auth_service,
     )
     token = admin_session.access_token

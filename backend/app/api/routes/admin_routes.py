@@ -27,4 +27,3 @@ def update_system_parameters(
 ) -> SystemParametersDto:
     admin_user = auth_service.require_roles(token, ("admin",))
     return admin_service.update_parameters(payload, updated_by=admin_user.email)
-

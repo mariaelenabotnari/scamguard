@@ -69,4 +69,3 @@ class UpdateSystemParametersInputDto(BaseModel):
     time_window_minutes: int = Field(..., alias="timeWindowMinutes")
     collection_interval_minutes: int = Field(..., alias="collectionIntervalMinutes")
     min_cluster_channels: int = Field(..., alias="minClusterChannels")
-

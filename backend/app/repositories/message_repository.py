@@ -25,9 +25,7 @@ class IMessageRepository(Protocol):
     def list_messages(
         self, channel_id: str | None = None, limit: int = 100
     ) -> list[StoredMessageDto]: ...
-    def purge_deleted_post_raw_text(
-        self, message_id: str
-    ) -> PurgeDeletedPostReceiptDto | None: ...
+    def purge_deleted_post_raw_text(self, message_id: str) -> PurgeDeletedPostReceiptDto | None: ...
     def record_collection_run(self, run: CollectionRunDto) -> CollectionRunDto: ...
     def list_collection_runs(self, limit: int = 20) -> list[CollectionRunDto]: ...
 
@@ -184,9 +182,7 @@ class SqliteMessageRepository:
             )
         return [self._row_to_dto(r) for r in cursor.fetchall()]
 
-    def purge_deleted_post_raw_text(
-        self, message_id: str
-    ) -> PurgeDeletedPostReceiptDto | None:
+    def purge_deleted_post_raw_text(self, message_id: str) -> PurgeDeletedPostReceiptDto | None:
         existing = self.get_message_by_id(message_id)
         if existing is None:
             return None
