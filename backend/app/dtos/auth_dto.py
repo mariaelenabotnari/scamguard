@@ -12,9 +12,11 @@ class AuthUserDto(BaseModel):
 
     id: str = Field(..., description="Unique user identifier")
     email: str = Field(..., description="User work or newsroom email")
+    username: str = Field(default="", description="Unique username")
     full_name: str = Field(..., alias="fullName", description="Display full name")
     organization: str = Field(..., description="Newsroom or research organization")
     role: UserRole = Field(..., description="RBAC role: visitor, journalist, or admin")
+    is_verified: bool = Field(default=True, alias="isVerified")
     account_age_days: int = Field(
         default=0,
         alias="accountAgeDays",
@@ -25,15 +27,42 @@ class AuthUserDto(BaseModel):
 class RegisterInputDto(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
-    full_name: str = Field(..., alias="fullName")
     email: str
-    organization: str = Field(default="Independent Researcher")
     password: str
+    username: str = Field(default="")
+    full_name: str | None = Field(default=None, alias="fullName")
+    organization: str = Field(default="Independent Researcher")
+
+
+class VerifyEmailInputDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    email: str
+    code: str
+
+
+class SendVerificationCodeInputDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    email: str
+
+
+class VerificationResponseDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    message: str
+    email: str
+    code: str | None = None
+    requires_verification: bool = Field(default=True, alias="requiresVerification")
 
 
 class LoginInputDto(BaseModel):
-    email: str
+    model_config = ConfigDict(populate_by_name=True)
+
     password: str
+    email: str | None = None
+    username: str | None = None
+    login: str | None = None
 
 
 class RefreshTokenInputDto(BaseModel):
