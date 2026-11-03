@@ -30,7 +30,7 @@ def recalculate_ranked_channels(
     auth_service: AuthServiceDep,
     token: BearerTokenDep,
 ) -> list[RankedChannelDto]:
-    auth_service.require_role(token, ("journalist", "admin"))
+    auth_service.require_roles(token, ("journalist", "admin"))
     return scoring_service.recalculate_all_scores()
 
 
