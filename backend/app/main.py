@@ -10,6 +10,7 @@ from app.api.routes.collector_routes import router as collector_router
 from app.api.routes.health_routes import router as health_router
 from app.api.routes.health_routes import v1_system_router
 from app.api.routes.narrative_routes import router as narrative_router
+from app.api.routes.scoring_routes import scoring_router
 from app.api.routes.watchlist_routes import router as watchlist_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
     application.include_router(collector_router)
     application.include_router(cluster_router)
     application.include_router(narrative_router)
+    application.include_router(scoring_router)
 
     return application
 
