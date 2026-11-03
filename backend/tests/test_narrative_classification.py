@@ -16,7 +16,7 @@ from app.services.narrative_classifier_service import (
 )
 
 
-def test_10_narrative_categories_batch_inference_unknown_threshold_and_model_version() -> None:
+def test_12_narrative_categories_batch_inference_unknown_threshold_and_model_version() -> None:
     db_manager = DatabaseManager(":memory:")
     hasher = PasswordHasher(iterations=1_000)
     token_manager = TokenManager(secret_key="narrative-test-secret")
@@ -31,7 +31,12 @@ def test_10_narrative_categories_batch_inference_unknown_threshold_and_model_ver
     classifier_service = NarrativeClassifierService(db_manager=db_manager)
 
     categories = get_narrative_categories(classifier_service=classifier_service)
-    assert len(categories) == 10
+    assert len(categories) == 12
+    for cat in categories:
+        assert cat.name
+        assert cat.prototype_claim
+        assert cat.severity in ("low", "medium", "high")
+        assert len(cat.sub_narratives) >= 1
 
     admin_session = login_user(
         payload=LoginInputDto(
@@ -95,6 +100,16 @@ def test_10_narrative_categories_batch_inference_unknown_threshold_and_model_ver
                 text="Meci de fotbal pe stadion și concert la teatru cu meteo bun",
             ),
             ClassifyItemInputDto(
+                targetId="msg-cat-11",
+                targetType="message",
+                text="Băncile comerciale din Chișinău blochează retragerile de depozite și conturi",
+            ),
+            ClassifyItemInputDto(
+                targetId="msg-cat-12",
+                targetType="message",
+                text="Mobilizare secretă și recrutare militară cu ordin la graniță",
+            ),
+            ClassifyItemInputDto(
                 targetId="msg-unknown-01",
                 targetType="message",
                 text="Salut tuturor o zi obișnuită fără cuvinte cheie specifice",
@@ -108,7 +123,7 @@ def test_10_narrative_categories_batch_inference_unknown_threshold_and_model_ver
         auth_service=auth_service,
         classifier_service=classifier_service,
     )
-    assert len(predictions) == 11
+    assert len(predictions) == 13
 
     by_id = {p.target_id: p for p in predictions}
     assert by_id["msg-cat-01"].category == "War in Ukraine and Russia justification"
@@ -130,10 +145,26 @@ def test_10_narrative_categories_batch_inference_unknown_threshold_and_model_ver
         == "Traditional values, religion, anti-LGBT narratives"
     )
     assert by_id["msg-cat-10"].category == "Other / not disinformation"
+    assert by_id["msg-cat-10"].is_disinformation is False
+    assert by_id["msg-cat-10"].fake_news_score < 0.20
+
+    assert (
+        by_id["msg-cat-11"].category
+        == "Financial panic, bank runs and currency devaluation"
+    )
+    assert by_id["msg-cat-11"].is_disinformation is True
+    assert by_id["msg-cat-11"].fake_news_score >= 0.70
+
+    assert (
+        by_id["msg-cat-12"].category
+        == "Forced mobilization and border militarization"
+    )
+    assert by_id["msg-cat-12"].is_disinformation is True
 
     # Below confidence threshold returns "unknown"
     assert by_id["msg-unknown-01"].category == "unknown"
     assert by_id["msg-unknown-01"].confidence < 0.55
+    assert by_id["msg-unknown-01"].is_disinformation is False
 
     # Every persisted prediction stores the exact model_version
     stored = classifier_service.get_prediction("msg-cat-06")

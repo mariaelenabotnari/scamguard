@@ -1,4 +1,4 @@
-"""DTOs for 10-category disinformation narrative classification and batch inference."""
+"""DTOs for disinformation narrative classification, fake news scoring, and batch inference."""
 
 from typing import Literal
 
@@ -13,6 +13,8 @@ class NarrativeCategorySpecDto(BaseModel):
     id: int
     name: str
     prototype_claim: str = Field(..., alias="prototypeClaim")
+    severity: str = Field(default="medium")
+    sub_narratives: list[str] = Field(default_factory=list, alias="subNarratives")
 
 
 class ClassifyItemInputDto(BaseModel):
@@ -39,3 +41,6 @@ class NarrativePredictionDto(BaseModel):
     confidence: float
     matched_claim: str = Field(..., alias="matchedClaim")
     model_version: str = Field(..., alias="modelVersion")
+    fake_news_score: float = Field(default=0.85, alias="fakeNewsScore")
+    is_disinformation: bool = Field(default=True, alias="isDisinformation")
+    sub_narrative: str | None = Field(default=None, alias="subNarrative")
