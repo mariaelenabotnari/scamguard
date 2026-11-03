@@ -10,6 +10,7 @@ export interface NavItemDto {
   path: string;
   icon: IconName;
   badgeCount?: number;
+  adminOnly?: boolean;
 }
 
 export interface SidebarPulseBarDto {

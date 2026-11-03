@@ -1,22 +1,20 @@
 import type { NavItemDto, ShellSummaryDto } from '../dtos/layout.dto';
 
 export const PRIMARY_NAV_ITEMS: readonly NavItemDto[] = [
-  { id: 'dashboard', label: 'Dashboard', path: '/', icon: 'gauge-high' },
-  { id: 'channels', label: 'Channels', path: '/channels', icon: 'user' },
-  { id: 'clusters', label: 'Clusters', path: '/clusters', icon: 'briefcase' },
-  { id: 'settings', label: 'Settings', path: '/admin', icon: 'gear' },
-  { id: 'messages', label: 'Messages', path: '/search', icon: 'envelope' },
-  { id: 'analytics', label: 'Analytics', path: '/ranking', icon: 'chart-pie' },
-  { id: 'integrations', label: 'Alerts & Export', path: '/alerts', icon: 'share-nodes' },
+  { id: 'overview', label: 'Overview', path: '/', icon: 'gauge-high' },
+  { id: 'clusters', label: 'Clusters', path: '/clusters', icon: 'diagram-project' },
+  { id: 'channels', label: 'Channels', path: '/channels', icon: 'tower-broadcast' },
+  { id: 'alerts', label: 'Alerts', path: '/alerts', icon: 'bell', badgeCount: 3 },
+  { id: 'settings', label: 'Settings', path: '/admin', icon: 'gear', adminOnly: true },
 ];
 
 export const MOCK_SHELL_SUMMARY: ShellSummaryDto = {
   lastCollectionLabel: '14:02 Today • Active',
-  unreadAlertsCount: 4,
+  unreadAlertsCount: 3,
   user: {
     fullName: 'Elena Botnari',
     roleLabel: 'Lead Researcher',
-    role: 'journalist',
+    role: 'admin',
     initials: 'EB',
   },
   pulseBars: [

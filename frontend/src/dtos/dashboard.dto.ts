@@ -14,6 +14,8 @@ export interface StatCardMetricDto {
   trendDirection: TrendDirection;
   icon: IconName;
   tone: StatCardTone;
+  subline?: string;
+  targetPath?: string;
 }
 
 export interface DashboardBannerDto {
@@ -41,9 +43,45 @@ export interface ActivityTimelineDto {
   points: readonly TimelinePointDto[];
 }
 
+export interface TopClusterItemDto {
+  id: string;
+  headline: string;
+  narrativeCategory: string;
+  channelsCount: number;
+  timeWindow: string;
+  postedAtLabel: string;
+}
+
+export interface RiskiestChannelItemDto {
+  id: string;
+  handle: string;
+  title: string;
+  score: number;
+  riskBand: 'high' | 'medium' | 'low';
+  sparkline: readonly number[];
+  primaryNarrative: string;
+}
+
+export interface NarrativeCountItemDto {
+  category: string;
+  clustersCount: number;
+  percentage: number;
+}
+
+export interface SystemStatusDto {
+  lastCollectionLabel: string;
+  nextRunLabel: string;
+  connectionStatus: 'ok' | 'degraded' | 'error';
+  analysisDelaySeconds: number;
+}
+
 export interface DashboardOverviewDto {
   range: TimeRangeOption;
   banner: DashboardBannerDto;
   timeline: ActivityTimelineDto;
   stats: readonly StatCardMetricDto[];
+  topClusters?: readonly TopClusterItemDto[];
+  riskiestChannels?: readonly RiskiestChannelItemDto[];
+  narrativeCounts?: readonly NarrativeCountItemDto[];
+  systemStatus?: SystemStatusDto;
 }

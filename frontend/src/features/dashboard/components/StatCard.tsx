@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import type { StatCardMetricDto, StatCardTone } from '../../../dtos/dashboard.dto';
 import { Card, Icon } from '../../../components/ui';
 
@@ -13,12 +14,22 @@ const TONE_BADGE_CLASSES: Record<StatCardTone, string> = {
 };
 
 export function StatCard({ metric }: StatCardProps) {
+  const navigate = useNavigate();
   const isPositive = metric.trendDirection === 'up';
+
+  const handleClick = () => {
+    if (metric.targetPath) {
+      navigate(metric.targetPath);
+    }
+  };
 
   return (
     <Card
       padding="sm"
-      className="flex items-center gap-4 rounded-card bg-surface-card px-4 py-4 shadow-card transition-transform hover:-translate-y-0.5"
+      onClick={metric.targetPath ? handleClick : undefined}
+      className={`flex items-center gap-4 rounded-card bg-surface-card px-4 py-4 shadow-card transition-all ${
+        metric.targetPath ? 'cursor-pointer hover:-translate-y-0.5 hover:shadow-pill' : ''
+      }`}
     >
       <div
         aria-hidden="true"
@@ -28,19 +39,25 @@ export function StatCard({ metric }: StatCardProps) {
       </div>
 
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[11px] font-medium text-ink-muted">{metric.label}</p>
-        <p className="mt-0.5 text-lg font-extrabold tracking-tight text-ink-primary">
+        <p className="truncate text-[11px] font-semibold text-ink-muted">{metric.label}</p>
+        <p className="mt-0.5 text-xl font-extrabold tracking-tight text-ink-primary">
           {metric.formattedValue}
         </p>
-        <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-ink-muted">
-          <Icon
-            name={isPositive ? 'arrow-trend-up' : 'arrow-trend-down'}
-            className={`text-[10px] ${
-              isPositive ? 'text-status-successText' : 'text-status-dangerText'
-            }`}
-          />
-          <span>{metric.formattedDelta}</span>
-        </div>
+        {metric.subline ? (
+          <p className="truncate text-[11px] font-medium text-ink-secondary">
+            {metric.subline}
+          </p>
+        ) : (
+          <div className="mt-0.5 flex items-center gap-1 text-[11px] font-semibold text-ink-muted">
+            <Icon
+              name={isPositive ? 'arrow-trend-up' : 'arrow-trend-down'}
+              className={`text-[10px] ${
+                isPositive ? 'text-status-successText' : 'text-status-dangerText'
+              }`}
+            />
+            <span>{metric.formattedDelta}</span>
+          </div>
+        )}
       </div>
     </Card>
   );

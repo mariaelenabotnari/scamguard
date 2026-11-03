@@ -40,7 +40,7 @@ export function LoginPage({ service = authService }: LoginPageProps) {
             <Icon name="lock" className="text-brand-500" />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">
-            Sign in to Scamguard
+            Sign in to ChorusWatch
           </h1>
           <p className="text-xs font-medium text-ink-muted">
             Authenticate as a journalist or administrator to manage watchlists and export datasets

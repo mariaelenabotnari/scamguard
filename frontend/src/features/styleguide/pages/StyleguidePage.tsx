@@ -57,7 +57,7 @@ export function StyleguidePage() {
       <div className="mx-auto max-w-6xl space-y-8 rounded-shell bg-surface-app p-8 shadow-shell">
         <header className="flex flex-wrap items-center justify-between gap-4 border-b border-brand-200 pb-6">
           <div>
-            <h1 className="text-2xl font-bold text-ink-primary">Scamguard Design System</h1>
+            <h1 className="text-2xl font-bold text-ink-primary">ChorusWatch Design System</h1>
             <p className="mt-1 text-sm text-ink-muted">
               Tokenized UI primitives and Font Awesome icon registry (/styleguide)
             </p>

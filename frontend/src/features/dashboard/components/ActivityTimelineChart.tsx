@@ -1,19 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Card, CardHeader, EmptyState, Tabs } from '../../../components/ui';
+import { Card, CardHeader, EmptyState } from '../../../components/ui';
 import type { ActivityTimelineDto, TimelinePointDto } from '../../../dtos/dashboard.dto';
 import type { TimeRangeOption } from '../../../dtos/layout.dto';
 
 export interface ActivityTimelineChartProps {
   timeline: ActivityTimelineDto;
-  selectedRange: TimeRangeOption;
-  onRangeChange: (range: TimeRangeOption) => void;
+  selectedRange?: TimeRangeOption;
+  onRangeChange?: (range: TimeRangeOption) => void;
 }
-
-const RANGE_TABS: readonly { value: TimeRangeOption; label: string }[] = [
-  { value: '24h', label: '24h' },
-  { value: '7d', label: '7d' },
-  { value: '30d', label: '30d' },
-];
 
 interface PlottedPoint {
   point: TimelinePointDto;
@@ -42,8 +36,6 @@ function buildSmoothSplinePath(coords: readonly { x: number; y: number }[]): str
 
 export function ActivityTimelineChart({
   timeline,
-  selectedRange,
-  onRangeChange,
 }: ActivityTimelineChartProps) {
   const defaultPoint =
     timeline.points.find((p) => p.isHighlighted) ?? timeline.points[1] ?? timeline.points[0];
@@ -96,18 +88,10 @@ export function ActivityTimelineChart({
   const areaPath = `${splinePath} L ${plotted[plotted.length - 1].x.toFixed(1)} ${plotBottomY} L ${plotted[0].x.toFixed(1)} ${plotBottomY} Z`;
 
   return (
-    <Card tone="chart" className="flex flex-1 flex-col justify-between">
+    <Card tone="chart" className="flex flex-col justify-between">
       <CardHeader
-        title={timeline.title}
-        subtitle={timeline.subtitle}
-        action={
-          <Tabs
-            ariaLabel="Timeline range switcher"
-            items={RANGE_TABS}
-            value={selectedRange}
-            onChange={onRangeChange}
-          />
-        }
+        title={timeline.title || 'Messages and flagged clusters'}
+        subtitle={timeline.subtitle || 'Coordinated volume progression across the selected period'}
       />
 
       {/* Plot Canvas */}
