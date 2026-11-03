@@ -53,21 +53,22 @@ export function ChannelDetailPage({ service }: ChannelDetailPageProps) {
                   <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">
                     {channel.handle}
                   </h1>
-                  <Badge variant={channel.riskBand} icon="triangle-exclamation">
+                  <Badge
+                    variant={channel.riskBand === 'high' ? 'high' : channel.riskBand === 'medium' ? 'medium' : 'low'}
+                  >
                     {channel.riskBand.toUpperCase()} RISK • {channel.score}/100
                   </Badge>
                   <Badge variant="neutral">{channel.language}</Badge>
                 </div>
                 <p className="mt-1 text-xs font-medium text-ink-muted">
-                  {channel.title} • {channel.subscribersCount.toLocaleString()} subscribers •
-                  Monitored since {channel.addedAt}
+                  {channel.title} • {channel.subscribersCount.toLocaleString()} subscribers • Monitored since {channel.addedAt}
                 </p>
               </div>
 
               <div className="flex items-center gap-3 rounded-badge bg-surface-card px-4 py-2.5 shadow-card">
                 <div>
                   <p className="text-[10px] font-semibold uppercase text-ink-muted">
-                    7d Score Trajectory
+                    7-Day Score Trend
                   </p>
                   <Sparkline
                     values={channel.scoreHistory.map((p) => p.score)}
@@ -78,11 +79,11 @@ export function ChannelDetailPage({ service }: ChannelDetailPageProps) {
               </div>
             </Card>
 
-            {/* Why Was This Channel Flagged? (Explanation Block - FR-07, NFR-13) */}
+            {/* Why This Score? Plain Language Factor Breakdown */}
             <Card data-testid="channel-explanation-block" className="space-y-4">
               <CardHeader
-                title="Why Was This Channel Flagged? (Coordination Explanation)"
-                subtitle={`Deterministic score breakdown • Parameter Version ${channel.explanation.parameterVersion}`}
+                title="Why Was This Channel Flagged?"
+                subtitle="The primary coordination factors driving this risk assessment"
                 action={
                   <Badge variant="brand" icon="layer-group">
                     {channel.explanation.dominantNarrativeCategory}
@@ -100,39 +101,44 @@ export function ChannelDetailPage({ service }: ChannelDetailPageProps) {
                   <p className="mt-1 text-lg font-extrabold text-ink-primary">
                     +{channel.explanation.breakdown.clusterShareScore} pts
                   </p>
+                  <p className="text-[10px] text-ink-secondary mt-0.5">High volume in multi-channel groups</p>
                 </div>
                 <div className="rounded-badge bg-surface-muted p-3.5">
                   <p className="text-[11px] font-medium text-ink-muted">Copy Delay Speed</p>
                   <p className="mt-1 text-lg font-extrabold text-ink-primary">
                     +{channel.explanation.breakdown.copyDelayScore} pts
                   </p>
+                  <p className="text-[10px] text-ink-secondary mt-0.5">Fast reposting after source</p>
                 </div>
                 <div className="rounded-badge bg-surface-muted p-3.5">
                   <p className="text-[11px] font-medium text-ink-muted">Pair Repetition</p>
                   <p className="mt-1 text-lg font-extrabold text-ink-primary">
                     +{channel.explanation.breakdown.pairRepetitionScore} pts
                   </p>
+                  <p className="text-[10px] text-ink-secondary mt-0.5">Frequently co-posting with same channels</p>
                 </div>
                 <div className="rounded-badge bg-surface-muted p-3.5">
                   <p className="text-[11px] font-medium text-ink-muted">Narrative Weight</p>
                   <p className="mt-1 text-lg font-extrabold text-ink-primary">
                     +{channel.explanation.breakdown.narrativeWeightScore} pts
                   </p>
+                  <p className="text-[10px] text-ink-secondary mt-0.5">Focus on high-impact disinformation</p>
                 </div>
               </div>
 
               <p className="text-xs text-ink-secondary">
-                <strong className="text-ink-primary">Primary Score Driver:</strong>{' '}
+                <strong className="text-ink-primary">Primary Driver:</strong>{' '}
                 {channel.explanation.breakdown.dominantFactor}
               </p>
             </Card>
 
             {/* Two-Column Grid: Co-Moving Channels & Joined Clusters */}
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+              {/* Co-Moving Channels */}
               <Card>
                 <CardHeader
-                  title="Channels It Moves With (Pair Repetition)"
-                  subtitle="Channels posting synchronized messages in the same clusters"
+                  title="Frequently Appears Alongside"
+                  subtitle="Channels posting synchronized copies of the same messages"
                 />
                 <div className="space-y-3">
                   {channel.coMovingChannels.map((peer) => (
@@ -148,22 +154,22 @@ export function ChannelDetailPage({ service }: ChannelDetailPageProps) {
                           {peer.handle}
                         </Link>
                         <p className="text-xs text-ink-muted">
-                          {peer.sharedClustersCount} shared clusters • median lag{' '}
-                          {peer.medianTimeDiffSeconds}s
+                          {peer.sharedClustersCount} shared clusters • median delay {peer.medianTimeDiffSeconds}s
                         </p>
                       </div>
                       <Badge variant="brand">
-                        {Math.round(peer.averageSimilarity * 100)}% avg match
+                        {Math.round(peer.averageSimilarity * 100)}% text similarity
                       </Badge>
                     </div>
                   ))}
                 </div>
               </Card>
 
+              {/* Participating Clusters */}
               <Card>
                 <CardHeader
-                  title="Participating Clusters"
-                  subtitle="Recent multi-channel message clusters joined by this channel"
+                  title="Clusters This Channel Participated In"
+                  subtitle="Recent coordinated cascades containing messages from this channel"
                 />
                 <div className="space-y-3">
                   {channel.joinedClusters.map((cl) => (
@@ -181,7 +187,7 @@ export function ChannelDetailPage({ service }: ChannelDetailPageProps) {
                       </div>
                       <Link to={`/clusters/${cl.clusterId}`}>
                         <Button variant="secondary" size="sm" rightIcon="chevron-right">
-                          Compare
+                          View Cascade
                         </Button>
                       </Link>
                     </div>
@@ -195,4 +201,3 @@ export function ChannelDetailPage({ service }: ChannelDetailPageProps) {
     </AppShell>
   );
 }
-

@@ -100,7 +100,7 @@ describe('ClustersListPage (feat/fe-clusters-list)', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/unable to load coordinated clusters/i),
+        screen.getByText(/unable to load (coordinated )?clusters/i),
       ).toBeInTheDocument();
       expect(screen.getByText(/cluster service unavailable/i)).toBeInTheDocument();
     });

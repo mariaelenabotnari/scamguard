@@ -91,6 +91,12 @@ export class ChannelService implements IChannelService {
         addedBy: 'elena.botnari',
         addedAt: '2026-11-02',
         subscribersCount: 1200,
+        score: 15,
+        riskBand: 'low',
+        primaryNarrative: 'Other / not disinformation',
+        clustersJoinedCount: 0,
+        sparkline: [12, 14, 15, 15, 14, 15, 15],
+        whyExplanation: 'Newly added channel; waiting for initial cluster and coordination analysis.',
       };
       this.watchlistStore = [newEntry, ...this.watchlistStore];
       return Promise.resolve(newEntry);

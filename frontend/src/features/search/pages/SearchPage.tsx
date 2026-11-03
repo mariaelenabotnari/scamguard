@@ -92,31 +92,24 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
   return (
     <AppShell>
       <div className="space-y-6">
-        <Card
-          tone="banner"
-          padding="lg"
-          className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
-        >
+        {/* Page Header */}
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">
-              Messages & Narrative Search
+              Search Results
             </h1>
-            <p className="mt-1 text-xs font-medium text-ink-muted">
-              Search across monitored Telegram channels, message texts, and coordinated clusters
-              with inline score explanations (NFR-13)
+            <p className="mt-0.5 text-xs font-medium text-ink-muted">
+              Search across watched channels, individual messages, and multi-channel clusters.
             </p>
           </div>
-          <Badge variant="brand" icon="magnifying-glass">
-            Full-Text & Semantic Index
-          </Badge>
-        </Card>
+        </div>
 
         {/* Search Input & Result Type Tabs */}
         <Card padding="sm" className="flex flex-col justify-between gap-4 lg:flex-row lg:items-center">
           <div className="w-full lg:max-w-md">
             <Input
               aria-label="Search channels, messages, and clusters"
-              placeholder="Search by @channel, Romanian/Russian text, or narrative..."
+              placeholder="Search channels, messages or clusters..."
               leftIcon="magnifying-glass"
               value={queryInput}
               onChange={(e) => handleQueryChange(e.target.value)}
@@ -157,7 +150,7 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
             {/* Channels Section */}
             {showChannels && results.channels.length > 0 ? (
               <section aria-label="Matching channels" className="space-y-3">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-ink-muted">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
                   Channels ({results.channels.length})
                 </h2>
                 {results.channels.map((ch) => (
@@ -174,19 +167,21 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
                         >
                           {ch.handle}
                         </Link>
-                        <Badge variant={ch.riskBand}>
-                          {ch.riskBand.toUpperCase()} • {ch.score}/100
+                        <Badge
+                          variant={ch.score >= 70 ? 'high' : ch.score >= 40 ? 'medium' : 'low'}
+                        >
+                          {ch.score >= 70 ? 'HIGH' : ch.score >= 40 ? 'MEDIUM' : 'LOW'} {ch.score}
                         </Badge>
                         <Badge variant="brand">{ch.primaryNarrative}</Badge>
                       </div>
                       <p className="text-xs text-ink-secondary">
-                        <strong>Score Explanation ({ch.explanation.parameterVersion}):</strong>{' '}
-                        {ch.explanation.summary} ({ch.explanation.breakdown.dominantFactor})
+                        <span className="font-semibold text-brand-700">Found because (Score Explanation):</span>{' '}
+                        {ch.explanation.summary}
                       </p>
                     </div>
                     <Link to={`/channels/${ch.id}`}>
                       <Button variant="secondary" size="sm" rightIcon="chevron-right">
-                        Channel Profile
+                        Inspect Channel
                       </Button>
                     </Link>
                   </Card>
@@ -197,7 +192,7 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
             {/* Messages Section */}
             {showMessages && results.messages.length > 0 ? (
               <section aria-label="Matching messages" className="space-y-3">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-ink-muted">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
                   Messages ({results.messages.length})
                 </h2>
                 {results.messages.map((msg) => (
@@ -210,8 +205,10 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
                         >
                           {msg.handle}
                         </Link>
-                        <Badge variant={msg.riskBand}>
-                          Channel Score {msg.channelScore}/100
+                        <Badge
+                          variant={msg.channelScore >= 70 ? 'high' : msg.channelScore >= 40 ? 'medium' : 'low'}
+                        >
+                          Risk {msg.channelScore}
                         </Badge>
                         <Badge variant="brand">{msg.narrativeCategory}</Badge>
                       </div>
@@ -226,12 +223,13 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
 
                     <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-ink-secondary">
                       <span>
-                        <strong>Explanation:</strong> {msg.explanation.summary}
+                        <span className="font-semibold text-brand-700">Found because:</span>{' '}
+                        {msg.explanation.summary}
                       </span>
                       {msg.clusterId ? (
                         <Link to={`/clusters/${msg.clusterId}`}>
                           <Button variant="outline" size="sm" rightIcon="arrow-right">
-                            View Cluster
+                            View In Cluster
                           </Button>
                         </Link>
                       ) : null}
@@ -244,8 +242,8 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
             {/* Clusters Section */}
             {showClusters && results.clusters.length > 0 ? (
               <section aria-label="Matching clusters" className="space-y-3">
-                <h2 className="text-sm font-bold uppercase tracking-wider text-ink-muted">
-                  Coordinated Clusters ({results.clusters.length})
+                <h2 className="text-xs font-bold uppercase tracking-wider text-ink-muted">
+                  Clusters ({results.clusters.length})
                 </h2>
                 {results.clusters.map((cl) => (
                   <Card
@@ -260,14 +258,14 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
                         </span>
                         <Badge variant="brand">{cl.narrativeCategory}</Badge>
                         <Badge variant="high">
-                          {Math.round(cl.averageSimilarity * 100)}% Similarity
+                          {Math.round(cl.averageSimilarity * 100)}% Match
                         </Badge>
                       </div>
                       <p className="text-xs text-ink-muted">“{cl.representativeSnippet}”</p>
                     </div>
                     <Link to={`/clusters/${cl.id}`}>
                       <Button variant="primary" size="sm" rightIcon="chevron-right">
-                        Compare
+                        Inspect Cluster
                       </Button>
                     </Link>
                   </Card>
@@ -280,4 +278,3 @@ export function SearchPage({ service = searchService }: SearchPageProps) {
     </AppShell>
   );
 }
-

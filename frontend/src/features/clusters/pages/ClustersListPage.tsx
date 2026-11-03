@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { AppShell } from '../../../components/layout';
 import {
-  Badge,
   Button,
   Card,
   EmptyState,
@@ -10,6 +9,7 @@ import {
   Skeleton,
 } from '../../../components/ui';
 import type { IClusterService } from '../../../services/cluster.service';
+import { ExportModal } from '../../export/components/ExportModal';
 import { ClustersList } from '../components/ClustersList';
 import { useClustersList } from '../hooks/useClustersList';
 
@@ -20,6 +20,9 @@ export interface ClustersListPageProps {
 export function ClustersListPage({ service }: ClustersListPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [minChannels, setMinChannels] = useState<string>('3');
+  const [sortBy, setSortBy] = useState<string>('channels');
+
   const { clusters, categories, isLoading, error, reload } = useClustersList(
     selectedCategory,
     searchQuery,
@@ -31,34 +34,57 @@ export function ClustersListPage({ service }: ClustersListPageProps) {
     ...categories.map((cat) => ({ value: cat, label: cat })),
   ];
 
+  const minChannelsOptions = [
+    { value: '2', label: 'Min 2+ Channels' },
+    { value: '3', label: 'Min 3+ Channels (Default)' },
+    { value: '4', label: 'Min 4+ Channels' },
+    { value: '5', label: 'Min 5+ Channels' },
+  ];
+
+  const sortOptions = [
+    { value: 'channels', label: 'Most Channels' },
+    { value: 'newest', label: 'Newest First' },
+    { value: 'speed', label: 'Fastest Spread' },
+  ];
+
+  const filteredClusters = clusters
+    .filter((cl) => {
+      const minN = parseInt(minChannels, 10) || 2;
+      return cl.participants.length >= minN;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'channels') {
+        return b.participants.length - a.participants.length;
+      }
+      if (sortBy === 'speed') {
+        return a.spanMinutes - b.spanMinutes;
+      }
+      return b.firstPostedAt.localeCompare(a.firstPostedAt);
+    });
+
   return (
     <AppShell>
       <div className="space-y-6">
-        {/* Page Header Banner */}
-        <Card
-          tone="banner"
-          padding="lg"
-          className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
-        >
+        {/* Page Header */}
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">
-              Detected Coordinated Clusters
+              Clusters
             </h1>
-            <p className="mt-1 text-xs font-medium text-ink-muted">
-              Near-duplicate and semantically equivalent messages posted across multiple channels
-              within a short time window
+            <p className="mt-0.5 text-xs font-medium text-ink-muted">
+              A cluster is one message, or near copies of it, that several channels posted within a short time.
             </p>
           </div>
-          <Badge variant="brand" icon="layer-group">
-            Threshold ≥ 0.85 • 60m Window
-          </Badge>
-        </Card>
+          <div className="flex items-center gap-3">
+            <ExportModal defaultEntity="clusters" />
+          </div>
+        </div>
 
-        {/* Search & Narrative Category Filter Bar */}
-        <Card padding="sm" className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Filter Bar: Search, Narrative, Min Channels, Sort */}
+        <Card padding="sm" className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Input
             aria-label="Search clusters"
-            placeholder="Search by message snippet, @channel, or keyword..."
+            placeholder="Search cluster text or keyword..."
             leftIcon="magnifying-glass"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -68,6 +94,18 @@ export function ClustersListPage({ service }: ClustersListPageProps) {
             options={categoryOptions}
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
+          />
+          <Select
+            aria-label="Filter by minimum channels"
+            options={minChannelsOptions}
+            value={minChannels}
+            onChange={(e) => setMinChannels(e.target.value)}
+          />
+          <Select
+            aria-label="Sort clusters"
+            options={sortOptions}
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
           />
         </Card>
 
@@ -80,7 +118,7 @@ export function ClustersListPage({ service }: ClustersListPageProps) {
         ) : error ? (
           <EmptyState
             icon="triangle-exclamation"
-            title="Unable to Load Coordinated Clusters"
+            title="Unable to Load Clusters"
             description={error}
             action={
               <Button variant="primary" size="sm" leftIcon="rotate-right" onClick={reload}>
@@ -88,11 +126,20 @@ export function ClustersListPage({ service }: ClustersListPageProps) {
               </Button>
             }
           />
+        ) : filteredClusters.length === 0 ? (
+          <EmptyState
+            icon="diagram-project"
+            title="No Clusters Found"
+            description={
+              searchQuery
+                ? `No clusters matched "${searchQuery}".`
+                : 'No clusters matched the current narrative and channel filters.'
+            }
+          />
         ) : (
-          <ClustersList clusters={clusters} />
+          <ClustersList clusters={filteredClusters} />
         )}
       </div>
     </AppShell>
   );
 }
-

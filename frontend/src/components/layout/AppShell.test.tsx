@@ -80,7 +80,7 @@ describe('AppShell Layout (Sidebar, Topbar, Full Width)', () => {
     const clustersLink = screen.getByRole('link', { name: /clusters/i });
     fireEvent.click(clustersLink);
     expect(
-      await screen.findByRole('heading', { name: /detected coordinated clusters/i }),
+      await screen.findByRole('heading', { name: /clusters/i }),
     ).toBeInTheDocument();
 
     // Submit search query in Topbar
@@ -88,7 +88,7 @@ describe('AppShell Layout (Sidebar, Topbar, Full Width)', () => {
     fireEvent.change(searchInput, { target: { value: 'chisinau' } });
     fireEvent.submit(screen.getByRole('search'));
     expect(
-      screen.getByRole('heading', { name: /messages & narrative search/i }),
+      screen.getByRole('heading', { name: /search results/i }),
     ).toBeInTheDocument();
   });
 });
