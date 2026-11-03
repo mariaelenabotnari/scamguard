@@ -38,24 +38,19 @@ export function RiskRankingPage({ service }: RiskRankingPageProps) {
     <AppShell>
       <div className="space-y-6">
         {/* Page Header Banner */}
-        <Card
-          tone="banner"
-          padding="lg"
-          className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center"
-        >
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div>
             <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">
-              Coordination Risk Ranking
+              Channel Risk Ranking
             </h1>
             <p className="mt-1 text-xs font-medium text-ink-muted">
-              Channels sorted by composite coordination risk score (0–100) with transparent factor
-              explanations
+              Channels sorted by coordination risk score with transparent factor explanations
             </p>
           </div>
           <Badge variant="brand" icon="shield-halved">
-            Parameter Version v3
+            Risk Analysis Active
           </Badge>
-        </Card>
+        </div>
 
         {/* Filter Bar */}
         <Card padding="sm" className="flex flex-wrap items-center justify-between gap-4">
@@ -102,4 +97,3 @@ export function RiskRankingPage({ service }: RiskRankingPageProps) {
     </AppShell>
   );
 }
-

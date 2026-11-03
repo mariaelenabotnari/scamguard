@@ -11,6 +11,12 @@ export interface WatchlistChannelDto {
   addedBy: string;
   addedAt: string;
   subscribersCount: number;
+  score: number;
+  riskBand: RiskBand;
+  primaryNarrative: string;
+  clustersJoinedCount: number;
+  sparkline: readonly number[];
+  whyExplanation: string;
 }
 
 export interface AddWatchlistChannelInputDto {
