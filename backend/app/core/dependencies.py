@@ -12,6 +12,7 @@ from app.repositories.message_repository import SqliteMessageRepository
 from app.repositories.user_repository import SqliteParameterRepository, SqliteUserRepository
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.admin_service import AdminService, IAdminService
+from app.services.alert_service import AlertService, IAlertService
 from app.services.auth_service import AuthService, IAuthService
 from app.services.clustering_service import ClusteringService, IClusteringService
 from app.services.collector_service import (
@@ -24,6 +25,7 @@ from app.services.narrative_classifier_service import (
     INarrativeClassifierService,
     NarrativeClassifierService,
 )
+from app.services.scoring_service import IScoringService, ScoringService
 from app.services.similarity_service import SimilarityService
 from app.services.text_normaliser import TextNormaliser
 from app.services.watchlist_service import IWatchlistService, WatchlistService
@@ -93,6 +95,14 @@ def get_narrative_classifier_service(
     return NarrativeClassifierService(db_manager=db_manager)
 
 
+def get_scoring_service(db_manager: DatabaseDep) -> IScoringService:
+    return ScoringService(db_manager=db_manager)
+
+
+def get_alert_service(db_manager: DatabaseDep) -> IAlertService:
+    return AlertService(db_manager=db_manager)
+
+
 def extract_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str | None:
@@ -112,4 +122,6 @@ ClusteringServiceDep = Annotated[IClusteringService, Depends(get_clustering_serv
 NarrativeClassifierServiceDep = Annotated[
     INarrativeClassifierService, Depends(get_narrative_classifier_service)
 ]
+ScoringServiceDep = Annotated[IScoringService, Depends(get_scoring_service)]
+AlertServiceDep = Annotated[IAlertService, Depends(get_alert_service)]
 BearerTokenDep = Annotated[str | None, Depends(extract_bearer_token)]
