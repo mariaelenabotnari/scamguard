@@ -26,6 +26,7 @@ from app.services.narrative_classifier_service import (
     NarrativeClassifierService,
 )
 from app.services.scoring_service import IScoringService, ScoringService
+from app.services.search_service import ISearchService, SearchService
 from app.services.similarity_service import SimilarityService
 from app.services.text_normaliser import TextNormaliser
 from app.services.watchlist_service import IWatchlistService, WatchlistService
@@ -103,6 +104,18 @@ def get_alert_service(db_manager: DatabaseDep) -> IAlertService:
     return AlertService(db_manager=db_manager)
 
 
+def get_search_service(
+    db_manager: DatabaseDep,
+    scoring_service: Annotated[IScoringService, Depends(get_scoring_service)],
+    clustering_service: Annotated[IClusteringService, Depends(get_clustering_service)],
+) -> ISearchService:
+    return SearchService(
+        db_manager=db_manager,
+        scoring_service=scoring_service,
+        clustering_service=clustering_service,
+    )
+
+
 def extract_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str | None:
@@ -124,4 +137,5 @@ NarrativeClassifierServiceDep = Annotated[
 ]
 ScoringServiceDep = Annotated[IScoringService, Depends(get_scoring_service)]
 AlertServiceDep = Annotated[IAlertService, Depends(get_alert_service)]
+SearchServiceDep = Annotated[ISearchService, Depends(get_search_service)]
 BearerTokenDep = Annotated[str | None, Depends(extract_bearer_token)]
