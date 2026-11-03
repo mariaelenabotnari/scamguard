@@ -92,18 +92,14 @@ def test_login_rate_limiting_refresh_and_logout() -> None:
     for _ in range(5):
         with pytest.raises(AppError) as exc_bad:
             login_user(
-                payload=LoginInputDto(
-                    email="ion.rusu@scamguard.md", password="wrongpassword1"
-                ),
+                payload=LoginInputDto(email="ion.rusu@scamguard.md", password="wrongpassword1"),
                 auth_service=auth_service,
             )
         assert exc_bad.value.status_code == 401
 
     with pytest.raises(AppError) as exc_rate:
         login_user(
-            payload=LoginInputDto(
-                email="ion.rusu@scamguard.md", password="journalist2026"
-            ),
+            payload=LoginInputDto(email="ion.rusu@scamguard.md", password="journalist2026"),
             auth_service=auth_service,
         )
     assert exc_rate.value.status_code == 429
@@ -111,9 +107,7 @@ def test_login_rate_limiting_refresh_and_logout() -> None:
 
     # Admin login succeeds, refresh rotates tokens, and logout revokes access token
     admin_session = login_user(
-        payload=LoginInputDto(
-            email="elena.botnari@scamguard.md", password="scamguard2026"
-        ),
+        payload=LoginInputDto(email="elena.botnari@scamguard.md", password="scamguard2026"),
         auth_service=auth_service,
     )
     assert admin_session.user.role == "admin"
@@ -139,16 +133,12 @@ def test_rbac_enforcement_across_visitor_journalist_and_admin_roles() -> None:
 
     # 1. Visitor (no token) is rejected with 401 UNAUTHORIZED
     with pytest.raises(AppError) as exc_visitor:
-        get_system_parameters(
-            token=None, auth_service=auth_service, admin_service=admin_service
-        )
+        get_system_parameters(token=None, auth_service=auth_service, admin_service=admin_service)
     assert exc_visitor.value.status_code == 401
 
     # 2. Journalist can view parameters but is rejected with 403 FORBIDDEN on update
     journalist_session = login_user(
-        payload=LoginInputDto(
-            email="ion.rusu@scamguard.md", password="journalist2026"
-        ),
+        payload=LoginInputDto(email="ion.rusu@scamguard.md", password="journalist2026"),
         auth_service=auth_service,
     )
     params = get_system_parameters(
@@ -175,9 +165,7 @@ def test_rbac_enforcement_across_visitor_journalist_and_admin_roles() -> None:
 
     # 3. Admin can update parameters (bumps v1.4 -> v1.5) and NFR-01 rejects interval > 10
     admin_session = login_user(
-        payload=LoginInputDto(
-            email="elena.botnari@scamguard.md", password="scamguard2026"
-        ),
+        payload=LoginInputDto(email="elena.botnari@scamguard.md", password="scamguard2026"),
         auth_service=auth_service,
     )
 
@@ -218,4 +206,3 @@ def test_rbac_enforcement_across_visitor_journalist_and_admin_roles() -> None:
     assert "/api/v1/auth/logout" in openapi_paths
     assert "/api/v1/auth/me" in openapi_paths
     assert "/api/v1/admin/parameters" in openapi_paths
-

@@ -140,9 +140,7 @@ class SqliteClusterRepository:
             parameterVersion=str(mapping["parameter_version"]),
         )
 
-    def _load_cluster_channels(
-        self, cluster_id: str
-    ) -> list[ClusterChannelAvatarDto]:
+    def _load_cluster_channels(self, cluster_id: str) -> list[ClusterChannelAvatarDto]:
         cursor = self._db.connection.cursor()
         cursor.execute(
             """
@@ -177,9 +175,7 @@ class SqliteClusterRepository:
             )
         return avatars
 
-    def _load_cluster_messages(
-        self, cluster_id: str
-    ) -> list[ClusterMessageComparisonDto]:
+    def _load_cluster_messages(self, cluster_id: str) -> list[ClusterMessageComparisonDto]:
         cursor = self._db.connection.cursor()
         cursor.execute(
             """
@@ -214,9 +210,7 @@ class SqliteClusterRepository:
             tg_id = int(str(mapping["telegram_message_id"]))
             norm_text = str(mapping["normalised_text"])
             raw_val = mapping["raw_text"]
-            diff_words = [
-                w for w in norm_text.split() if w not in base_words and len(w) > 2
-            ]
+            diff_words = [w for w in norm_text.split() if w not in base_words and len(w) > 2]
             comparisons.append(
                 ClusterMessageComparisonDto(
                     messageId=str(mapping["message_id"]),

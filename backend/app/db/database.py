@@ -60,9 +60,7 @@ class DatabaseManager:
     def get_current_revision(self) -> str:
         self.run_migrations()
         cursor = self._conn.cursor()
-        cursor.execute(
-            "SELECT revision FROM schema_migrations ORDER BY revision DESC LIMIT 1"
-        )
+        cursor.execute("SELECT revision FROM schema_migrations ORDER BY revision DESC LIMIT 1")
         row = cursor.fetchone()
         return str(row["revision"]) if row else str(datetime.now(UTC))
 

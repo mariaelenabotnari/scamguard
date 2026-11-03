@@ -239,9 +239,7 @@ class INarrativeClassifierService(Protocol):
         raw_text: str,
         confidence_threshold: float = 0.55,
     ) -> NarrativePredictionDto: ...
-    def classify_batch(
-        self, payload: BatchClassifyInputDto
-    ) -> list[NarrativePredictionDto]: ...
+    def classify_batch(self, payload: BatchClassifyInputDto) -> list[NarrativePredictionDto]: ...
     def get_prediction(self, target_id: str) -> NarrativePredictionDto | None: ...
 
 
@@ -295,9 +293,7 @@ class NarrativeClassifierService:
 
         for rule in _NARRATIVE_CATEGORIES:
             hits = sum(
-                1
-                for tok in tokens
-                if any(tok.startswith(kw) or kw in tok for kw in rule.keywords)
+                1 for tok in tokens if any(tok.startswith(kw) or kw in tok for kw in rule.keywords)
             )
             if hits > best_hits:
                 best_hits = hits
@@ -323,9 +319,7 @@ class NarrativeClassifierService:
         else:
             category_name = best_rule.name
             matched_claim = best_rule.prototype_claim
-            sub_narrative = (
-                best_rule.sub_narratives[0] if best_rule.sub_narratives else None
-            )
+            sub_narrative = best_rule.sub_narratives[0] if best_rule.sub_narratives else None
             is_disinfo = True
             fake_score = round(min(0.99, confidence * 1.05), 4)
 
@@ -343,9 +337,7 @@ class NarrativeClassifierService:
         self._persist_prediction(prediction)
         return prediction
 
-    def classify_batch(
-        self, payload: BatchClassifyInputDto
-    ) -> list[NarrativePredictionDto]:
+    def classify_batch(self, payload: BatchClassifyInputDto) -> list[NarrativePredictionDto]:
         return [
             self.classify_one(
                 target_id=item.target_id,

@@ -55,11 +55,7 @@ class FakeTelegramClientAdapter:
             raise FloodWaitError(seconds=wait_sec)
 
         posts = self._posts.get(channel_id, [])
-        return [
-            p
-            for p in posts
-            if p.telegram_message_id > min_message_id
-        ]
+        return [p for p in posts if p.telegram_message_id > min_message_id]
 
     @staticmethod
     def _default_posts() -> dict[str, list[RawTelegramPostDto]]:
@@ -166,9 +162,7 @@ class TelegramCollectorService:
                     self._sleep_fn(float(flood_err.seconds))
                 except Exception as exc:
                     backoff = float(2 ** (attempt - 1))
-                    logger.error(
-                        f"Error polling {channel.handle} (attempt {attempt}): {exc}"
-                    )
+                    logger.error(f"Error polling {channel.handle} (attempt {attempt}): {exc}")
                     if attempt >= self._max_retries:
                         errors.append(f"{channel.handle}: {exc}")
                     else:

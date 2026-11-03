@@ -149,9 +149,7 @@ class AuthService:
             )
         return user
 
-    def _build_session(
-        self, stored: StoredUserRecord, account_age_days: int
-    ) -> AuthSessionDto:
+    def _build_session(self, stored: StoredUserRecord, account_age_days: int) -> AuthSessionDto:
         access_token = self._token_manager.create_token(
             user_id=stored.id, role=stored.role, token_type="access", ttl_seconds=3600
         )
@@ -177,4 +175,3 @@ class AuthService:
             role=stored.role,
             accountAgeDays=account_age_days,
         )
-

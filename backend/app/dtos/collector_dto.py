@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-DetectedLanguage = Literal["RO", "RU", "OTHER"]
+DetectedLanguage = Literal["RO", "RU", "MIXED", "OTHER"]
 CollectionRunStatus = Literal["completed", "partial", "failed"]
 
 
@@ -23,9 +23,12 @@ class NormalisedTextDto(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     normalised_text: str = Field(..., alias="normalisedText")
-    transliterated_text: str = Field(..., alias="transliteratedText")
+    transliterated_text: str = Field(default="", alias="transliteratedText")
     text_hash: str = Field(..., alias="textHash")
+    text_model: str = Field(default="", alias="textModel")
+    text_display: str = Field(default="", alias="textDisplay")
     language: DetectedLanguage
+    is_mixed_script: bool = Field(default=False, alias="isMixedScript")
 
 
 class StoredMessageDto(BaseModel):
@@ -42,6 +45,9 @@ class StoredMessageDto(BaseModel):
     raw_text: str | None = Field(default=None, alias="rawText")
     normalised_text: str = Field(..., alias="normalisedText")
     text_hash: str = Field(..., alias="textHash")
+    text_model: str | None = Field(default=None, alias="textModel")
+    text_display: str | None = Field(default=None, alias="textDisplay")
+    is_mixed_script: bool = Field(default=False, alias="isMixedScript")
 
 
 class CollectionRunDto(BaseModel):

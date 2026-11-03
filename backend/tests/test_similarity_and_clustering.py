@@ -414,9 +414,7 @@ def test_same_channel_messages_are_never_compared_and_clustering_is_reproducible
     )
 
     admin_session = login_user(
-        payload=LoginInputDto(
-            email="elena.botnari@scamguard.md", password="scamguard2026"
-        ),
+        payload=LoginInputDto(email="elena.botnari@scamguard.md", password="scamguard2026"),
         auth_service=auth_service,
     )
     token = admin_session.access_token
@@ -447,9 +445,7 @@ def test_same_channel_messages_are_never_compared_and_clustering_is_reproducible
     summaries = list_detected_clusters(clustering_service=clustering_service)
     assert len(summaries) == 1
 
-    detail = get_cluster_comparison(
-        cluster_id=run_1[0].id, clustering_service=clustering_service
-    )
+    detail = get_cluster_comparison(cluster_id=run_1[0].id, clustering_service=clustering_service)
     assert len(detail.messages) == 3
     assert any("exclusiv" in m.changed_phrases for m in detail.messages)
     assert watchlist_repo.get_by_id("ch-01") is not None

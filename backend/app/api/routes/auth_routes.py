@@ -54,4 +54,3 @@ def get_me(
     auth_service: AuthServiceDep,
 ) -> AuthUserDto:
     return auth_service.require_roles(token, ("journalist", "admin"))
-

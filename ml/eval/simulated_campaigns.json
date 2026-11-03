@@ -1,0 +1,122 @@
+[
+  {
+    "campaign_id": "camp-00",
+    "narrative": "Sanctions, energy prices and economy fear",
+    "channel_ids": [
+      "channel_md_coord_0_0",
+      "channel_md_coord_0_1",
+      "channel_md_coord_0_2",
+      "channel_md_coord_0_3"
+    ],
+    "message_ids": [
+      "msg-coord-0-0",
+      "msg-coord-0-1",
+      "msg-coord-0-2",
+      "msg-coord-0-3"
+    ],
+    "variation_types": [
+      "exact",
+      "multilingual_rewrite",
+      "multilingual_rewrite",
+      "multilingual_rewrite"
+    ],
+    "lead_channel": "channel_md_coord_0_0",
+    "span_minutes": 24
+  },
+  {
+    "campaign_id": "camp-01",
+    "narrative": "Moldova government and elections delegitimisation",
+    "channel_ids": [
+      "channel_md_coord_1_0",
+      "channel_md_coord_1_1",
+      "channel_md_coord_1_2",
+      "channel_md_coord_1_3"
+    ],
+    "message_ids": [
+      "msg-coord-1-0",
+      "msg-coord-1-1",
+      "msg-coord-1-2",
+      "msg-coord-1-3"
+    ],
+    "variation_types": [
+      "exact",
+      "multilingual_rewrite",
+      "multilingual_rewrite",
+      "multilingual_rewrite"
+    ],
+    "lead_channel": "channel_md_coord_1_0",
+    "span_minutes": 24
+  },
+  {
+    "campaign_id": "camp-02",
+    "narrative": "Anti-NATO / anti-West",
+    "channel_ids": [
+      "channel_md_coord_2_0",
+      "channel_md_coord_2_1",
+      "channel_md_coord_2_2",
+      "channel_md_coord_2_3"
+    ],
+    "message_ids": [
+      "msg-coord-2-0",
+      "msg-coord-2-1",
+      "msg-coord-2-2",
+      "msg-coord-2-3"
+    ],
+    "variation_types": [
+      "exact",
+      "multilingual_rewrite",
+      "multilingual_rewrite",
+      "multilingual_rewrite"
+    ],
+    "lead_channel": "channel_md_coord_2_0",
+    "span_minutes": 24
+  },
+  {
+    "campaign_id": "camp-03",
+    "narrative": "Anti-EU / \"Europe is falling apart\"",
+    "channel_ids": [
+      "channel_md_coord_3_0",
+      "channel_md_coord_3_1",
+      "channel_md_coord_3_2",
+      "channel_md_coord_3_3"
+    ],
+    "message_ids": [
+      "msg-coord-3-0",
+      "msg-coord-3-1",
+      "msg-coord-3-2",
+      "msg-coord-3-3"
+    ],
+    "variation_types": [
+      "exact",
+      "multilingual_rewrite",
+      "multilingual_rewrite",
+      "multilingual_rewrite"
+    ],
+    "lead_channel": "channel_md_coord_3_0",
+    "span_minutes": 24
+  },
+  {
+    "campaign_id": "camp-04",
+    "narrative": "Transnistria / Gagauzia and separatism",
+    "channel_ids": [
+      "channel_md_coord_4_0",
+      "channel_md_coord_4_1",
+      "channel_md_coord_4_2",
+      "channel_md_coord_4_3"
+    ],
+    "message_ids": [
+      "msg-coord-4-0",
+      "msg-coord-4-1",
+      "msg-coord-4-2",
+      "msg-coord-4-3"
+    ],
+    "variation_types": [
+      "exact",
+      "multilingual_rewrite",
+      "multilingual_rewrite",
+      "multilingual_rewrite"
+    ],
+    "lead_channel": "channel_md_coord_4_0",
+    "span_minutes": 24
+  }
+]

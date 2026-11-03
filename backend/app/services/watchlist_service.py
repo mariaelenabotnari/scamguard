@@ -30,9 +30,7 @@ class WatchlistService:
     def __init__(self, repo: IWatchlistRepository) -> None:
         self._repo = repo
 
-    def list_channels(
-        self, page: int = 1, page_size: int = 50
-    ) -> PaginatedWatchlistResponseDto:
+    def list_channels(self, page: int = 1, page_size: int = 50) -> PaginatedWatchlistResponseDto:
         safe_page = max(1, page)
         safe_size = min(max(1, page_size), 500)
         items, total = self._repo.list_paginated(page=safe_page, page_size=safe_size)
@@ -83,9 +81,7 @@ class WatchlistService:
                 message=f"Channel '{channel_id}' was not found on the watch list.",
                 status_code=404,
             )
-        next_status: WatchlistStatus = (
-            "paused" if existing.status == "active" else "active"
-        )
+        next_status: WatchlistStatus = "paused" if existing.status == "active" else "active"
         updated = self._repo.update_status(channel_id=channel_id, status=next_status)
         if updated is None:
             raise AppError(
