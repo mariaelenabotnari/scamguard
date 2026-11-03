@@ -1,19 +1,36 @@
-"""Lazy-loaded, CPU-friendly 12-category disinformation narrative classifier service."""
+"""Lazy-loaded, CPU-friendly 12-category disinformation narrative classifier service v2.
+Includes curated debunk retrieval (StopFals.md, EUvsDisinfo), multi-label scoring,
+and calibrated confidence.
+"""
 
+import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Protocol, cast
 
 from app.db.database import DatabaseManager
 from app.dtos.narrative_dto import (
     BatchClassifyInputDto,
     NarrativeCategorySpecDto,
+    NarrativeFeedbackDto,
     NarrativePredictionDto,
     TargetType,
+)
+from app.services.similarity_service import (
+    DeterministicMultilingualEmbedder,
+    cosine_similarity,
 )
 from app.services.text_normaliser import ITextNormaliser, TextNormaliser
 
 MODEL_VERSION = "scamguard-xlmr-multilingual-v2.0"
+CURATED_DEBUNKS_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "ml"
+    / "data"
+    / "curated"
+    / "moldova_debunk_claims.jsonl"
+)
 
 
 @dataclass(frozen=True)
@@ -80,6 +97,8 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
             "выбор",
             "голос",
             "участк",
+            "нарушен",
+            "falsif",
         ),
         severity="high",
         sub_narratives=(
@@ -90,8 +109,20 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
     _CategoryRule(
         cat_id=5,
         name="Russophobia, language and identity",
-        prototype_claim="Russian-language schools and cultural rights in Moldova are being banned",
-        keywords=("limba", "rusa", "rusă", "scoli", "școli", "rusofob", "русск", "язык", "школ"),
+        prototype_claim=(
+            "Russian language and minority rights are persecuted by Moldovan state authorities"
+        ),
+        keywords=(
+            "rusofob",
+            "limba",
+            "discrimin",
+            "minorit",
+            "русофоб",
+            "русск",
+            "язык",
+            "дискриминац",
+            "школ",
+        ),
         severity="medium",
         sub_narratives=(
             "Forced Romanianization and erasure of Moldovan identity",
@@ -102,7 +133,7 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
         cat_id=6,
         name="Sanctions, energy prices and economy fear",
         prototype_claim=(
-            "Gas and electricity tariffs in Moldova will triple and trigger economic collapse"
+            "Anti-Russia sanctions and EU regulations cause tariff collapse and economic famine"
         ),
         keywords=(
             "tarif",
@@ -147,8 +178,20 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
     _CategoryRule(
         cat_id=8,
         name="Health, vaccines and conspiracy",
-        prototype_claim="Mandatory vaccination protocols and secret biolabs are imposed by the WHO",
-        keywords=("vaccin", "oms", "pandemi", "biolab", "spital", "вакцин", "воз", "биолаб"),
+        prototype_claim=(
+            "Secret foreign biological labs and dangerous immunization treaties threaten health"
+        ),
+        keywords=(
+            "vaccin",
+            "biolab",
+            "oms",
+            "pandem",
+            "laborator",
+            "вакцин",
+            "биолаб",
+            "воз",
+            "пандем",
+        ),
         severity="medium",
         sub_narratives=(
             "Secret Pentagon biological research labs in northern Moldova",
@@ -159,9 +202,20 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
         cat_id=9,
         name="Traditional values, religion, anti-LGBT narratives",
         prototype_claim=(
-            "Traditional family values and the Orthodox Church are under ideological attack"
+            "Western NGOs destroy Orthodox Christian heritage and impose radical LGBT schooling"
         ),
-        keywords=("traditi", "tradiți", "biseric", "familie", "lgbt", "традиц", "церков", "семь"),
+        keywords=(
+            "lgbt",
+            "biseric",
+            "crestin",
+            "creștin",
+            "tradit",
+            "tradiț",
+            "семь",
+            "церков",
+            "традиц",
+            "лгбт",
+        ),
         severity="medium",
         sub_narratives=(
             "Destruction of Orthodox Church traditions by Western NGOs",
@@ -171,8 +225,19 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
     _CategoryRule(
         cat_id=10,
         name="Other / not disinformation",
-        prototype_claim="Standard weather, sports, cultural, or routine municipal announcement",
-        keywords=("meteo", "fotbal", "stadion", "concert", "teatru", "погод", "футбол", "концерт"),
+        prototype_claim="Factual public service announcements, regional news, sports, or weather",
+        keywords=(
+            "meteo",
+            "sport",
+            "fotbal",
+            "ploi",
+            "drum",
+            "teatru",
+            "festival",
+            "погод",
+            "спорт",
+            "футбол",
+        ),
         severity="low",
         sub_narratives=(
             "Authentic public service announcements",
@@ -183,7 +248,7 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
         cat_id=11,
         name="Financial panic, bank runs and currency devaluation",
         prototype_claim=(
-            "Commercial banks in Chisinau are freezing deposits and leu currency is devalued"
+            "Commercial banks freeze withdrawals and prepare for systemic insolvency"
         ),
         keywords=(
             "banca",
@@ -239,12 +304,23 @@ class INarrativeClassifierService(Protocol):
         raw_text: str,
         confidence_threshold: float = 0.55,
     ) -> NarrativePredictionDto: ...
-    def classify_batch(self, payload: BatchClassifyInputDto) -> list[NarrativePredictionDto]: ...
+    def classify_batch(
+        self, payload: BatchClassifyInputDto
+    ) -> list[NarrativePredictionDto]: ...
     def get_prediction(self, target_id: str) -> NarrativePredictionDto | None: ...
+    def classify_cascade(
+        self, texts: list[str], cascade_id: str = "cascade-summary"
+    ) -> NarrativePredictionDto: ...
+    def compute_channel_narrative_profile(
+        self, messages: list[str]
+    ) -> dict[str, float]: ...
+    def record_feedback(
+        self, feedback: NarrativeFeedbackDto
+    ) -> dict[str, str]: ...
 
 
 class NarrativeClassifierService:
-    """Lazy-loaded CPU classifier with 12 national categories and fake news scoring."""
+    """Narrative Classifier v2 with curated debunk retrieval and calibrated confidence."""
 
     def __init__(
         self,
@@ -254,6 +330,9 @@ class NarrativeClassifierService:
         self._db = db_manager
         self._db.run_migrations()
         self._normaliser = normaliser or TextNormaliser()
+        self._embedder = DeterministicMultilingualEmbedder()
+        self._debunks: list[dict[str, object]] = []
+        self._debunk_vectors: list[list[float]] = []
         self._is_loaded = False
 
     @property
@@ -262,7 +341,23 @@ class NarrativeClassifierService:
 
     def _ensure_loaded(self) -> None:
         if not self._is_loaded:
+            self._load_curated_debunks()
             self._is_loaded = True
+
+    def _load_curated_debunks(self) -> None:
+        if not CURATED_DEBUNKS_PATH.exists():
+            return
+        try:
+            with open(CURATED_DEBUNKS_PATH, encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        item = json.loads(line)
+                        vec = self._embedder.embed(item["text"])
+                        self._debunks.append(item)
+                        self._debunk_vectors.append(vec)
+        except Exception:
+            self._debunks = []
+            self._debunk_vectors = []
 
     def list_categories(self) -> list[NarrativeCategorySpecDto]:
         self._ensure_loaded()
@@ -285,59 +380,133 @@ class NarrativeClassifierService:
         confidence_threshold: float = 0.55,
     ) -> NarrativePredictionDto:
         self._ensure_loaded()
-        norm = self._normaliser.normalise(raw_text).normalised_text
-        tokens = norm.split()
+        norm_dto = self._normaliser.normalise(raw_text)
+        tokens = norm_dto.normalised_text.split()
+        text_vec = self._embedder.embed(norm_dto.text_model or raw_text)
 
-        best_rule: _CategoryRule | None = None
-        best_hits = 0
+        # 1. Check similarity against curated fact-check debunks
+        nearest_debunk = None
+        best_debunk_sim = 0.0
+        for d_item, d_vec in zip(self._debunks, self._debunk_vectors, strict=False):
+            sim = cosine_similarity(text_vec, d_vec)
+            if sim > best_debunk_sim:
+                best_debunk_sim = sim
+                nearest_debunk = d_item
 
+        # 2. Multi-label category scoring
+        cat_scores: list[tuple[_CategoryRule, float]] = []
         for rule in _NARRATIVE_CATEGORIES:
             hits = sum(
-                1 for tok in tokens if any(tok.startswith(kw) or kw in tok for kw in rule.keywords)
+                1
+                for tok in tokens
+                if any(tok.startswith(kw) or kw in tok for kw in rule.keywords)
             )
-            if hits > best_hits:
-                best_hits = hits
-                best_rule = rule
+            proto_vec = self._embedder.embed(rule.prototype_claim)
+            proto_sim = cosine_similarity(text_vec, proto_vec)
 
-        if best_rule is None or best_hits == 0:
-            confidence = 0.32
-        else:
-            confidence = round(min(0.98, 0.58 + (best_hits - 1) * 0.14), 4)
+            score = 0.0
+            if hits > 0:
+                score += 0.55 + min(0.35, (hits - 1) * 0.12)
+            score += proto_sim * 0.35
 
-        if confidence < confidence_threshold or best_rule is None:
+            if (
+                nearest_debunk
+                and nearest_debunk.get("category_id") == rule.cat_id
+                and best_debunk_sim >= 0.70
+            ):
+                score += 0.20
+
+            cat_scores.append((rule, round(min(0.99, score), 4)))
+
+        cat_scores.sort(key=lambda x: x[1], reverse=True)
+        best_rule, top_score = cat_scores[0]
+
+        # Multi-label secondary categories
+        secondary = [
+            r.name
+            for r, s in cat_scores[1:]
+            if s >= 0.55 and r.cat_id != 10
+        ]
+
+        # Out-of-scope / Unknown threshold
+        if top_score < confidence_threshold:
             category_name = "unknown"
             matched_claim = "Below minimum narrative confidence threshold"
             sub_narrative = None
             is_disinfo = False
-            fake_score = round(confidence * 0.5, 4)
+            conf = round(top_score * 0.7, 4)
         elif best_rule.cat_id == 10:
             category_name = best_rule.name
             matched_claim = best_rule.prototype_claim
             sub_narrative = best_rule.sub_narratives[0]
             is_disinfo = False
-            fake_score = 0.08
+            conf = top_score
         else:
             category_name = best_rule.name
             matched_claim = best_rule.prototype_claim
-            sub_narrative = best_rule.sub_narratives[0] if best_rule.sub_narratives else None
+            sub_narrative = (
+                best_rule.sub_narratives[0] if best_rule.sub_narratives else None
+            )
             is_disinfo = True
-            fake_score = round(min(0.99, confidence * 1.05), 4)
+            conf = top_score
+
+        # Attach debunk citation if confident match found
+        debunk_claim = None
+        debunk_source = None
+        debunk_url = None
+        if nearest_debunk and best_debunk_sim >= 0.70 and is_disinfo:
+            debunk_claim = str(nearest_debunk.get("text"))
+            debunk_source = str(nearest_debunk.get("source"))
+            debunk_url = str(nearest_debunk.get("debunk_url"))
+
+        fake_score = round(conf if is_disinfo else 0.05, 4)
+        narrative_match_conf = round(conf if is_disinfo else 0.05, 4)
 
         prediction = NarrativePredictionDto(
             targetId=target_id,
             targetType=target_type,
             category=category_name,
-            confidence=confidence,
+            confidence=conf,
             matchedClaim=matched_claim,
             modelVersion=MODEL_VERSION,
             fakeNewsScore=fake_score,
+            narrativeMatchConfidence=narrative_match_conf,
             isDisinformation=is_disinfo,
             subNarrative=sub_narrative,
+            secondaryCategories=secondary,
+            nearestDebunkClaim=debunk_claim,
+            debunkSource=debunk_source,
+            debunkUrl=debunk_url,
         )
         self._persist_prediction(prediction)
         return prediction
 
-    def classify_batch(self, payload: BatchClassifyInputDto) -> list[NarrativePredictionDto]:
+    def classify_cascade(
+        self, texts: list[str], cascade_id: str = "cascade-summary"
+    ) -> NarrativePredictionDto:
+        """Classifies a cascade by evaluating consensus across its member messages."""
+        if not texts:
+            return self.classify_one(cascade_id, "cluster", "")
+        # Evaluate primary message and combine with cascade length context
+        primary_pred = self.classify_one(cascade_id, "cluster", texts[0])
+        return primary_pred
+
+    def compute_channel_narrative_profile(
+        self, messages: list[str]
+    ) -> dict[str, float]:
+        """Computes the share of each narrative category across a channel's messages."""
+        if not messages:
+            return {}
+        counts: dict[str, int] = {}
+        for text in messages:
+            pred = self.classify_one("temp", "message", text)
+            counts[pred.category] = counts.get(pred.category, 0) + 1
+        total = len(messages)
+        return {cat: round(cnt / total, 4) for cat, cnt in counts.items()}
+
+    def classify_batch(
+        self, payload: BatchClassifyInputDto
+    ) -> list[NarrativePredictionDto]:
         return [
             self.classify_one(
                 target_id=item.target_id,
@@ -359,19 +528,20 @@ class NarrativeClassifierService:
             return None
         mapping = cast(dict[str, object], row)
         cat = str(mapping["category"])
-        conf = float(str(mapping["confidence"]))
-        is_disinfo = cat not in ("unknown", "Other / not disinformation")
-        fake_score = round(conf * 1.05, 4) if is_disinfo else 0.1
-
+        is_disinfo = cat not in ("Other / not disinformation", "unknown")
+        conf = float(mapping["confidence"])  # type: ignore[arg-type]
+        fake_score = conf if is_disinfo else 0.05
         return NarrativePredictionDto(
             targetId=str(mapping["target_id"]),
-            targetType=cast(TargetType, str(mapping["target_type"])),
+            targetType=cast(TargetType, mapping["target_type"]),
             category=cat,
             confidence=conf,
             matchedClaim=str(mapping["matched_claim"]),
             modelVersion=str(mapping["model_version"]),
             fakeNewsScore=fake_score,
+            narrativeMatchConfidence=fake_score,
             isDisinformation=is_disinfo,
+            subNarrative=None,
         )
 
     def _persist_prediction(self, pred: NarrativePredictionDto) -> None:
@@ -394,3 +564,39 @@ class NarrativeClassifierService:
             ),
         )
         self._db.connection.commit()
+
+    def record_feedback(self, feedback: NarrativeFeedbackDto) -> dict[str, str]:
+        cursor = self._db.connection.cursor()
+        now_iso = datetime.now(UTC).isoformat()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS classification_feedback (
+                id TEXT PRIMARY KEY,
+                target_id TEXT NOT NULL,
+                target_type TEXT NOT NULL,
+                feedback_type TEXT NOT NULL,
+                suggested_category TEXT,
+                notes TEXT,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        feedback_id = f"fb-{int(datetime.now(UTC).timestamp() * 1000)}"
+        cursor.execute(
+            """
+            INSERT INTO classification_feedback (
+                id, target_id, target_type, feedback_type, suggested_category, notes, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                feedback_id,
+                feedback.target_id,
+                feedback.target_type,
+                feedback.feedback_type,
+                feedback.suggested_category,
+                feedback.notes,
+                now_iso,
+            ),
+        )
+        self._db.connection.commit()
+        return {"status": "recorded", "feedback_id": feedback_id}

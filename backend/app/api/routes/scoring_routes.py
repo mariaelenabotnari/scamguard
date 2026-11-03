@@ -10,9 +10,21 @@ from app.core.dependencies import (
     BearerTokenDep,
     ScoringServiceDep,
 )
-from app.dtos.scoring_dto import AlertItemDto, ChannelDetailDto, RankedChannelDto
+from app.dtos.scoring_dto import (
+    AlertItemDto,
+    ChannelDetailDto,
+    CoordinationGroupDto,
+    RankedChannelDto,
+)
 
 scoring_router = APIRouter(prefix="/api/v1", tags=["scoring-and-alerts"])
+
+
+@scoring_router.get("/coordination-groups", response_model=list[CoordinationGroupDto])
+def list_coordination_groups(
+    scoring_service: ScoringServiceDep,
+) -> list[CoordinationGroupDto]:
+    return scoring_service.get_channel_coordination_groups()
 
 
 @scoring_router.get("/ranking", response_model=list[RankedChannelDto])

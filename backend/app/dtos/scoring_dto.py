@@ -39,6 +39,9 @@ class RankedChannelDto(BaseModel):
     title: str
     language: Literal["RO", "RU", "MIXED"]
     score: int
+    coordination_score: int = Field(default=0, alias="coordinationScore")
+    narrative_risk: RiskBand = Field(default="low", alias="narrativeRisk")
+    has_sufficient_data: bool = Field(default=True, alias="hasSufficientData")
     risk_band: RiskBand = Field(..., alias="riskBand")
     sparkline: list[int]
     clusters_joined_7d: int = Field(..., alias="clustersJoined7d")
@@ -87,11 +90,24 @@ class ChannelDetailDto(BaseModel):
     added_at: str = Field(..., alias="addedAt")
     added_by: str = Field(..., alias="addedBy")
     score: int
+    coordination_score: int = Field(default=0, alias="coordinationScore")
+    narrative_risk: RiskBand = Field(default="low", alias="narrativeRisk")
+    has_sufficient_data: bool = Field(default=True, alias="hasSufficientData")
     risk_band: RiskBand = Field(..., alias="riskBand")
     score_history: list[ChannelScoreHistoryPointDto] = Field(..., alias="scoreHistory")
     explanation: ScoreExplanationDto
     co_moving_channels: list[CoMovingChannelDto] = Field(..., alias="coMovingChannels")
     joined_clusters: list[ChannelJoinedClusterDto] = Field(..., alias="joinedClusters")
+
+
+class CoordinationGroupDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    group_id: str = Field(..., alias="groupId")
+    channel_ids: list[str] = Field(..., alias="channelIds")
+    shared_cascades_count: int = Field(..., alias="sharedCascadesCount")
+    typical_delay_seconds: int = Field(..., alias="typicalDelaySeconds")
+    main_narrative: str = Field(..., alias="mainNarrative")
 
 
 class AlertItemDto(BaseModel):

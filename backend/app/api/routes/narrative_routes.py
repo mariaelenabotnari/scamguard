@@ -10,6 +10,7 @@ from app.core.dependencies import (
 from app.dtos.narrative_dto import (
     BatchClassifyInputDto,
     NarrativeCategorySpecDto,
+    NarrativeFeedbackDto,
     NarrativePredictionDto,
 )
 
@@ -32,3 +33,14 @@ def classify_texts_batch(
 ) -> list[NarrativePredictionDto]:
     auth_service.require_roles(token, ("journalist", "admin"))
     return classifier_service.classify_batch(payload)
+
+
+@router.post("/feedback")
+def record_classification_feedback(
+    payload: NarrativeFeedbackDto,
+    token: BearerTokenDep,
+    auth_service: AuthServiceDep,
+    classifier_service: NarrativeClassifierServiceDep,
+) -> dict[str, str]:
+    auth_service.require_roles(token, ("journalist", "admin"))
+    return classifier_service.record_feedback(payload)

@@ -326,6 +326,7 @@ def evaluate_scoring_and_speed(
     sim_stream_path: Path,
     sim_campaigns_path: Path,
     normaliser: TextNormaliser,
+    classifier_service: NarrativeClassifierService,
 ) -> dict[str, float]:
     posts = []
     with open(sim_stream_path, "r", encoding="utf-8") as f:
@@ -341,26 +342,42 @@ def evaluate_scoring_and_speed(
         for ch in c["channel_ids"]:
             coordinating_channels.add(ch)
 
-    # Count simulated repetitions per channel
-    ch_counts: dict[str, int] = defaultdict(int)
+    # Throughput benchmark
     t0 = time.perf_counter()
     for p in posts:
-        norm = normaliser.normalise(p["raw_text"])
-        ch_counts[p["channel_id"]] += 1
+        _ = normaliser.normalise(p["raw_text"])
     duration = max(0.001, time.perf_counter() - t0)
     msgs_per_sec = round(len(posts) / duration, 2)
 
-    # Ranking by activity & coordination count
-    ranked_channels = sorted(ch_counts.keys(), key=lambda ch: ch_counts[ch], reverse=True)
+    # Risk scoring per channel: combination of narrative risk and cluster participation
+    ch_scores: dict[str, float] = defaultdict(float)
+    hash_to_channels: dict[str, set[str]] = defaultdict(set)
+
+    for p in posts:
+        norm = normaliser.normalise(p["raw_text"])
+        ch = p["channel_id"]
+        pred = classifier_service.classify_one(
+            target_id=p["id"], target_type="message", raw_text=p["raw_text"]
+        )
+        if pred.is_disinformation:
+            ch_scores[ch] += pred.confidence * 40.0
+            th = norm.text_hash
+            if th in hash_to_channels:
+                for prev_ch in hash_to_channels[th]:
+                    if prev_ch != ch:
+                        ch_scores[ch] += 20.0
+                        ch_scores[prev_ch] += 20.0
+            hash_to_channels[th].add(ch)
+
+    all_channels = sorted(set(p["channel_id"] for p in posts))
+    ranked_channels = sorted(all_channels, key=lambda ch: ch_scores[ch], reverse=True)
     top_5 = set(ranked_channels[:5])
     top_k_hits = len(top_5 & coordinating_channels)
     top_k_rate = round(top_k_hits / max(1, min(5, len(coordinating_channels))), 4)
 
     # Rank correlation proxy (higher activity in campaigns correlates with ground truth label)
-    # Simple Spearman approximation
     gt_ranks = {ch: (1 if ch in coordinating_channels else 0) for ch in ranked_channels}
     pred_ranks = {ch: len(ranked_channels) - idx for idx, ch in enumerate(ranked_channels)}
-    # Covariance
     mean_gt = sum(gt_ranks.values()) / len(gt_ranks)
     mean_pred = sum(pred_ranks.values()) / len(pred_ranks)
     num = sum((gt_ranks[ch] - mean_gt) * (pred_ranks[ch] - mean_pred) for ch in ranked_channels)
@@ -399,7 +416,7 @@ def run_evaluation() -> EvalSummary:
     narr_metrics = evaluate_narrative_classifier(narrative_file, classifier_service)
 
     print("Evaluating Scoring & Speed...")
-    score_metrics = evaluate_scoring_and_speed(stream_file, campaigns_file, normaliser)
+    score_metrics = evaluate_scoring_and_speed(stream_file, campaigns_file, normaliser, classifier_service)
 
     summary = EvalSummary(
         sim_precision=sim_metrics["precision"],

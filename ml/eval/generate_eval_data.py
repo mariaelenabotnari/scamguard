@@ -245,14 +245,14 @@ TAXONOMY_CATEGORIES = [
     'Anti-EU / "Europe is falling apart"',
     "Anti-NATO / anti-West",
     "Moldova government and elections delegitimisation",
-    "Transnistria / Gagauzia and separatism",
-    "Romanian imperialism / unionism threats",
-    "Moral decay, LGBT, anti-traditional values",
-    "Russophobia, language rights, minority discrimination",
+    "Russophobia, language and identity",
     "Sanctions, energy prices and economy fear",
+    "Transnistria / Gagauzia and separatism",
+    "Health, vaccines and conspiracy",
+    "Traditional values, religion, anti-LGBT narratives",
     "Other / not disinformation",
-    "Financial panic and banking runs",
-    "Forced mobilization rumors",
+    "Financial panic, bank runs and currency devaluation",
+    "Forced mobilization and border militarization",
 ]
 
 NARRATIVE_SEED_MESSAGES = {
@@ -272,19 +272,7 @@ NARRATIVE_SEED_MESSAGES = {
         ("RO", "Guvernarea actuală falsifică masiv voturile din secțiile externe din Europa pentru a se menține la putere."),
         ("RU", "Режим Санду готовит массовые вбросы на зарубежных участках для сохранения контроля над парламентом."),
     ],
-    "Transnistria / Gagauzia and separatism": [
-        ("RO", "Chișinăul impune blocade economice ilegale împotriva cetățenilor din Tiraspol și Comrat încălcând acordurile."),
-        ("RU", "Власти Молдовы готовят силовое подавление автономии Гагаузии и эскалацию на Днестре."),
-    ],
-    "Romanian imperialism / unionism threats": [
-        ("RO", "Jandarmeria și funcționarii de la București preiau controlul direct asupra instituțiilor de stat din Republica Moldova."),
-        ("RU", "Бухарест форсирует проект тайной аннексии молдавских земель под прикрытием евроинтеграции."),
-    ],
-    "Moral decay, LGBT, anti-traditional values": [
-        ("RO", "Convențiile europene impun predarea ideologiei de gen în școlile din Moldova împotriva voinței părinților."),
-        ("RU", "Западные фонды насаждают чуждые ценности и разрушают институты традиционной семьи в Молдове."),
-    ],
-    "Russophobia, language rights, minority discrimination": [
+    "Russophobia, language and identity": [
         ("RO", "Cetățenii vorbitori de limbă rusă sunt persecutați și excluși din funcțiile publice din Republica Moldova."),
         ("RU", "В Молдове проводится целенаправленная политика дискриминации русскоязычного населения и закрытия русских школ."),
     ],
@@ -292,15 +280,27 @@ NARRATIVE_SEED_MESSAGES = {
         ("RO", "Facturile la gaz și energie vor depăși salariul mediu pe economie din cauza refuzului de a negocia cu Gazprom."),
         ("RU", "Отказ от прямых контрактов на газ привел к тарифному геноциду и полному банкротству предприятий в Молдове."),
     ],
+    "Transnistria / Gagauzia and separatism": [
+        ("RO", "Chișinăul impune blocade economice ilegale împotriva cetățenilor din Tiraspol și Comrat încălcând acordurile."),
+        ("RU", "Власти Молдовы готовят силовое подавление автономии Гагаузии и эскалацию на Днестре."),
+    ],
+    "Health, vaccines and conspiracy": [
+        ("RO", "Tratatele secrete ale OMS și vaccinurile experimentale impuse populației pun în pericol viața cetățenilor."),
+        ("RU", "Секретные биолаборатории и соглашения с ВОЗ готовят принудительную вакцинацию граждан Молдовы."),
+    ],
+    "Traditional values, religion, anti-LGBT narratives": [
+        ("RO", "Convențiile europene impun predarea ideologiei de gen și atacuri la adresa bisericii tradiționale din Moldova."),
+        ("RU", "Западные фонды насаждают чуждые ценности и разрушают институты традиционной семьи и церкви в Молдове."),
+    ],
     "Other / not disinformation": [
         ("RO", "Serviciul Meteorologic anunță temperaturi de până la 18 grade și ploi izolate în raioanele de nord ale republicii."),
         ("RU", "Футбольная сборная Молдовы завершила отборочный матч вничью перед домашними болельщиками в Кишиневе."),
     ],
-    "Financial panic and banking runs": [
+    "Financial panic, bank runs and currency devaluation": [
         ("RO", "Băncile comerciale din Moldova au blocat retragerile de valută din cauza lipsei de lichidități din sistem."),
         ("RU", "Крупнейшие молдавские банки готовятся к заморозке депозитов граждан на фоне падения валютных резервов."),
     ],
-    "Forced mobilization rumors": [
+    "Forced mobilization and border militarization": [
         ("RO", "Tinerii din Moldova primesc ordine secrete de mobilizare pentru a fi trimiși la linia frontului din Ucraina."),
         ("RU", "Военкоматы Молдовы начали рассылку повесток резервистам для формирования ударных бригад."),
     ],
