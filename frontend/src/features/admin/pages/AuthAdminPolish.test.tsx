@@ -78,6 +78,43 @@ describe('Auth, Admin Settings, and Polish Views (Branch 3 of 3)', () => {
     });
   });
 
+  it('completes registration, 6-digit email verification, and starts with clean profile', async () => {
+    const authService = new AuthService();
+    render(
+      <MemoryRouter initialEntries={['/register']}>
+        <RegisterPage service={authService} />
+      </MemoryRouter>,
+    );
+
+    fireEvent.change(screen.getByLabelText(/Full Name/i), {
+      target: { value: 'Alexandru Moraru' },
+    });
+    fireEvent.change(screen.getByLabelText(/Username/i), {
+      target: { value: 'alex_investigates' },
+    });
+    fireEvent.change(screen.getByLabelText(/Newsroom or Academic Email/i), {
+      target: { value: 'alex@news.md' },
+    });
+    fireEvent.change(screen.getByLabelText(/Password/i), {
+      target: { value: 'securePassword2026' },
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /register journalist account/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Verify Your Email/i)).toBeInTheDocument();
+      expect(screen.getByText(/Demo Verification Code/i)).toBeInTheDocument();
+    });
+
+    const codeInput = screen.getByLabelText(/6-Digit Verification Code/i);
+    fireEvent.change(codeInput, { target: { value: '123456' } });
+    fireEvent.click(screen.getByRole('button', { name: /verify & start investigation/i }));
+
+    await waitFor(() => {
+      expect(authService.isCleanProfile()).toBe(true);
+    });
+  });
+
   it('renders 403 UnauthorizedPage and 404 NotFoundPage for unknown routes', () => {
     const { unmount } = render(
       <MemoryRouter initialEntries={['/unauthorized']}>

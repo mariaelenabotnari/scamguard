@@ -219,6 +219,50 @@ export function WatchlistPage({ service = channelService }: WatchlistPageProps) 
             <Skeleton variant="block" className="h-16 w-full" />
             <Skeleton variant="block" className="h-16 w-full" />
           </div>
+        ) : channels.length === 0 ? (
+          <Card padding="lg" className="space-y-4 py-10 text-center">
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-brand-100 text-brand-700 shadow-sm">
+              <Icon name="tower-broadcast" className="text-xl" />
+            </div>
+            <div className="mx-auto max-w-md space-y-1.5">
+              <h2 className="text-lg font-bold text-ink-primary">No Channels Monitored Yet</h2>
+              <p className="text-xs text-ink-muted">
+                Your workspace is clean. Add your first Telegram channels below to begin tracking message synchronization and coordinated disinformation narratives across Moldova.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
+              <span className="text-xs font-semibold text-ink-muted">Quick suggestions:</span>
+              {[
+                { handle: '@gagauznewsmd', title: 'Gagauznews' },
+                { handle: '@kp_md', title: 'KP Moldova' },
+                { handle: '@rusputnikmd', title: 'Sputnik Moldova' },
+                { handle: '@pridnestrovie_pulse', title: 'Pridnestrovie Pulse' },
+              ].map((rec) => (
+                <button
+                  key={rec.handle}
+                  type="button"
+                  onClick={() => {
+                    setHandleInput(rec.handle);
+                    setTitleInput(rec.title);
+                    setShowAddForm(true);
+                  }}
+                  className="rounded-full border border-brand-200 bg-surface-card px-3 py-1 text-xs font-semibold text-brand-700 transition-colors hover:border-brand-400 hover:bg-brand-50"
+                >
+                  <Icon name="plus" className="mr-1 text-[10px]" />
+                  {rec.title}
+                </button>
+              ))}
+            </div>
+            <div className="pt-2">
+              <Button
+                variant="primary"
+                leftIcon="plus"
+                onClick={() => setShowAddForm(true)}
+              >
+                Add Telegram Channel
+              </Button>
+            </div>
+          </Card>
         ) : filteredChannels.length === 0 ? (
           <EmptyState
             icon="tower-broadcast"
