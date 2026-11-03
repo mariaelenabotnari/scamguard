@@ -14,18 +14,9 @@ import {
   type IHttpClient,
 } from '../lib/api/http-client';
 
-const DEFAULT_MOCK_USER: AuthUserDto = {
-  id: 'usr-elena-01',
-  email: 'elena.botnari@scamguard.md',
-  username: 'elena.botnari',
-  fullName: 'Elena Botnari',
-  organization: 'Moldova Civic Media Lab',
-  role: 'admin',
-  isVerified: true,
-  accountAgeDays: 45,
-};
-
 const CLEAN_PROFILE_STORAGE_KEY = 'choruswatch_clean_profile';
+const SESSION_TOKEN_KEY = 'choruswatch_auth_token';
+const SESSION_USER_KEY = 'choruswatch_auth_user';
 
 export interface IAuthService {
   getCurrentUser(): Promise<AuthUserDto | null>;
@@ -37,25 +28,50 @@ export interface IAuthService {
   logout(): Promise<void>;
   isCleanProfile(): boolean;
   setCleanProfile(val: boolean): void;
+  hasSession(): boolean;
+  subscribe(listener: (user: AuthUserDto | null) => void): () => void;
 }
 
 export class AuthService implements IAuthService {
-  private currentUser: AuthUserDto | null = { ...DEFAULT_MOCK_USER };
+  private currentUser: AuthUserDto | null = null;
   private pendingRegistrations = new Map<string, { input: RegisterInputDto; code: string }>();
+  private listeners = new Set<(user: AuthUserDto | null) => void>();
 
   constructor(private readonly client: IHttpClient = httpClient) {
-    if (this.isCleanProfile()) {
-      this.currentUser = {
-        id: 'usr-new-investigator',
-        email: 'researcher@news.md',
-        username: 'new_investigator',
-        fullName: 'New Investigator',
-        organization: 'Independent Desk',
-        role: 'journalist',
-        isVerified: true,
-        accountAgeDays: 0,
-      };
+    try {
+      const storedToken = localStorage.getItem(SESSION_TOKEN_KEY);
+      const storedUser = localStorage.getItem(SESSION_USER_KEY);
+      if (storedToken && storedUser) {
+        this.currentUser = JSON.parse(storedUser) as AuthUserDto;
+        setAuthAccessToken(storedToken);
+      } else {
+        this.currentUser = null;
+        setAuthAccessToken(null);
+      }
+    } catch {
+      this.currentUser = null;
     }
+  }
+
+  subscribe(listener: (user: AuthUserDto | null) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(this.currentUser);
+      } catch {
+        // Ignore listener exceptions
+      }
+    }
+  }
+
+  hasSession(): boolean {
+    return Boolean(this.currentUser);
   }
 
   isCleanProfile(): boolean {
@@ -114,15 +130,31 @@ export class AuthService implements IAuthService {
       };
       this.currentUser = user;
       this.setCleanProfile(isNew);
-      setAuthAccessToken('mock-jwt-token-scamguard');
+      const token = 'mock-jwt-token-scamguard';
+      setAuthAccessToken(token);
+      try {
+        localStorage.setItem(SESSION_TOKEN_KEY, token);
+        localStorage.setItem(SESSION_USER_KEY, JSON.stringify(user));
+      } catch {
+        // Ignore in headless
+      }
+      this.notifyListeners();
       return Promise.resolve({
-        accessToken: 'mock-jwt-token-scamguard',
+        accessToken: token,
         user,
       });
     }
 
     const session = await this.client.post<LoginInputDto, AuthSessionDto>('/auth/login', input);
+    this.currentUser = session.user;
     setAuthAccessToken(session.accessToken);
+    try {
+      localStorage.setItem(SESSION_TOKEN_KEY, session.accessToken);
+      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(session.user));
+    } catch {
+      // Ignore
+    }
+    this.notifyListeners();
     return session;
   }
 
@@ -140,7 +172,13 @@ export class AuthService implements IAuthService {
 
     if (isMockMode()) {
       const code = '123456';
-      this.pendingRegistrations.set(input.email.toLowerCase().trim(), { input, code });
+      const cleanEmail = input.email.toLowerCase().trim();
+      this.pendingRegistrations.set(cleanEmail, { input, code });
+      try {
+        localStorage.setItem(`scamguard_pending_${cleanEmail}`, JSON.stringify({ input, code }));
+      } catch {
+        // Ignore
+      }
       return Promise.resolve({
         message: 'Verification code sent to your email.',
         email: input.email.trim(),
@@ -164,7 +202,18 @@ export class AuthService implements IAuthService {
     }
 
     if (isMockMode()) {
-      const pending = this.pendingRegistrations.get(cleanEmail);
+      let pending = this.pendingRegistrations.get(cleanEmail);
+      if (!pending) {
+        try {
+          const raw = localStorage.getItem(`scamguard_pending_${cleanEmail}`);
+          if (raw) {
+            pending = JSON.parse(raw);
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
       if (cleanCode !== '123456' && (!pending || pending.code !== cleanCode)) {
         return Promise.reject(
           new Error('Invalid verification code. Please check your email or enter 123456.'),
@@ -185,9 +234,18 @@ export class AuthService implements IAuthService {
       };
       this.currentUser = user;
       this.setCleanProfile(true);
-      setAuthAccessToken('mock-jwt-token-verified');
+      const token = 'mock-jwt-token-verified';
+      setAuthAccessToken(token);
+      try {
+        localStorage.setItem(SESSION_TOKEN_KEY, token);
+        localStorage.setItem(SESSION_USER_KEY, JSON.stringify(user));
+        localStorage.removeItem(`scamguard_pending_${cleanEmail}`);
+      } catch {
+        // Ignore
+      }
+      this.notifyListeners();
       return Promise.resolve({
-        accessToken: 'mock-jwt-token-verified',
+        accessToken: token,
         user,
       });
     }
@@ -196,8 +254,16 @@ export class AuthService implements IAuthService {
       '/auth/verify-email',
       input,
     );
+    this.currentUser = session.user;
     this.setCleanProfile(true);
     setAuthAccessToken(session.accessToken);
+    try {
+      localStorage.setItem(SESSION_TOKEN_KEY, session.accessToken);
+      localStorage.setItem(SESSION_USER_KEY, JSON.stringify(session.user));
+    } catch {
+      // Ignore
+    }
+    this.notifyListeners();
     return session;
   }
 
@@ -217,12 +283,22 @@ export class AuthService implements IAuthService {
   }
 
   async switchMockRole(role: UserRole): Promise<AuthUserDto> {
-    const base = this.currentUser ?? DEFAULT_MOCK_USER;
+    const base = this.currentUser ?? {
+      id: 'usr-elena-01',
+      email: 'elena.botnari@scamguard.md',
+      username: 'elena.botnari',
+      fullName: 'Elena Botnari',
+      organization: 'Moldova Civic Media Lab',
+      role,
+      isVerified: true,
+      accountAgeDays: 45,
+    };
     const updated: AuthUserDto = {
       ...base,
       role,
     };
     this.currentUser = updated;
+    this.notifyListeners();
     return Promise.resolve(updated);
   }
 
@@ -230,6 +306,14 @@ export class AuthService implements IAuthService {
     this.currentUser = null;
     this.setCleanProfile(false);
     setAuthAccessToken(null);
+    try {
+      localStorage.removeItem(SESSION_TOKEN_KEY);
+      localStorage.removeItem(SESSION_USER_KEY);
+      localStorage.removeItem(CLEAN_PROFILE_STORAGE_KEY);
+    } catch {
+      // Ignore
+    }
+    this.notifyListeners();
     if (!isMockMode()) {
       await this.client.post<Record<string, never>, unknown>('/auth/logout', {});
     }

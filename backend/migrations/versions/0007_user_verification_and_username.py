@@ -23,3 +23,4 @@ UPGRADE_SQL: tuple[str, ...] = (
     );
     """,
 )
+

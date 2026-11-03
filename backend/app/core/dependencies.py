@@ -21,6 +21,7 @@ from app.services.collector_service import (
     TelegramCollectorService,
 )
 from app.services.dashboard_service import DashboardService, IDashboardService
+from app.services.email_service import EmailService
 from app.services.export_service import ExportService, IExportService
 from app.services.health_service import HealthService, IHealthService
 from app.services.narrative_classifier_service import (
@@ -45,13 +46,15 @@ def get_health_service(settings: SettingsDep, db_manager: DatabaseDep) -> IHealt
     return HealthService(settings=settings, db_manager=db_manager)
 
 
-def get_auth_service(db_manager: DatabaseDep) -> IAuthService:
+def get_auth_service(db_manager: DatabaseDep, settings: SettingsDep) -> IAuthService:
     user_repo = SqliteUserRepository(db_manager=db_manager, hasher=_default_hasher)
+    email_service = EmailService(settings=settings)
     return AuthService(
         user_repo=user_repo,
         hasher=_default_hasher,
         token_manager=_default_token_manager,
         rate_limiter=_default_rate_limiter,
+        email_service=email_service,
     )
 
 

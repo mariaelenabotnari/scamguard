@@ -1,9 +1,14 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AppRoutes } from '../../app/router';
+import { authService } from '../../services/auth.service';
 
 describe('AppShell Layout (Sidebar, Topbar, Full Width)', () => {
+  beforeEach(async () => {
+    await authService.login({ email: 'elena.botnari@scamguard.md', password: 'scamguard2026' });
+  });
+
   it('renders ChorusWatch shell with brand logo, 5 nav items, and Topbar with avatar menu', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>

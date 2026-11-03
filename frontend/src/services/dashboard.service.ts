@@ -22,7 +22,7 @@ export class DashboardService implements IDashboardService {
         return Promise.resolve({
           range,
           banner: {
-            greetingTitle: 'Welcome to ChorusWatch',
+            greetingTitle: 'Welcome to ScamGuard',
             subtitle:
               channelCount === 0
                 ? 'Your fresh investigation workspace is ready. Add channels to begin monitoring.'

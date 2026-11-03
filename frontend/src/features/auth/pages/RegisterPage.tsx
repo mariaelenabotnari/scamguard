@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AppShell } from '../../../components/layout';
 import { Badge, Button, Card, Icon, Input } from '../../../components/ui';
 import { authService, type IAuthService } from '../../../services/auth.service';
+import { AuthLayout } from '../components/AuthLayout';
 
 export interface RegisterPageProps {
   service?: IAuthService;
@@ -36,10 +36,14 @@ export function RegisterPage({ service = authService }: RegisterPageProps) {
         password,
       });
       if (response && response.requiresVerification) {
-        setDevCode(response.code ?? null);
+        const codeVal = response.code ?? null;
+        setDevCode(codeVal);
+        if (codeVal) {
+          setVerificationCode(codeVal);
+        }
         setStep('verify');
       } else {
-        navigate('/');
+        navigate('/overview', { replace: true });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed.');
@@ -58,7 +62,7 @@ export function RegisterPage({ service = authService }: RegisterPageProps) {
         email: email.trim(),
         code: verificationCode.trim(),
       });
-      navigate('/');
+      navigate('/overview', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Verification failed.');
     } finally {
@@ -72,16 +76,17 @@ export function RegisterPage({ service = authService }: RegisterPageProps) {
       const res = await service.resendCode(email.trim());
       if (res.code) {
         setDevCode(res.code);
+        setVerificationCode(res.code);
       }
-      setInfoMessage('A new verification code has been sent to your email.');
+      setInfoMessage('A new verification code has been generated and dispatched.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to resend code.');
     }
   };
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-md space-y-6 py-6">
+    <AuthLayout>
+      <div className="space-y-5">
         <Card tone="banner" padding="lg" className="space-y-2">
           <Badge variant="brand" icon="user-shield">
             {step === 'register' ? 'Self-Registration (Journalist Role)' : 'Account Activation'}
@@ -167,17 +172,31 @@ export function RegisterPage({ service = authService }: RegisterPageProps) {
           ) : (
             <form onSubmit={(e) => void handleVerifySubmit(e)} className="space-y-4" noValidate>
               {devCode ? (
-                <div className="rounded-xl border border-brand-200 bg-brand-50 p-3 text-xs text-brand-900">
-                  <div className="flex items-center gap-2 font-semibold">
-                    <Icon name="envelope" className="text-brand-600" />
-                    <span>Demo Verification Code</span>
+                <div className="rounded-xl border border-brand-200 bg-brand-50 p-3.5 text-xs text-brand-900 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-brand-800">
+                      <Icon name="envelope" className="text-brand-600" />
+                      <span>Demo Verification Code</span>
+                    </div>
+                    <span className="rounded-md bg-brand-200/80 px-2 py-0.5 text-[10px] font-semibold text-brand-800">
+                      Local Preview
+                    </span>
                   </div>
-                  <p className="mt-1 text-[11px] text-ink-muted">
-                    In development/preview mode, use code:{' '}
-                    <span className="font-mono font-bold tracking-widest text-brand-700">
+                  <p className="mt-1.5 text-[11px] leading-relaxed text-ink-muted">
+                    Outbound SMTP is not configured in this local environment. Your 6-digit code has been generated:
+                  </p>
+                  <div className="mt-2.5 flex items-center justify-between rounded-lg border border-brand-200 bg-white px-3 py-2">
+                    <span className="font-mono text-base font-extrabold tracking-widest text-brand-700">
                       {devCode}
                     </span>
-                  </p>
+                    <button
+                      type="button"
+                      onClick={() => setVerificationCode(devCode)}
+                      className="rounded bg-brand-100 px-2.5 py-1 text-[11px] font-semibold text-brand-700 hover:bg-brand-200 transition-colors"
+                    >
+                      Autofill Code
+                    </button>
+                  </div>
                 </div>
               ) : null}
 
@@ -237,6 +256,6 @@ export function RegisterPage({ service = authService }: RegisterPageProps) {
           )}
         </Card>
       </div>
-    </AppShell>
+    </AuthLayout>
   );
 }
