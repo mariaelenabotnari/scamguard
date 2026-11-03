@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AppShell } from '../../../components/layout';
 import { Badge, Button, Card, Icon, Input } from '../../../components/ui';
 import { authService, type IAuthService } from '../../../services/auth.service';
+import { AuthLayout } from '../components/AuthLayout';
 
 export interface RegisterPageProps {
   service?: IAuthService;
@@ -80,8 +80,8 @@ export function RegisterPage({ service = authService }: RegisterPageProps) {
   };
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-md space-y-6 py-6">
+    <AuthLayout>
+      <div className="space-y-5">
         <Card tone="banner" padding="lg" className="space-y-2">
           <Badge variant="brand" icon="user-shield">
             {step === 'register' ? 'Self-Registration (Journalist Role)' : 'Account Activation'}
@@ -237,6 +237,6 @@ export function RegisterPage({ service = authService }: RegisterPageProps) {
           )}
         </Card>
       </div>
-    </AppShell>
+    </AuthLayout>
   );
 }

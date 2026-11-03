@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { AppShell } from '../../../components/layout';
 import { Badge, Button, Card, Icon, Input } from '../../../components/ui';
 import { authService, type IAuthService } from '../../../services/auth.service';
+import { AuthLayout } from '../components/AuthLayout';
 
 export interface LoginPageProps {
   service?: IAuthService;
@@ -35,8 +35,8 @@ export function LoginPage({ service = authService }: LoginPageProps) {
   };
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-md space-y-6 py-6">
+    <AuthLayout>
+      <div className="space-y-5">
         <Card tone="banner" padding="lg" className="space-y-2">
           <div className="flex items-center justify-between">
             <Badge variant="brand" icon="shield-halved">
@@ -100,6 +100,6 @@ export function LoginPage({ service = authService }: LoginPageProps) {
           </div>
         </Card>
       </div>
-    </AppShell>
+    </AuthLayout>
   );
 }

@@ -13,11 +13,15 @@ import { RiskRankingPage } from '../features/ranking/pages/RiskRankingPage';
 import { SearchPage } from '../features/search/pages/SearchPage';
 import { StyleguidePage } from '../features/styleguide/pages/StyleguidePage';
 import { WatchlistPage } from '../features/watchlist/pages/WatchlistPage';
+import { authService } from '../services/auth.service';
 
 export function AppRoutes() {
+  const isAuth = authService.hasSession();
+
   return (
     <Routes>
-      <Route path="/" element={<DashboardPage />} />
+      <Route path="/" element={isAuth ? <DashboardPage /> : <RegisterPage />} />
+      <Route path="/overview" element={<DashboardPage />} />
       <Route path="/channels" element={<WatchlistPage />} />
       <Route path="/channels/:channelId" element={<ChannelDetailPage />} />
       <Route path="/clusters" element={<ClustersListPage />} />
