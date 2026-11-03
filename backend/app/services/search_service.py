@@ -76,9 +76,11 @@ class SearchService(ISearchService):
         conn = self._db.connection
         db_messages = conn.execute(
             """
-            SELECT m.id, m.channel_id, m.posted_at, m.raw_text, m.normalised_text,
+            SELECT m.id, m.channel_id, m.posted_at, mt.raw_text, mn.normalised_text,
                    cm.cluster_id
             FROM messages m
+            LEFT JOIN message_texts mt ON mt.message_id = m.id
+            LEFT JOIN message_norm mn ON mn.message_id = m.id
             LEFT JOIN cluster_messages cm ON cm.message_id = m.id
             ORDER BY m.posted_at DESC
             LIMIT 100
