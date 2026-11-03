@@ -20,6 +20,8 @@ from app.services.collector_service import (
     ICollectorService,
     TelegramCollectorService,
 )
+from app.services.dashboard_service import DashboardService, IDashboardService
+from app.services.export_service import ExportService, IExportService
 from app.services.health_service import HealthService, IHealthService
 from app.services.narrative_classifier_service import (
     INarrativeClassifierService,
@@ -116,6 +118,22 @@ def get_search_service(
     )
 
 
+def get_export_service(
+    db_manager: DatabaseDep,
+    scoring_service: Annotated[IScoringService, Depends(get_scoring_service)],
+    clustering_service: Annotated[IClusteringService, Depends(get_clustering_service)],
+) -> IExportService:
+    return ExportService(
+        db_manager=db_manager,
+        scoring_service=scoring_service,
+        clustering_service=clustering_service,
+    )
+
+
+def get_dashboard_service(db_manager: DatabaseDep) -> IDashboardService:
+    return DashboardService(db_manager=db_manager)
+
+
 def extract_bearer_token(
     authorization: Annotated[str | None, Header()] = None,
 ) -> str | None:
@@ -138,4 +156,6 @@ NarrativeClassifierServiceDep = Annotated[
 ScoringServiceDep = Annotated[IScoringService, Depends(get_scoring_service)]
 AlertServiceDep = Annotated[IAlertService, Depends(get_alert_service)]
 SearchServiceDep = Annotated[ISearchService, Depends(get_search_service)]
+ExportServiceDep = Annotated[IExportService, Depends(get_export_service)]
+DashboardServiceDep = Annotated[IDashboardService, Depends(get_dashboard_service)]
 BearerTokenDep = Annotated[str | None, Depends(extract_bearer_token)]

@@ -42,7 +42,7 @@ class TimelinePointDto(BaseModel):
     messages_count: int = Field(..., alias="messagesCount")
     flagged_clusters_count: int = Field(..., alias="flaggedClustersCount")
     formatted_headline: str = Field(..., alias="formattedHeadline")
-    normalized_y: int = Field(..., alias="normalizedY")
+    normalized_y: float = Field(..., alias="normalizedY")
     is_highlighted: bool = Field(default=False, alias="isHighlighted")
 
 
