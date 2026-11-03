@@ -10,7 +10,7 @@ export interface LoginPageProps {
 
 export function LoginPage({ service = authService }: LoginPageProps) {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('elena.botnari@scamguard.md');
+  const [identifier, setIdentifier] = useState('elena.botnari@scamguard.md');
   const [password, setPassword] = useState('scamguard2026');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -20,7 +20,12 @@ export function LoginPage({ service = authService }: LoginPageProps) {
     setError(null);
     setIsSubmitting(true);
     try {
-      await service.login({ email, password });
+      await service.login({
+        email: identifier,
+        username: !identifier.includes('@') ? identifier : undefined,
+        login: identifier,
+        password,
+      });
       navigate('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in.');
@@ -43,19 +48,19 @@ export function LoginPage({ service = authService }: LoginPageProps) {
             Sign in to ChorusWatch
           </h1>
           <p className="text-xs font-medium text-ink-muted">
-            Authenticate as a journalist or administrator to manage watchlists and export datasets
+            Authenticate as a journalist or administrator to monitor watchlists, analyze clusters, and export reports
           </p>
         </Card>
 
         <Card>
           <form onSubmit={(e) => void handleSubmit(e)} className="space-y-4" noValidate>
             <Input
-              label="Work or Newsroom Email"
-              type="email"
-              leftIcon="envelope"
-              placeholder="journalist@newsroom.md"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              label="Work or Newsroom Email / Username"
+              type="text"
+              leftIcon="user"
+              placeholder="username or journalist@newsroom.md"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
             />
             <Input
               label="Password"
@@ -98,4 +103,3 @@ export function LoginPage({ service = authService }: LoginPageProps) {
     </AppShell>
   );
 }
-

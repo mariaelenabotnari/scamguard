@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AppShell } from '../../../components/layout';
-import { Button, EmptyState, Skeleton } from '../../../components/ui';
+import { Button, EmptyState, Icon, Skeleton } from '../../../components/ui';
 import type { TimeRangeOption } from '../../../dtos/layout.dto';
 import type { IDashboardService } from '../../../services/dashboard.service';
 import { ActivityTimelineChart } from '../components/ActivityTimelineChart';
@@ -49,6 +50,30 @@ export function DashboardPage({ service }: DashboardPageProps) {
           <>
             {/* Top Compact Page Header */}
             <OverviewBanner banner={data.banner} />
+
+            {/* Fresh Workspace Onboarding Banner */}
+            {data.stats[0]?.numericValue === 0 ? (
+              <div className="flex flex-col justify-between gap-4 rounded-card border border-brand-200 bg-brand-50 p-4 shadow-sm sm:flex-row sm:items-center">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-700 text-white">
+                    <Icon name="tower-broadcast" className="text-lg" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-ink-primary">Fresh Investigation Workspace</h3>
+                    <p className="text-xs text-ink-muted">
+                      Your watchlist is currently empty. Add Telegram channels to start monitoring message coordination and narrative amplification.
+                    </p>
+                  </div>
+                </div>
+                <Link
+                  to="/channels"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-badge bg-brand-700 px-4 py-2 text-xs font-semibold text-white shadow-button transition-all hover:bg-brand-800"
+                >
+                  <Icon name="plus" />
+                  <span>Add Channels</span>
+                </Link>
+              </div>
+            ) : null}
 
             {/* Top 4 KPI Stat Cards */}
             <StatCardsGrid stats={data.stats} />

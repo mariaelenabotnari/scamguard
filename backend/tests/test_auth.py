@@ -7,6 +7,8 @@ from app.api.routes.auth_routes import (
     logout_user,
     refresh_user_token,
     register_user,
+    resend_verification_code,
+    verify_user_email,
 )
 from app.core.errors import AppError
 from app.core.security import LoginRateLimiter, PasswordHasher, TokenManager
@@ -15,7 +17,9 @@ from app.dtos.auth_dto import (
     LoginInputDto,
     RefreshTokenInputDto,
     RegisterInputDto,
+    SendVerificationCodeInputDto,
     UpdateSystemParametersInputDto,
+    VerifyEmailInputDto,
 )
 from app.main import create_app
 from app.repositories.user_repository import SqliteParameterRepository, SqliteUserRepository
@@ -47,6 +51,7 @@ def test_registration_password_rules_and_duplicate_protection() -> None:
     with pytest.raises(AppError) as exc_weak:
         register_user(
             payload=RegisterInputDto(
+                username="testresearcher",
                 fullName="Test Researcher",
                 email="researcher@news.md",
                 organization="News MD",
@@ -57,9 +62,10 @@ def test_registration_password_rules_and_duplicate_protection() -> None:
     assert exc_weak.value.status_code == 422
     assert exc_weak.value.code == "WEAK_PASSWORD"
 
-    # Valid registration assigns journalist role and accountAgeDays=0
-    session = register_user(
+    # Valid registration sends verification code
+    reg_response = register_user(
         payload=RegisterInputDto(
+            username="maria_r",
             fullName="Maria Researcher",
             email="maria@news.md",
             organization="News MD",
@@ -67,13 +73,72 @@ def test_registration_password_rules_and_duplicate_protection() -> None:
         ),
         auth_service=auth_service,
     )
+    assert reg_response.requires_verification is True
+    assert reg_response.code is not None
+    assert len(reg_response.code) == 6
+
+    # Attempting to log in before verification is rejected with 403 EMAIL_NOT_VERIFIED
+    with pytest.raises(AppError) as exc_unverified:
+        login_user(
+            payload=LoginInputDto(
+                username="maria_r",
+                password="securePassword2026",
+            ),
+            auth_service=auth_service,
+        )
+    assert exc_unverified.value.status_code == 403
+    assert exc_unverified.value.code == "EMAIL_NOT_VERIFIED"
+
+    # Reject invalid verification code
+    with pytest.raises(AppError) as exc_code:
+        verify_user_email(
+            payload=VerifyEmailInputDto(
+                email="maria@news.md",
+                code="000000",
+            ),
+            auth_service=auth_service,
+        )
+    assert exc_code.value.status_code == 400
+    assert exc_code.value.code == "INVALID_VERIFICATION_CODE"
+
+    # Resend verification code generates a new code
+    resend_resp = resend_verification_code(
+        payload=SendVerificationCodeInputDto(email="maria@news.md"),
+        auth_service=auth_service,
+    )
+    assert resend_resp.requires_verification is True
+    assert resend_resp.code is not None
+    assert len(resend_resp.code) == 6
+
+    # Verify email with resent code
+    session = verify_user_email(
+        payload=VerifyEmailInputDto(
+            email="maria@news.md",
+            code=resend_resp.code,
+        ),
+        auth_service=auth_service,
+    )
     assert session.user.role == "journalist"
+    assert session.user.username == "maria_r"
+    assert session.user.is_verified is True
     assert session.user.account_age_days == 0
 
-    # Reject duplicate registration
-    with pytest.raises(AppError) as exc_dup:
+    # Login now succeeds with username
+    login_session = login_user(
+        payload=LoginInputDto(
+            username="maria_r",
+            password="securePassword2026",
+        ),
+        auth_service=auth_service,
+    )
+    assert login_session.user.email == "maria@news.md"
+    assert login_session.user.username == "maria_r"
+
+    # Reject duplicate registration by email
+    with pytest.raises(AppError) as exc_dup_email:
         register_user(
             payload=RegisterInputDto(
+                username="maria_alt",
                 fullName="Maria Researcher",
                 email="maria@news.md",
                 organization="News MD",
@@ -81,8 +146,23 @@ def test_registration_password_rules_and_duplicate_protection() -> None:
             ),
             auth_service=auth_service,
         )
-    assert exc_dup.value.status_code == 409
-    assert exc_dup.value.code == "EMAIL_ALREADY_REGISTERED"
+    assert exc_dup_email.value.status_code == 409
+    assert exc_dup_email.value.code == "EMAIL_ALREADY_REGISTERED"
+
+    # Reject duplicate registration by username
+    with pytest.raises(AppError) as exc_dup_user:
+        register_user(
+            payload=RegisterInputDto(
+                username="maria_r",
+                fullName="Maria Researcher",
+                email="maria2@news.md",
+                organization="News MD",
+                password="securePassword2026",
+            ),
+            auth_service=auth_service,
+        )
+    assert exc_dup_user.value.status_code == 409
+    assert exc_dup_user.value.code == "USERNAME_ALREADY_TAKEN"
 
 
 def test_login_rate_limiting_refresh_and_logout() -> None:
@@ -201,6 +281,8 @@ def test_rbac_enforcement_across_visitor_journalist_and_admin_roles() -> None:
     # OpenAPI schema includes all auth and admin routes
     openapi_paths = create_app().openapi()["paths"]
     assert "/api/v1/auth/register" in openapi_paths
+    assert "/api/v1/auth/verify-email" in openapi_paths
+    assert "/api/v1/auth/resend-code" in openapi_paths
     assert "/api/v1/auth/login" in openapi_paths
     assert "/api/v1/auth/refresh" in openapi_paths
     assert "/api/v1/auth/logout" in openapi_paths
