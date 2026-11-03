@@ -22,6 +22,7 @@ from app.dtos.auth_dto import (
     VerifyEmailInputDto,
 )
 from app.repositories.user_repository import IUserRepository, StoredUserRecord
+from app.services.email_service import EmailService
 
 
 class IAuthService(Protocol):
@@ -46,11 +47,13 @@ class AuthService:
         hasher: PasswordHasher,
         token_manager: TokenManager,
         rate_limiter: LoginRateLimiter,
+        email_service: EmailService | None = None,
     ) -> None:
         self._user_repo = user_repo
         self._hasher = hasher
         self._token_manager = token_manager
         self._rate_limiter = rate_limiter
+        self._email_service = email_service or EmailService()
 
     def register(self, payload: RegisterInputDto) -> VerificationResponseDto:
         clean_email = payload.email.strip().lower()
@@ -74,6 +77,17 @@ class AuthService:
 
         existing_email = self._user_repo.get_by_email(clean_email)
         if existing_email is not None:
+            if not existing_email.is_verified:
+                code = f"{secrets.randbelow(900000) + 100000:06d}"
+                expires_at = (datetime.now(UTC) + timedelta(minutes=15)).isoformat()
+                self._user_repo.store_verification_code(clean_email, code, expires_at)
+                self._email_service.send_verification_email(clean_email, code)
+                return VerificationResponseDto(
+                    message="Verification code sent to your email.",
+                    email=clean_email,
+                    code=code,
+                    requiresVerification=True,
+                )
             raise AppError(
                 code="EMAIL_ALREADY_REGISTERED",
                 message=f"An account with email {clean_email} already exists.",
@@ -104,6 +118,7 @@ class AuthService:
         code = f"{secrets.randbelow(900000) + 100000:06d}"
         expires_at = (datetime.now(UTC) + timedelta(minutes=15)).isoformat()
         self._user_repo.store_verification_code(clean_email, code, expires_at)
+        self._email_service.send_verification_email(clean_email, code)
 
         return VerificationResponseDto(
             message="Verification code sent to your email.",
@@ -117,9 +132,12 @@ class AuthService:
         code_input = payload.code.strip()
         record = self._user_repo.get_verification_code(clean_email)
         if not record:
+            stored = self._user_repo.get_by_email(clean_email)
+            if stored and stored.is_verified:
+                return self._build_session(stored, account_age_days=0)
             raise AppError(
                 code="INVALID_VERIFICATION_CODE",
-                message="No pending verification code found for this email.",
+                message="No pending verification code found for this email. Please request a new code.",
                 status_code=400,
             )
 
@@ -127,7 +145,7 @@ class AuthService:
         if expected_code != code_input:
             raise AppError(
                 code="INVALID_VERIFICATION_CODE",
-                message="Incorrect verification code. Please check your email or resend a code.",
+                message="Incorrect verification code. Please check your email or enter the code provided on screen.",
                 status_code=400,
             )
 
@@ -169,6 +187,7 @@ class AuthService:
         code = f"{secrets.randbelow(900000) + 100000:06d}"
         expires_at = (datetime.now(UTC) + timedelta(minutes=15)).isoformat()
         self._user_repo.store_verification_code(clean_email, code, expires_at)
+        self._email_service.send_verification_email(clean_email, code)
         return VerificationResponseDto(
             message="New verification code sent.",
             email=clean_email,

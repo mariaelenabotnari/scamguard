@@ -23,6 +23,12 @@ class Settings(BaseSettings):
     )
     default_parameter_version: str = "v1.4"
     max_collection_interval_minutes: int = 10
+    smtp_host: str | None = None
+    smtp_port: int = 587
+    smtp_user: str | None = None
+    smtp_password: str | None = None
+    smtp_from: str = "noreply@scamguard.md"
+    smtp_tls: bool = True
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

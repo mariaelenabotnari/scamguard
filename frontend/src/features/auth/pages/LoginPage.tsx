@@ -26,7 +26,7 @@ export function LoginPage({ service = authService }: LoginPageProps) {
         login: identifier,
         password,
       });
-      navigate('/');
+      navigate('/overview', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to sign in.');
     } finally {
@@ -45,7 +45,7 @@ export function LoginPage({ service = authService }: LoginPageProps) {
             <Icon name="lock" className="text-brand-500" />
           </div>
           <h1 className="text-2xl font-extrabold tracking-tight text-ink-primary">
-            Sign in to ChorusWatch
+            Sign in to ScamGuard
           </h1>
           <p className="text-xs font-medium text-ink-muted">
             Authenticate as a journalist or administrator to monitor watchlists, analyze clusters, and export reports

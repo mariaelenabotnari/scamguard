@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import type { AuthUserDto } from '../dtos/auth.dto';
 import { AdminSettingsPage } from '../features/admin/pages/AdminSettingsPage';
 import { AlertsPage } from '../features/alerts/pages/AlertsPage';
 import { LoginPage } from '../features/auth/pages/LoginPage';
@@ -16,7 +18,22 @@ import { WatchlistPage } from '../features/watchlist/pages/WatchlistPage';
 import { authService } from '../services/auth.service';
 
 export function AppRoutes() {
-  const isAuth = authService.hasSession();
+  const [sessionUser, setSessionUser] = useState<AuthUserDto | null>(() => {
+    try {
+      const stored = localStorage.getItem('choruswatch_auth_user');
+      return stored ? (JSON.parse(stored) as AuthUserDto) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    return authService.subscribe((user) => {
+      setSessionUser(user);
+    });
+  }, []);
+
+  const isAuth = Boolean(sessionUser) || authService.hasSession();
 
   return (
     <Routes>

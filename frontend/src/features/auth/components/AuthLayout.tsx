@@ -22,7 +22,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           </svg>
         </div>
         <span className="mt-2 text-2xl font-black tracking-tight text-ink-primary">
-          ChorusWatch
+          ScamGuard
         </span>
         <p className="mt-1 text-xs font-medium text-ink-muted">
           Moldova Telegram Disinformation &amp; Coordination Detection
@@ -34,7 +34,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
       {/* Bottom Footer Info */}
       <footer className="mt-8 text-center text-[11px] font-medium text-ink-muted">
-        <p>© 2026 ChorusWatch • Independent Media Research &amp; Disinformation Forensics</p>
+        <p>© 2026 ScamGuard • Independent Media Research &amp; Disinformation Forensics</p>
       </footer>
     </div>
   );

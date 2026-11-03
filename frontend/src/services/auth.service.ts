@@ -29,11 +29,13 @@ export interface IAuthService {
   isCleanProfile(): boolean;
   setCleanProfile(val: boolean): void;
   hasSession(): boolean;
+  subscribe(listener: (user: AuthUserDto | null) => void): () => void;
 }
 
 export class AuthService implements IAuthService {
   private currentUser: AuthUserDto | null = null;
   private pendingRegistrations = new Map<string, { input: RegisterInputDto; code: string }>();
+  private listeners = new Set<(user: AuthUserDto | null) => void>();
 
   constructor(private readonly client: IHttpClient = httpClient) {
     try {
@@ -48,6 +50,23 @@ export class AuthService implements IAuthService {
       }
     } catch {
       this.currentUser = null;
+    }
+  }
+
+  subscribe(listener: (user: AuthUserDto | null) => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notifyListeners(): void {
+    for (const listener of this.listeners) {
+      try {
+        listener(this.currentUser);
+      } catch {
+        // Ignore listener exceptions
+      }
     }
   }
 
@@ -119,6 +138,7 @@ export class AuthService implements IAuthService {
       } catch {
         // Ignore in headless
       }
+      this.notifyListeners();
       return Promise.resolve({
         accessToken: token,
         user,
@@ -134,6 +154,7 @@ export class AuthService implements IAuthService {
     } catch {
       // Ignore
     }
+    this.notifyListeners();
     return session;
   }
 
@@ -151,7 +172,13 @@ export class AuthService implements IAuthService {
 
     if (isMockMode()) {
       const code = '123456';
-      this.pendingRegistrations.set(input.email.toLowerCase().trim(), { input, code });
+      const cleanEmail = input.email.toLowerCase().trim();
+      this.pendingRegistrations.set(cleanEmail, { input, code });
+      try {
+        localStorage.setItem(`scamguard_pending_${cleanEmail}`, JSON.stringify({ input, code }));
+      } catch {
+        // Ignore
+      }
       return Promise.resolve({
         message: 'Verification code sent to your email.',
         email: input.email.trim(),
@@ -175,7 +202,18 @@ export class AuthService implements IAuthService {
     }
 
     if (isMockMode()) {
-      const pending = this.pendingRegistrations.get(cleanEmail);
+      let pending = this.pendingRegistrations.get(cleanEmail);
+      if (!pending) {
+        try {
+          const raw = localStorage.getItem(`scamguard_pending_${cleanEmail}`);
+          if (raw) {
+            pending = JSON.parse(raw);
+          }
+        } catch {
+          // Ignore
+        }
+      }
+
       if (cleanCode !== '123456' && (!pending || pending.code !== cleanCode)) {
         return Promise.reject(
           new Error('Invalid verification code. Please check your email or enter 123456.'),
@@ -201,9 +239,11 @@ export class AuthService implements IAuthService {
       try {
         localStorage.setItem(SESSION_TOKEN_KEY, token);
         localStorage.setItem(SESSION_USER_KEY, JSON.stringify(user));
+        localStorage.removeItem(`scamguard_pending_${cleanEmail}`);
       } catch {
         // Ignore
       }
+      this.notifyListeners();
       return Promise.resolve({
         accessToken: token,
         user,
@@ -223,6 +263,7 @@ export class AuthService implements IAuthService {
     } catch {
       // Ignore
     }
+    this.notifyListeners();
     return session;
   }
 
@@ -257,6 +298,7 @@ export class AuthService implements IAuthService {
       role,
     };
     this.currentUser = updated;
+    this.notifyListeners();
     return Promise.resolve(updated);
   }
 
@@ -271,6 +313,7 @@ export class AuthService implements IAuthService {
     } catch {
       // Ignore
     }
+    this.notifyListeners();
     if (!isMockMode()) {
       await this.client.post<Record<string, never>, unknown>('/auth/logout', {});
     }

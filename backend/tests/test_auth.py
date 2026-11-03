@@ -288,3 +288,49 @@ def test_rbac_enforcement_across_visitor_journalist_and_admin_roles() -> None:
     assert "/api/v1/auth/logout" in openapi_paths
     assert "/api/v1/auth/me" in openapi_paths
     assert "/api/v1/admin/parameters" in openapi_paths
+
+
+def test_idempotent_verification_and_unverified_reregistration() -> None:
+    auth_service, _ = _build_services()
+
+    reg = register_user(
+        payload=RegisterInputDto(
+            username="resilient_user",
+            fullName="Resilient User",
+            email="resilient@newsroom.md",
+            organization="Investigative Hub",
+            password="StrongPassword2026!",
+        ),
+        auth_service=auth_service,
+    )
+    assert reg.requires_verification is True
+    assert reg.code is not None
+
+    # Re-registering with same email before verifying should re-issue code
+    rereg = register_user(
+        payload=RegisterInputDto(
+            username="resilient_user",
+            fullName="Resilient User",
+            email="resilient@newsroom.md",
+            organization="Investigative Hub",
+            password="StrongPassword2026!",
+        ),
+        auth_service=auth_service,
+    )
+    assert rereg.requires_verification is True
+    assert rereg.code is not None
+
+    # Verify with the newly issued code
+    session = verify_user_email(
+        payload=VerifyEmailInputDto(email="resilient@newsroom.md", code=rereg.code),
+        auth_service=auth_service,
+    )
+    assert session.user.is_verified is True
+
+    # Idempotent re-verify (e.g. accidental double submit) returns the session without error
+    session_repeat = verify_user_email(
+        payload=VerifyEmailInputDto(email="resilient@newsroom.md", code=rereg.code),
+        auth_service=auth_service,
+    )
+    assert session_repeat.user.id == session.user.id
+    assert session_repeat.user.is_verified is True
