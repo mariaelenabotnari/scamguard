@@ -22,7 +22,7 @@ def test_health_service_returns_ok_and_meta_dtos() -> None:
 
     meta = service.get_meta()
     assert meta.app_name == "Scamguard API"
-    assert meta.schema_revision == "0005_scores_and_alerts"
+    assert meta.schema_revision == "0006_exports_and_audit_log"
     assert meta.active_parameter_version == "v1.4"
     assert meta.max_collection_interval_minutes == 10
 
@@ -30,7 +30,7 @@ def test_health_service_returns_ok_and_meta_dtos() -> None:
 def test_database_migrations_create_initial_tables_and_seed_parameters() -> None:
     db_manager = DatabaseManager(":memory:")
     revision = db_manager.run_migrations()
-    assert revision == "0005_scores_and_alerts"
+    assert revision == "0006_exports_and_audit_log"
 
     cursor = db_manager.connection.cursor()
     cursor.execute("SELECT version, collection_interval_minutes FROM parameter_sets")
@@ -78,4 +78,4 @@ def test_health_and_meta_routes_are_registered_and_delegate_to_service() -> None
 
     assert get_health(health_service=service).status == "ok"
     assert get_v1_health(health_service=service).status == "ok"
-    assert get_v1_meta(health_service=service).schema_revision == "0005_scores_and_alerts"
+    assert get_v1_meta(health_service=service).schema_revision == "0006_exports_and_audit_log"
