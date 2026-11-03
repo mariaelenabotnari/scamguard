@@ -1,65 +1,125 @@
-version: "1.0"
-model_version: "scamguard-xlmr-proto-v1.0"
+version: "2.0"
+model_version: "scamguard-xlmr-multilingual-v2.0"
 confidence_threshold: 0.55
 
 categories:
   - id: 1
     name: "War in Ukraine and Russia justification"
+    severity: "high"
     external_topics:
       - "ukraine_war_justification"
       - "special_military_operation"
       - "donbas_escalation"
+    sub_narratives:
+      - "Moldova being dragged into regional conflict"
+      - "De-escalation via capitulation"
   - id: 2
     name: 'Anti-EU / "Europe is falling apart"'
+    severity: "high"
     external_topics:
       - "eu_collapse"
       - "brussels_dictatorship"
       - "eu_sovereignty_loss"
+    sub_narratives:
+      - "EU integration causes land and sovereignty surrender"
+      - "European economic decline and moral decay"
   - id: 3
     name: "Anti-NATO / anti-West"
+    severity: "high"
     external_topics:
       - "nato_encirclement"
       - "western_warmongering"
       - "nato_bases_moldova"
+    sub_narratives:
+      - "Neutrality violation through NATO joint drills"
+      - "Western weapon deliveries make Moldova a military target"
   - id: 4
     name: "Moldova government and elections delegitimisation"
+    severity: "high"
     external_topics:
       - "moldova_election_rigging"
       - "diaspora_vote_fraud"
       - "chisinau_regime_illegitimate"
+    sub_narratives:
+      - "Falsification of diaspora mail-in ballots"
+      - "Police intimidation and voter suppression"
   - id: 5
     name: "Russophobia, language and identity"
+    severity: "medium"
     external_topics:
       - "russian_language_ban"
       - "russophobia"
       - "romanian_annexation_fear"
+    sub_narratives:
+      - "Forced Romanianization and erasure of Moldovan identity"
+      - "Discrimination against Russian-speaking minorities"
   - id: 6
     name: "Sanctions, energy prices and economy fear"
+    severity: "high"
     external_topics:
       - "gas_price_collapse"
       - "energy_poverty"
       - "sanctions_backfire"
+    sub_narratives:
+      - "Imminent winter energy grid cutoffs and blackout panic"
+      - "Bankruptcy of local agriculture due to anti-Russia sanctions"
   - id: 7
     name: "Transnistria / Gagauzia and separatism"
+    severity: "high"
     external_topics:
       - "transnistria_blockade"
       - "gagauzia_autonomy_threat"
       - "tiraspol_comrat_conflict"
+    sub_narratives:
+      - "Imminent military raid against Transnistria"
+      - "Suppression of Gagauz constitutional autonomy"
   - id: 8
     name: "Health, vaccines and conspiracy"
+    severity: "medium"
     external_topics:
       - "vaccine_conspiracy"
       - "who_pandemic_treaty"
       - "biolab_rumours"
+    sub_narratives:
+      - "Secret Pentagon biological research labs in northern Moldova"
+      - "Contaminated foreign pharmaceuticals and forced immunization"
   - id: 9
     name: "Traditional values, religion, anti-LGBT narratives"
+    severity: "medium"
     external_topics:
       - "traditional_family_threat"
       - "orthodox_church_attack"
       - "gender_ideology_imposition"
+    sub_narratives:
+      - "Destruction of Orthodox Church traditions by Western NGOs"
+      - "Mandatory LGBT curriculum in secondary schools"
   - id: 10
     name: "Other / not disinformation"
+    severity: "low"
     external_topics:
       - "general_news"
       - "weather_sports_culture"
       - "verified_official_report"
+    sub_narratives:
+      - "Authentic public service announcements"
+      - "Standard domestic reporting"
+  - id: 11
+    name: "Financial panic, bank runs and currency devaluation"
+    severity: "high"
+    external_topics:
+      - "bank_withdrawal_freeze"
+      - "moldovan_leu_collapse"
+      - "imf_deposit_confiscation"
+    sub_narratives:
+      - "Coordinated claims of commercial bank insolvency"
+      - "Imminent state seizure of private bank accounts"
+  - id: 12
+    name: "Forced mobilization and border militarization"
+    severity: "high"
+    external_topics:
+      - "secret_draft_orders"
+      - "border_conscription_checkpoints"
+      - "foreign_mercenaries_patrol"
+    sub_narratives:
+      - "Compulsory call-up of reservists for foreign conflict"
+      - "Secret deployment of French and Romanian military units"
