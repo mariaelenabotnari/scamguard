@@ -1,0 +1,76 @@
+{
+  "model_architecture": "Scamguard Multilingual Prototype Classifier (v2.0)",
+  "train_samples_count": 14,
+  "test_samples_count": 11,
+  "macro_f1": 1.0,
+  "fake_news_binary_accuracy": 1.0,
+  "categories_evaluated": 11,
+  "per_class_metrics": [
+    {
+      "category": "Anti-EU / \"Europe is falling apart\"",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Anti-NATO / anti-West",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Financial panic, bank runs and currency devaluation",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Forced mobilization and border militarization",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Health, vaccines and conspiracy",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Moldova government and elections delegitimisation",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Other / not disinformation",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Russophobia, language and identity",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Sanctions, energy prices and economy fear",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "Transnistria / Gagauzia and separatism",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    {
+      "category": "War in Ukraine and Russia justification",
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    }
+  ]
+}
