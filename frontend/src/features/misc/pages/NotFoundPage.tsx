@@ -9,7 +9,7 @@ export function NotFoundPage() {
         <EmptyState
           icon="triangle-exclamation"
           title="Page Not Found (404)"
-          description="The requested route does not exist in the Scamguard monitoring workspace."
+          description="The requested route does not exist in the ChorusWatch monitoring workspace."
           action={
             <Link to="/">
               <Button variant="primary" size="sm" rightIcon="arrow-right">

@@ -3,29 +3,35 @@ import { MemoryRouter } from 'react-router-dom';
 import { describe, expect, it } from 'vitest';
 import { AppRoutes } from '../../app/router';
 
-describe('AppShell Layout (Sidebar, Topbar, RightPanel)', () => {
-  it('renders 3-column shell with brand logo, nav items, Statics widget, Topbar, and RightPanel', async () => {
+describe('AppShell Layout (Sidebar, Topbar, Full Width)', () => {
+  it('renders ChorusWatch shell with brand logo, 5 nav items, and Topbar with avatar menu', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <AppRoutes />
       </MemoryRouter>,
     );
 
-    // Brand & Main Hero
-    expect(screen.getByText('Scamguard')).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: /hello elena botnari/i })).toBeInTheDocument();
+    // Brand & Main Header
+    expect(screen.getByText('ChorusWatch')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /^overview$/i })).toBeInTheDocument();
 
-    // Sidebar Statics mini widget
-    expect(screen.getByText('Statics')).toBeInTheDocument();
-    expect(screen.getByText('Max')).toBeInTheDocument();
-    expect(screen.getByText('Min')).toBeInTheDocument();
+    // Navigation items
+    expect(screen.getByRole('link', { name: /overview/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /clusters/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /channels/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /alerts/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /settings/i })).toBeInTheDocument();
 
-    // RightPanel analyst profile, quick cards, and Audit radial gauge
+    // Topbar avatar button with initials
+    const avatarBtn = screen.getByRole('button', { name: /user menu for elena botnari/i });
+    expect(avatarBtn).toBeInTheDocument();
+    expect(avatarBtn).toHaveTextContent('EB');
+
+    // Click avatar button to open dropdown
+    fireEvent.click(avatarBtn);
     expect(screen.getByText('Elena Botnari')).toBeInTheDocument();
     expect(screen.getByText('Lead Researcher')).toBeInTheDocument();
-    expect(screen.getByText('3502')).toBeInTheDocument();
-    expect(screen.getByText('75%')).toBeInTheDocument();
-    expect(screen.getByText('38%')).toBeInTheDocument();
+    expect(screen.getByRole('menuitem', { name: /sign out/i })).toBeInTheDocument();
   });
 
   it('supports sidebar collapse, locale cycling, range selection, and mobile drawer toggle', () => {

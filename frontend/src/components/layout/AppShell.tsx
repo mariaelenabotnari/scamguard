@@ -6,8 +6,8 @@ import type {
   TimeRangeOption,
 } from '../../dtos/layout.dto';
 import { MOCK_SHELL_SUMMARY } from '../../mocks/layout.mock';
+import { authService } from '../../services/auth.service';
 import { layoutService } from '../../services/layout.service';
-import { RightPanel } from './RightPanel';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 
@@ -64,20 +64,25 @@ export function AppShell({
     }
   };
 
+  const handleSignOut = async () => {
+    await authService.logout();
+    navigate('/login');
+  };
+
   return (
     <div className="min-h-screen bg-surface-canvas p-2 sm:p-5 lg:p-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-[1440px] flex-col overflow-hidden rounded-shell bg-surface-app shadow-shell lg:flex-row">
         {/* Left Navigation Column */}
         <Sidebar
           items={navItems}
-          pulseBars={summary.pulseBars}
+          userRole={summary.user.role}
           isCollapsed={isSidebarCollapsed}
           onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
           isMobileOpen={isMobileMenuOpen}
           onCloseMobile={() => setIsMobileMenuOpen(false)}
         />
 
-        {/* Center Main Workspace Column */}
+        {/* Full-width Main Workspace Column */}
         <div className="flex min-w-0 flex-1 flex-col px-5 py-6 sm:px-8">
           <Topbar
             searchQuery={searchQuery}
@@ -89,20 +94,14 @@ export function AppShell({
             locale={locale}
             onLocaleChange={setLocale}
             unreadAlertsCount={summary.unreadAlertsCount}
+            user={summary.user}
+            onSignOut={handleSignOut}
             onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
             onOpenAlerts={() => navigate('/alerts')}
           />
 
           <main className="flex-1">{children}</main>
         </div>
-
-        {/* Right Context & Audit Panel */}
-        <RightPanel
-          user={summary.user}
-          quickCards={summary.quickCards}
-          calendarDays={summary.calendarDays}
-          audit={summary.audit}
-        />
       </div>
     </div>
   );

@@ -1,10 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import type { NavItemDto, SidebarPulseBarDto } from '../../dtos/layout.dto';
+import type { NavItemDto, UserRole } from '../../dtos/layout.dto';
 import { Icon } from '../ui';
 
 export interface SidebarProps {
   items: readonly NavItemDto[];
-  pulseBars: readonly SidebarPulseBarDto[];
+  userRole?: UserRole;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   isMobileOpen: boolean;
@@ -13,12 +13,16 @@ export interface SidebarProps {
 
 export function Sidebar({
   items,
-  pulseBars,
+  userRole = 'admin',
   isCollapsed,
   onToggleCollapse,
   isMobileOpen,
   onCloseMobile,
 }: SidebarProps) {
+  const visibleItems = items.filter(
+    (item) => !item.adminOnly || userRole === 'admin',
+  );
+
   const sidebarContent = (
     <aside
       aria-label="Primary Sidebar"
@@ -37,7 +41,7 @@ export function Sidebar({
       </button>
 
       {/* Top Brand Emblem & Navigation */}
-      <div className="space-y-9">
+      <div className="space-y-8">
         <div className="flex flex-col items-center text-center">
           <div
             aria-hidden="true"
@@ -64,15 +68,15 @@ export function Sidebar({
             </svg>
           </div>
           {!isCollapsed ? (
-            <span className="mt-1 text-xs font-bold tracking-tight text-ink-primary">
-              Scamguard
+            <span className="mt-1 text-sm font-extrabold tracking-tight text-ink-primary">
+              ChorusWatch
             </span>
           ) : null}
         </div>
 
         {/* Navigation Links */}
         <nav aria-label="Main Navigation" className="space-y-1.5">
-          {items.map((item) => (
+          {visibleItems.map((item) => (
             <NavLink
               key={item.id}
               to={item.path}
@@ -81,7 +85,7 @@ export function Sidebar({
               title={isCollapsed ? item.label : undefined}
               className={({ isActive }) =>
                 `group flex items-center rounded-badge py-2.5 text-xs transition-colors ${
-                  isCollapsed ? 'justify-center px-2' : 'gap-4 px-3'
+                  isCollapsed ? 'justify-center px-2' : 'justify-between px-3'
                 } ${
                   isActive
                     ? 'bg-surface-banner/70 font-bold text-ink-primary'
@@ -91,16 +95,24 @@ export function Sidebar({
             >
               {({ isActive }) => (
                 <>
-                  <span
-                    className={`inline-flex h-5 w-5 shrink-0 items-center justify-center ${
-                      isActive
-                        ? 'text-brand-700'
-                        : 'text-brand-600/80 group-hover:text-brand-700'
-                    }`}
-                  >
-                    <Icon name={item.icon} />
-                  </span>
-                  {!isCollapsed ? <span className="truncate">{item.label}</span> : null}
+                  <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3.5'}`}>
+                    <span
+                      className={`inline-flex h-5 w-5 shrink-0 items-center justify-center ${
+                        isActive
+                          ? 'text-brand-700'
+                          : 'text-brand-600/80 group-hover:text-brand-700'
+                      }`}
+                    >
+                      <Icon name={item.icon} />
+                    </span>
+                    {!isCollapsed ? <span className="truncate">{item.label}</span> : null}
+                  </div>
+
+                  {!isCollapsed && item.badgeCount && item.badgeCount > 0 ? (
+                    <span className="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-status-dangerText px-1.5 text-[10px] font-bold text-white shadow-xs">
+                      {item.badgeCount}
+                    </span>
+                  ) : null}
                 </>
               )}
             </NavLink>
@@ -108,46 +120,12 @@ export function Sidebar({
         </nav>
       </div>
 
-      {/* Bottom "Statics" Activity Pulse Card */}
+      {/* Footer Branding / Version */}
       {!isCollapsed ? (
-        <div className="mt-8 rounded-card bg-surface-muted p-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-bold text-ink-primary">Statics</span>
-            <button
-              type="button"
-              aria-label="Statics options"
-              className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-surface-card text-ink-muted shadow-xs hover:text-ink-primary"
-            >
-              <Icon name="ellipsis" className="text-[10px]" />
-            </button>
-          </div>
-
-          <div
-            aria-label="Collection pulse bars"
-            className="mt-5 flex h-28 items-end justify-between gap-2 px-1"
-          >
-            {pulseBars.map((bar) => (
-              <div
-                key={bar.id}
-                className="relative flex h-full flex-1 flex-col items-center justify-end"
-              >
-                {bar.tag ? (
-                  <span className="mb-1.5 text-[10px] font-semibold text-ink-primary">
-                    {bar.tag}
-                  </span>
-                ) : null}
-                <div className="relative flex h-20 w-full items-end justify-center">
-                  <div className="h-full w-[2px] rounded-full bg-brand-200/70" />
-                  <div
-                    style={{ height: `${bar.heightPercent}%` }}
-                    className={`absolute bottom-0 w-1.5 rounded-full transition-all ${
-                      bar.isHighlighted ? 'bg-brand-800' : 'bg-brand-400'
-                    }`}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="pt-6 text-center">
+          <p className="text-[10px] font-medium text-ink-muted">
+            ChorusWatch v1.2
+          </p>
         </div>
       ) : null}
     </aside>
