@@ -1,0 +1,1432 @@
+[
+  {
+    "id": "euvsdisinfo-zenodo",
+    "platform": "Zenodo / EUvsDisinfo",
+    "title": "EUvsDisinfo Database Dump (Multilingual)",
+    "url": "https://zenodo.org/records/10684784",
+    "languages": [
+      "ro",
+      "ru",
+      "en",
+      "multilingual"
+    ],
+    "license": "CC-BY-4.0",
+    "downloads": 1250,
+    "likes": 45,
+    "text_type": "Fact-check Claims & Debunks",
+    "description": "Official EUvsDisinfo repository tracking pro-Kremlin disinformation cases across Europe (18K+ entries with topics, dates, debunk articles).",
+    "relevance": "Directly maps to anti-EU, anti-NATO, Ukraine war, and biolabs narrative classes."
+  },
+  {
+    "id": "fakerom-github",
+    "platform": "GitHub",
+    "title": "FAKEROM: Romanian Fake News Corpus",
+    "url": "https://github.com/ciprian-oprea/FAKEROM",
+    "languages": [
+      "ro"
+    ],
+    "license": "MIT / Research",
+    "downloads": 350,
+    "likes": 28,
+    "text_type": "Romanian News Articles (Fake vs Real)",
+    "description": "Over 14,000 Romanian news articles annotated for veracity, covering political, medical, and social news in Romania and Moldova.",
+    "relevance": "Romanian disinformation and benign news classification."
+  },
+  {
+    "id": "moroco-corpus",
+    "platform": "HuggingFace / Academic",
+    "title": "MOROCO: Moldavian and Romanian Dialect Identification Corpus",
+    "url": "https://huggingface.co/datasets/moroco",
+    "languages": [
+      "ro",
+      "ro-MD"
+    ],
+    "license": "Non-commercial / Research",
+    "downloads": 5400,
+    "likes": 38,
+    "text_type": "Moldovan & Romanian News Articles",
+    "description": "33,564 news articles from Moldpres and Romanian news media (culture, finance, politics, science, sports, tech).",
+    "relevance": "Ideal source for high-quality benign Moldovan news across sports, weather, and civic culture."
+  },
+  {
+    "id": "taiga-fakes-ru",
+    "platform": "Taiga Corpus / Academic",
+    "title": "Taiga Russian Fakes Subcorpus",
+    "url": "https://tatianashavrina.github.io/taiga_corpus/",
+    "languages": [
+      "ru"
+    ],
+    "license": "CC-BY-4.0",
+    "downloads": 2800,
+    "likes": 90,
+    "text_type": "Russian Online Fakes & Propaganda",
+    "description": "Corpus of Russian online fakes, news manipulation, and debunked claims. Requires careful filtering to separate satire from malicious disinformation.",
+    "relevance": "Russian-language disinformation text candidates."
+  },
+  {
+    "id": "coronanet-romania-moldova",
+    "platform": "Zenodo / GitHub",
+    "title": "CoronaNet Fact-Checking & Misinformation",
+    "url": "https://github.com/CoronaNetData/CoronaNetCore",
+    "languages": [
+      "ro",
+      "ru"
+    ],
+    "license": "CC-BY-NC-4.0",
+    "downloads": 150,
+    "likes": 12,
+    "text_type": "Health & Pandemic Claims",
+    "description": "Policy responses and disinformation reports during COVID-19 in Eastern Europe.",
+    "relevance": "Health, vaccines, and biolab conspiracy class (Cat 8)."
+  },
+  {
+    "id": "danielrosehill/Propaganda-Bait-Eval-Runs",
+    "platform": "HuggingFace",
+    "title": "danielrosehill/Propaganda-Bait-Eval-Runs",
+    "url": "https://huggingface.co/datasets/danielrosehill/Propaganda-Bait-Eval-Runs",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 46,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Propaganda-Bait-Eval: runs \t  Raw model outputs from runs of Propaganda-Bait-Eval. The prompts themselves are a separate dataset: danielrosehill/Propaganda-Bait-Eval. This dataset holds only what mode",
+    "relevance": "Matched HF keyword 'propaganda' (lang: ru)"
+  },
+  {
+    "id": "NaughtyConstrictor/fact-check-bureau",
+    "platform": "HuggingFace",
+    "title": "NaughtyConstrictor/fact-check-bureau",
+    "url": "https://huggingface.co/datasets/NaughtyConstrictor/fact-check-bureau",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 287,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Fact-Check Retrieval Dataset \t  This dataset is designed to support the development and evaluation of fact-check retrieval pipelines. It is structured to work with FactCheckBureau, a tool for designin",
+    "relevance": "Matched HF keyword 'fact-check' (lang: ru)"
+  },
+  {
+    "id": "SHARProduction/production-claim-policy-fixtures",
+    "platform": "HuggingFace",
+    "title": "SHARProduction/production-claim-policy-fixtures",
+    "url": "https://huggingface.co/datasets/SHARProduction/production-claim-policy-fixtures",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 22,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Production Claim Policy Fixtures \t  Synthetic, non-client regression fixtures for validating claim-evidence policy implementations. Each JSON record contains a proposed claim, a small claim registry, ",
+    "relevance": "Matched HF keyword 'claim' (lang: ru)"
+  },
+  {
+    "id": "NiGuLa/Russian_Sensitive_Topics",
+    "platform": "HuggingFace",
+    "title": "NiGuLa/Russian_Sensitive_Topics",
+    "url": "https://huggingface.co/datasets/NiGuLa/Russian_Sensitive_Topics",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 66,
+    "likes": 14,
+    "text_type": "Dataset",
+    "description": "General concept of the model \t  Sensitive topics are such topics that have a high chance of initiating a toxic conversation: homophobia, politics, racism, etc. This dataset uses 18 topics.  More detai",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "TopicNet/PostNauka",
+    "platform": "HuggingFace",
+    "title": "TopicNet/PostNauka",
+    "url": "https://huggingface.co/datasets/TopicNet/PostNauka",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 77,
+    "likes": 1,
+    "text_type": "Dataset",
+    "description": "PostNauka \t   \t \t\t \t \t \t\tOrigin and credits \t  This Russian science communication corpus contains texts from PostNauka, whose authors and editors created the original articles. The historical corpus d",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "TopicNet/ICD-10",
+    "platform": "HuggingFace",
+    "title": "TopicNet/ICD-10",
+    "url": "https://huggingface.co/datasets/TopicNet/ICD-10",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 44,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "ICD-10 (МКБ-10) \t  Some measurable characteristics of the dataset:  D — number of documents  W — modality dictionary size (number of unique tokens)  len D — average document length in modality tokens ",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "TopicNet/Lenta",
+    "platform": "HuggingFace",
+    "title": "TopicNet/Lenta",
+    "url": "https://huggingface.co/datasets/TopicNet/Lenta",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 84,
+    "likes": 1,
+    "text_type": "Dataset",
+    "description": "Lenta \t  Some measurable characteristics of the dataset:  D — number of documents  W — modality dictionary size (number of unique tokens)  len D — average document length in modality tokens (number of",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "TopicNet/RuWiki-Good",
+    "platform": "HuggingFace",
+    "title": "TopicNet/RuWiki-Good",
+    "url": "https://huggingface.co/datasets/TopicNet/RuWiki-Good",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 41,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "RuWiki-Good \t  Selected articles from Russian Wikipedia dump (date 20200301). The dataset consists of good (\"добротные\", \"хорошие\") and featured (\"избранные\") articles (see https://ru.wikipedia.org/wi",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "ai-forever/sensitive-topics-classification",
+    "platform": "HuggingFace",
+    "title": "ai-forever/sensitive-topics-classification",
+    "url": "https://huggingface.co/datasets/ai-forever/sensitive-topics-classification",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 286,
+    "likes": 1,
+    "text_type": "Dataset",
+    "description": "No description provided.",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "PolinaStaroverova/topic-modelling-Prozhito",
+    "platform": "HuggingFace",
+    "title": "PolinaStaroverova/topic-modelling-Prozhito",
+    "url": "https://huggingface.co/datasets/PolinaStaroverova/topic-modelling-Prozhito",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 16,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "OVERVIEW \t  Dataset contains csv-tables which include topics (one topic is a list of 10 words) generated from the corpus of texts \"Prozhito\". The topics were generated with topic modelling method usin",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "complicat9d/tl-mirea-messages-topic-classification",
+    "platform": "HuggingFace",
+    "title": "complicat9d/tl-mirea-messages-topic-classification",
+    "url": "https://huggingface.co/datasets/complicat9d/tl-mirea-messages-topic-classification",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 25,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "RTU MIREA Telegram Channel Messages Topic Classification \t  The dataset has been created to fine-tune mDeBERTa-v3-base-mnli-xnli model for text classification tasks on Telegram messages with 17 differ",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "Sherzod011/safedocsai-kmeans-topics-v1",
+    "platform": "HuggingFace",
+    "title": "Sherzod011/safedocsai-kmeans-topics-v1",
+    "url": "https://huggingface.co/datasets/Sherzod011/safedocsai-kmeans-topics-v1",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 16,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "SafeDocsAI K-means Topics v1 \t  This is the exact dataset used to fit topic_model_best.npz in SafeDocsAI. It is published together with the original train/validation/test split, embedding cache, fitte",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "Pershlab/sillyfeed-telegram-topics",
+    "platform": "HuggingFace",
+    "title": "Pershlab/sillyfeed-telegram-topics",
+    "url": "https://huggingface.co/datasets/Pershlab/sillyfeed-telegram-topics",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 158,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "SillyFeed: замеры русскоязычного Telegram по темам \t  Агрегаты замеров, которые опубликованы на страницах SillyFeed — ленты постов из Telegram-каналов: сколько каналов пишет про тему, какой длины пост",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "TopicNet/RuWiki-Good-2026",
+    "platform": "HuggingFace",
+    "title": "TopicNet/RuWiki-Good-2026",
+    "url": "https://huggingface.co/datasets/TopicNet/RuWiki-Good-2026",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 112,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "RuWiki-Good-2026 — Russian Wikipedia quality articles \t  A Russian-language corpus of 17,413 Wikipedia articles with active community quality status in the 20261001 Russian Wikipedia dump, accompanied",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "TopicNet/RuWiki-Good-Thematized-2026",
+    "platform": "HuggingFace",
+    "title": "TopicNet/RuWiki-Good-Thematized-2026",
+    "url": "https://huggingface.co/datasets/TopicNet/RuWiki-Good-Thematized-2026",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 27,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "RuWiki-Good-Thematized-2026 — Russian Wikipedia quality articles with subjects \t  This Russian-language collection contains 17,251 Wikipedia articles with at least one subject label from a fixed taxon",
+    "relevance": "Matched HF keyword 'topic' (lang: ru)"
+  },
+  {
+    "id": "mxlcw/telegram-financial-sentiment-summarization",
+    "platform": "HuggingFace",
+    "title": "mxlcw/telegram-financial-sentiment-summarization",
+    "url": "https://huggingface.co/datasets/mxlcw/telegram-financial-sentiment-summarization",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 62,
+    "likes": 5,
+    "text_type": "Dataset",
+    "description": "No description provided.",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "ajtkulov/telegram-ru",
+    "platform": "HuggingFace",
+    "title": "ajtkulov/telegram-ru",
+    "url": "https://huggingface.co/datasets/ajtkulov/telegram-ru",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 75,
+    "likes": 3,
+    "text_type": "Dataset",
+    "description": "Dataset with 360K crawled channels from Russian Telegram, spanning from the beginning until July 2024. In total, there is about 1 Tb of raw data. Metadata contains tags (category: news/sport/blogs/tra",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "ScoutieAutoML/cybersecurity_news_telegram_dataset",
+    "platform": "HuggingFace",
+    "title": "ScoutieAutoML/cybersecurity_news_telegram_dataset",
+    "url": "https://huggingface.co/datasets/ScoutieAutoML/cybersecurity_news_telegram_dataset",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 58,
+    "likes": 3,
+    "text_type": "Dataset",
+    "description": "Description in English: \t    Dataset collected from 30 Russian-language Telegram news channels on the topic Cybersecurity,  collected and marked up automatically using the Scoutie data collection and ",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "ScoutieAutoML/russian_oil_gas_news_telegram_dataset",
+    "platform": "HuggingFace",
+    "title": "ScoutieAutoML/russian_oil_gas_news_telegram_dataset",
+    "url": "https://huggingface.co/datasets/ScoutieAutoML/russian_oil_gas_news_telegram_dataset",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 37,
+    "likes": 7,
+    "text_type": "Dataset",
+    "description": "Description in English: \t    Dataset collected from 30 Russian-language Telegram news channels on the topic of Oil ang Gas Industry,  collected and marked up automatically using the Scoutie data colle",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "ScoutieAutoML/russian-news-telegram-dataset",
+    "platform": "HuggingFace",
+    "title": "ScoutieAutoML/russian-news-telegram-dataset",
+    "url": "https://huggingface.co/datasets/ScoutieAutoML/russian-news-telegram-dataset",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 155,
+    "likes": 6,
+    "text_type": "Dataset",
+    "description": "Description in English: \t    Dataset collected from 30 Russian-language Telegram news channels on the topic News and Media,  collected and marked up automatically using the Scoutie data collection and",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "FGOTYT/Telegram_FGOT_ru",
+    "platform": "HuggingFace",
+    "title": "FGOTYT/Telegram_FGOT_ru",
+    "url": "https://huggingface.co/datasets/FGOTYT/Telegram_FGOT_ru",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 14,
+    "likes": 1,
+    "text_type": "Dataset",
+    "description": "THIS DATASET DON'T BE GOOD FOR ALL! \t   \t \t\t \t \t \t\tЭТОТ ДАТАСЕТ ПОДОЙДЁТ НЕ ДЛЯ ВСЕХ! \t  On this dataset was performed fine-tuning to write telegram posts in the style of the author with nickname \"FGO",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "Chanter404/telegram-cheboxariki-1",
+    "platform": "HuggingFace",
+    "title": "Chanter404/telegram-cheboxariki-1",
+    "url": "https://huggingface.co/datasets/Chanter404/telegram-cheboxariki-1",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 7,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "No description provided.",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "alt-gnome/telegram-spam",
+    "platform": "HuggingFace",
+    "title": "alt-gnome/telegram-spam",
+    "url": "https://huggingface.co/datasets/alt-gnome/telegram-spam",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 109,
+    "likes": 5,
+    "text_type": "Dataset",
+    "description": "No description provided.",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "aisbergpublicorganization/telegram-news-ua-dataset",
+    "platform": "HuggingFace",
+    "title": "aisbergpublicorganization/telegram-news-ua-dataset",
+    "url": "https://huggingface.co/datasets/aisbergpublicorganization/telegram-news-ua-dataset",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 45369,
+    "likes": 4,
+    "text_type": "Dataset",
+    "description": "Aisberg Telegram News UA \t  A continuously updated, de-identified corpus of Ukrainian Telegram news and the discussion around it, published by the Ukrainian non-profit Aisberg (ГО «АЙЗБЕРГ»). It comes",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "kurumikz/telegram-corpus-russian-kazakh",
+    "platform": "HuggingFace",
+    "title": "kurumikz/telegram-corpus-russian-kazakh",
+    "url": "https://huggingface.co/datasets/kurumikz/telegram-corpus-russian-kazakh",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 57,
+    "likes": 3,
+    "text_type": "Dataset",
+    "description": "📦 Telegram Corpus KAZ_RU \t  Telegram Corpus KAZ_RU is a raw multilingual dataset of Telegram messages in Russian and Kazakh, collected and assembled by Kurumikz. It contains over 1.4 million lines of ",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "AugustLight/telegram_spam_ru",
+    "platform": "HuggingFace",
+    "title": "AugustLight/telegram_spam_ru",
+    "url": "https://huggingface.co/datasets/AugustLight/telegram_spam_ru",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 29,
+    "likes": 3,
+    "text_type": "Dataset",
+    "description": "📨 TeleSpam: Russian Telegram Spam Detection Dataset \t  Курированный датасет для обучения моделей детекции спама в русскоязычных Telegram-чатах, собранный с применением методологии Human-in-the-Loop и ",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "aletheos-ngo/xenophobia_migrants_telegram",
+    "platform": "HuggingFace",
+    "title": "aletheos-ngo/xenophobia_migrants_telegram",
+    "url": "https://huggingface.co/datasets/aletheos-ngo/xenophobia_migrants_telegram",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 35,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Anti-Immigrant Narrative Detection in Telegram News \t   \t \t\t \t \t \t\tDataset Summary \t  This dataset contains Telegram messages from major news-oriented Telegram channels, collected to examine presence ",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "desllre/ru_telegram_news_detection",
+    "platform": "HuggingFace",
+    "title": "desllre/ru_telegram_news_detection",
+    "url": "https://huggingface.co/datasets/desllre/ru_telegram_news_detection",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 25,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Russian Telegram posts \t  The dataset contains Telegram channel posts broken down by topic, each post contains a label indicating whether it is news and the degree of confidence in awarding the label,",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "telegramtrading/telegram-trading-bots",
+    "platform": "HuggingFace",
+    "title": "telegramtrading/telegram-trading-bots",
+    "url": "https://huggingface.co/datasets/telegramtrading/telegram-trading-bots",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 112,
+    "likes": 3,
+    "text_type": "Dataset",
+    "description": "Crypto Trading Bots & AI Agents — Expert Knowledge Base v5 \t   \t \t\t \t \t \t\t27 Tools · Telegram Bots · Web Terminals · CEX · Arbitrage · AI Agents · Prediction Markets · 14 Chains \t  The most comprehens",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "r9zhenka/telegram-post-comments_data",
+    "platform": "HuggingFace",
+    "title": "r9zhenka/telegram-post-comments_data",
+    "url": "https://huggingface.co/datasets/r9zhenka/telegram-post-comments_data",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 12,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Telegram Post-Comment Pairs (Russian) \t   \t \t\t \t \t \t\tОписание \t  Датасет пар «пост — комментарий» из публичных русскоязычных Telegram-каналов. Предназначен для задачи стилевой адаптации генеративных я",
+    "relevance": "Matched HF keyword 'telegram' (lang: ru)"
+  },
+  {
+    "id": "MarkProMaster229/hate",
+    "platform": "HuggingFace",
+    "title": "MarkProMaster229/hate",
+    "url": "https://huggingface.co/datasets/MarkProMaster229/hate",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 57,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Синтетический датасет для исследований индукции моделей \t   \t \t\t \t \t \t\tОписание \t  Обсуждение посвящено синтетическому датасету, его созданию с помощью дистилляции модели — в частности, модели с Qwen ",
+    "relevance": "Matched HF keyword 'hate' (lang: ru)"
+  },
+  {
+    "id": "bruhwalkk/economic-narratives-golden-set",
+    "platform": "HuggingFace",
+    "title": "bruhwalkk/economic-narratives-golden-set",
+    "url": "https://huggingface.co/datasets/bruhwalkk/economic-narratives-golden-set",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 26,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Economic Narratives Golden Set \t  A manually annotated dataset of 500 Russian-language Telegram posts labeled for economic narrative presence, with LLM-generated temporal contexts. This is the evaluat",
+    "relevance": "Matched HF keyword 'narrative' (lang: ru)"
+  },
+  {
+    "id": "Mildegard/narrative_fantasy_music_ai_recommendations_data",
+    "platform": "HuggingFace",
+    "title": "Mildegard/narrative_fantasy_music_ai_recommendations_data",
+    "url": "https://huggingface.co/datasets/Mildegard/narrative_fantasy_music_ai_recommendations_data",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 29,
+    "likes": 1,
+    "text_type": "Dataset",
+    "description": "Obsidian Triad OST – Narrative Fantasy Music Dataset \t  Bilingual (English / Russian) dataset of the conceptual original soundtrack / indie soundtrack for the illustrated fantasy novel Obsidian Triad ",
+    "relevance": "Matched HF keyword 'narrative' (lang: ru)"
+  },
+  {
+    "id": "universityofbucharest/moroco",
+    "platform": "HuggingFace",
+    "title": "universityofbucharest/moroco",
+    "url": "https://huggingface.co/datasets/universityofbucharest/moroco",
+    "languages": [
+      "ro"
+    ],
+    "license": "Unknown",
+    "downloads": 163,
+    "likes": 9,
+    "text_type": "Dataset",
+    "description": "The MOROCO (Moldavian and Romanian Dialectal Corpus) dataset contains 33564 samples of text collected from the news domain. The samples belong to one of the following six topics:     - culture     - f",
+    "relevance": "Matched HF keyword 'moroco' (lang: ro)"
+  },
+  {
+    "id": "winterForestStump/fake-news-detector-euvsdisinfo",
+    "platform": "HuggingFace",
+    "title": "winterForestStump/fake-news-detector-euvsdisinfo",
+    "url": "https://huggingface.co/datasets/winterForestStump/fake-news-detector-euvsdisinfo",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 100,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "data from https://euvsdisinfo.eu/",
+    "relevance": "Target lead 'euvsdisinfo'"
+  },
+  {
+    "id": "SinclairSchneider/eu_vs_disinfo",
+    "platform": "HuggingFace",
+    "title": "SinclairSchneider/eu_vs_disinfo",
+    "url": "https://huggingface.co/datasets/SinclairSchneider/eu_vs_disinfo",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 60,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Multilingual benchmark/corpus.",
+    "relevance": "Target lead 'euvsdisinfo'"
+  },
+  {
+    "id": "NLP-UniBW/eu_vs_disinfo",
+    "platform": "HuggingFace",
+    "title": "NLP-UniBW/eu_vs_disinfo",
+    "url": "https://huggingface.co/datasets/NLP-UniBW/eu_vs_disinfo",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 3,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Multilingual benchmark/corpus.",
+    "relevance": "Target lead 'euvsdisinfo'"
+  },
+  {
+    "id": "MultiMind-SemEval2025/Augmented_MultiClaim_FactCheck_Retrieval",
+    "platform": "HuggingFace",
+    "title": "MultiMind-SemEval2025/Augmented_MultiClaim_FactCheck_Retrieval",
+    "url": "https://huggingface.co/datasets/MultiMind-SemEval2025/Augmented_MultiClaim_FactCheck_Retrieval",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 111,
+    "likes": 1,
+    "text_type": "Dataset",
+    "description": "Augmented MultiClaim FactCheck Retrieval Dataset \t   \t \t\t \t \t \t\t1. Dataset Summary \t  This dataset is a collection of social media posts that have been augmented using a large language model (GPT-4o).",
+    "relevance": "Target lead 'multiclaim'"
+  },
+  {
+    "id": "elbadry/morocon_data",
+    "platform": "HuggingFace",
+    "title": "elbadry/morocon_data",
+    "url": "https://huggingface.co/datasets/elbadry/morocon_data",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 1,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Multilingual benchmark/corpus.",
+    "relevance": "Target lead 'moroco'"
+  },
+  {
+    "id": "mteb/Moroco",
+    "platform": "HuggingFace",
+    "title": "mteb/Moroco",
+    "url": "https://huggingface.co/datasets/mteb/Moroco",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 19,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Moroco   An MTEB dataset   Massive Text Embedding Benchmark   The Moldavian and Romanian Dialectal Corpus. The MOROCO data set contains Moldavian and Romanian samples of text collected from the news d",
+    "relevance": "Target lead 'moroco'"
+  },
+  {
+    "id": "mateiaass/FakeRom",
+    "platform": "HuggingFace",
+    "title": "mateiaass/FakeRom",
+    "url": "https://huggingface.co/datasets/mateiaass/FakeRom",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 9,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Multilingual benchmark/corpus.",
+    "relevance": "Target lead 'fakerom'"
+  },
+  {
+    "id": "mihalca/Fakerom_updated_original",
+    "platform": "HuggingFace",
+    "title": "mihalca/Fakerom_updated_original",
+    "url": "https://huggingface.co/datasets/mihalca/Fakerom_updated_original",
+    "languages": [
+      "ro/ru/multilingual"
+    ],
+    "license": "Unknown",
+    "downloads": 9,
+    "likes": 0,
+    "text_type": "Dataset",
+    "description": "Multilingual benchmark/corpus.",
+    "relevance": "Target lead 'fakerom'"
+  },
+  {
+    "id": "vikasg/russian-troll-tweets",
+    "platform": "Kaggle",
+    "title": "Russian Troll Tweets",
+    "url": "https://www.kaggle.com/datasets/vikasg/russian-troll-tweets",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "200,000 malicious-account tweets captured by NBC",
+    "relevance": "Matched Kaggle query 'russian fake news'"
+  },
+  {
+    "id": "stevenpeutz/misinformation-fake-news-text-dataset-79k",
+    "platform": "Kaggle",
+    "title": "Misinformation & Fake News text dataset 79k",
+    "url": "https://www.kaggle.com/datasets/stevenpeutz/misinformation-fake-news-text-dataset-79k",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "A 79000 article set ready for a misinformation classification!",
+    "relevance": "Matched Kaggle query 'russian fake news'"
+  },
+  {
+    "id": "zepopo/ukrainian-fake-and-true-news",
+    "platform": "Kaggle",
+    "title": "Ukrainian news",
+    "url": "https://www.kaggle.com/datasets/zepopo/ukrainian-fake-and-true-news",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Contains Fake and True news about russo ukrainian war",
+    "relevance": "Matched Kaggle query 'russian fake news'"
+  },
+  {
+    "id": "morfifinka/fake-real-news-ru",
+    "platform": "Kaggle",
+    "title": "Fake and real Russian news",
+    "url": "https://www.kaggle.com/datasets/morfifinka/fake-real-news-ru",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Датасеты, содержащие правдивые и ложные новости на русском языке",
+    "relevance": "Matched Kaggle query 'russian fake news'"
+  },
+  {
+    "id": "morfifinka/type-of-fake-ru",
+    "platform": "Kaggle",
+    "title": "Type of fake Russian news",
+    "url": "https://www.kaggle.com/datasets/morfifinka/type-of-fake-ru",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Ложные новости различных типов на русском языке",
+    "relevance": "Matched Kaggle query 'russian fake news'"
+  },
+  {
+    "id": "danielsbuls/pretrained-model-for-russian-fake-news-detection",
+    "platform": "Kaggle",
+    "title": "Pretrained model for Russian fake news detection ",
+    "url": "https://www.kaggle.com/datasets/danielsbuls/pretrained-model-for-russian-fake-news-detection",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Kaggle dataset",
+    "relevance": "Matched Kaggle query 'russian fake news'"
+  },
+  {
+    "id": "danielsbuls/russian-media-fake-and-real",
+    "platform": "Kaggle",
+    "title": "Russian media (fake and real)",
+    "url": "https://www.kaggle.com/datasets/danielsbuls/russian-media-fake-and-real",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Kaggle dataset",
+    "relevance": "Matched Kaggle query 'russian fake news'"
+  },
+  {
+    "id": "restem/en-ro-datasets-for-llm-testing",
+    "platform": "Kaggle",
+    "title": "En-Ro Datasets for LLm testing",
+    "url": "https://www.kaggle.com/datasets/restem/en-ro-datasets-for-llm-testing",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Kaggle dataset",
+    "relevance": "Matched Kaggle query 'romanian fake news'"
+  },
+  {
+    "id": "lucafrance/the-world-factbook-by-cia",
+    "platform": "Kaggle",
+    "title": "The World Factbook by CIA",
+    "url": "https://www.kaggle.com/datasets/lucafrance/the-world-factbook-by-cia",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "The World Factbook, the indispensable source for basic information.",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "stephenofarrell/cost-of-living",
+    "platform": "Kaggle",
+    "title": "Cost of Living",
+    "url": "https://www.kaggle.com/datasets/stephenofarrell/cost-of-living",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Comparison of Cost of Living in Various Cities Around the World",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "gpreda/coronavirus-2019ncov",
+    "platform": "Kaggle",
+    "title": "COVID19 Daily Updates",
+    "url": "https://www.kaggle.com/datasets/gpreda/coronavirus-2019ncov",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Daily updates of Coronavirus 2019-nCoV (a.k.a. COVID-19)",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "sinakaraji/covid-vaccination-vs-death",
+    "platform": "Kaggle",
+    "title": "COVID vaccination vs. mortality ",
+    "url": "https://www.kaggle.com/datasets/sinakaraji/covid-vaccination-vs-death",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "you can find COVID vaccination percentage and progress beside death counts",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "marouandaghmoumi/dropout-and-success-student-data-analysis",
+    "platform": "Kaggle",
+    "title": "Dropout and Success: Student Data Analysis",
+    "url": "https://www.kaggle.com/datasets/marouandaghmoumi/dropout-and-success-student-data-analysis",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Exploring the Impact of Dropout Rates on Student Success",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "mikhail1681/student-performance-pip",
+    "platform": "Kaggle",
+    "title": "Student performance (PIP)",
+    "url": "https://www.kaggle.com/datasets/mikhail1681/student-performance-pip",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Student performance in higher education",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "vbmokin/covid19-holidays-of-countries",
+    "platform": "Kaggle",
+    "title": "COVID-19: Holidays of countries",
+    "url": "https://www.kaggle.com/datasets/vbmokin/covid19-holidays-of-countries",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Holidays of countries in format of Prophet for COVID-19 forecasting",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "holoong9291/gdp-of-all-countries19602020",
+    "platform": "Kaggle",
+    "title": "GDP of each country and region(1960-2020)",
+    "url": "https://www.kaggle.com/datasets/holoong9291/gdp-of-all-countries19602020",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "GDP:Gross Domestic Product",
+    "relevance": "Matched Kaggle query 'moldova'"
+  },
+  {
+    "id": "batrosjamali/world-press-freedom-index",
+    "platform": "Kaggle",
+    "title": "World Press Freedom Index",
+    "url": "https://www.kaggle.com/datasets/batrosjamali/world-press-freedom-index",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "World Press Freedom Index report warns threats to journalism",
+    "relevance": "Matched Kaggle query 'propaganda'"
+  },
+  {
+    "id": "fifthtribe/isis-religious-texts",
+    "platform": "Kaggle",
+    "title": "Religious Texts Used By ISIS",
+    "url": "https://www.kaggle.com/datasets/fifthtribe/isis-religious-texts",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "A compilation of 2,685 religious texts cited by ISIS over a 3 year period",
+    "relevance": "Matched Kaggle query 'propaganda'"
+  },
+  {
+    "id": "willianoliveiragibin/terrorism-in-world",
+    "platform": "Kaggle",
+    "title": "Terrorism_in_world",
+    "url": "https://www.kaggle.com/datasets/willianoliveiragibin/terrorism-in-world",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Terrorism is the threat or use of violence to intimidate or coerce 1960-2021",
+    "relevance": "Matched Kaggle query 'propaganda'"
+  },
+  {
+    "id": "solowpm23/iran-vs-us-coflict-news-dataset",
+    "platform": "Kaggle",
+    "title": "Iran vs USA Conflict News Dataset",
+    "url": "https://www.kaggle.com/datasets/solowpm23/iran-vs-us-coflict-news-dataset",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "A news dataset about Iran-USA Conflict for Natural Language Processing",
+    "relevance": "Matched Kaggle query 'propaganda'"
+  },
+  {
+    "id": "yuttasihinggusti/indonesian-political-youtube-comments",
+    "platform": "Kaggle",
+    "title": "Indonesian Political YouTube Comments",
+    "url": "https://www.kaggle.com/datasets/yuttasihinggusti/indonesian-political-youtube-comments",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Dataset komentar YouTube, ekstraksi N-Gram, dan skor sentimen liputan politik.",
+    "relevance": "Matched Kaggle query 'propaganda'"
+  },
+  {
+    "id": "adelalharbi/rogue-content-and-arabic-spammers-on-twitter",
+    "platform": "Kaggle",
+    "title": "Large Arabic Twitter Data for Sentiment Analysis",
+    "url": "https://www.kaggle.com/datasets/adelalharbi/rogue-content-and-arabic-spammers-on-twitter",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Detection for Arabic Spammers on Twitter",
+    "relevance": "Matched Kaggle query 'propaganda'"
+  },
+  {
+    "id": "bobconbob/4chan4trump",
+    "platform": "Kaggle",
+    "title": "4chan.org/pol forum posts with keyword Trump",
+    "url": "https://www.kaggle.com/datasets/bobconbob/4chan4trump",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Scraped 4chan forums looking for keywords trump **NSFW**",
+    "relevance": "Matched Kaggle query 'propaganda'"
+  },
+  {
+    "id": "piterfm/2022-ukraine-russian-war",
+    "platform": "Kaggle",
+    "title": "2022 Russia Ukraine War",
+    "url": "https://www.kaggle.com/datasets/piterfm/2022-ukraine-russian-war",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Equipment losses & Death Toll & Military Wounded & Prisoner of War of russians",
+    "relevance": "Matched Kaggle query 'telegram russian'"
+  },
+  {
+    "id": "piterfm/massive-missile-attacks-on-ukraine",
+    "platform": "Kaggle",
+    "title": "Massive Missile Attacks on Ukraine",
+    "url": "https://www.kaggle.com/datasets/piterfm/massive-missile-attacks-on-ukraine",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "2022–2023 russian strikes against Ukrainian",
+    "relevance": "Matched Kaggle query 'telegram russian'"
+  },
+  {
+    "id": "kirili4ik/yandex-jobs",
+    "platform": "Kaggle",
+    "title": "Yandex Jobs",
+    "url": "https://www.kaggle.com/datasets/kirili4ik/yandex-jobs",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "More than 600 IT vacancies in Russian from parsing telegram channel t.me/ya_jobs",
+    "relevance": "Matched Kaggle query 'telegram russian'"
+  },
+  {
+    "id": "gvyshnya/ru-and-ukr-war-related-telegram-channels",
+    "platform": "Kaggle",
+    "title": "RU and UKR War-related Telegram Channels",
+    "url": "https://www.kaggle.com/datasets/gvyshnya/ru-and-ukr-war-related-telegram-channels",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Russian and Ukrainian War-related Telegram Channels",
+    "relevance": "Matched Kaggle query 'telegram russian'"
+  },
+  {
+    "id": "jocelyndumlao/russian-dataset-for-the-reply-recovery",
+    "platform": "Kaggle",
+    "title": "Russian Dataset for the Reply Recovery",
+    "url": "https://www.kaggle.com/datasets/jocelyndumlao/russian-dataset-for-the-reply-recovery",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Enhancing Response Retrieval with Russian Language ",
+    "relevance": "Matched Kaggle query 'telegram russian'"
+  },
+  {
+    "id": "stereobooster/leave-russia-org",
+    "platform": "Kaggle",
+    "title": "leave-russia.org",
+    "url": "https://www.kaggle.com/datasets/stereobooster/leave-russia-org",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Companies responses to russian war in Ukraine",
+    "relevance": "Matched Kaggle query 'telegram russian'"
+  },
+  {
+    "id": "piterfm/warships-monitoring-kerch-strait",
+    "platform": "Kaggle",
+    "title": "Warships Monitoring - Kerch Strait",
+    "url": "https://www.kaggle.com/datasets/piterfm/warships-monitoring-kerch-strait",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Monitoring of russia's fleet on Black Sea, Sea of Azov, and Mediterranean Sea",
+    "relevance": "Matched Kaggle query 'telegram russian'"
+  },
+  {
+    "id": "kamendamov/russiaukraine-conflict-youtube-comments",
+    "platform": "Kaggle",
+    "title": "Russia/Ukraine conflict - Youtube comments ",
+    "url": "https://www.kaggle.com/datasets/kamendamov/russiaukraine-conflict-youtube-comments",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Explore the attitude of the Youtube crowd regarding the Ukraine war",
+    "relevance": "Matched Kaggle query 'ukraine war disinformation'"
+  },
+  {
+    "id": "dariusalexandru/russian-propaganda-tweets-vs-western-tweets-war",
+    "platform": "Kaggle",
+    "title": "Russian propaganda tweets",
+    "url": "https://www.kaggle.com/datasets/dariusalexandru/russian-propaganda-tweets-vs-western-tweets-war",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Kaggle dataset",
+    "relevance": "Matched Kaggle query 'ukraine war disinformation'"
+  },
+  {
+    "id": "yutkin/corpus-of-russian-news-articles-from-lenta",
+    "platform": "Kaggle",
+    "title": "News dataset from Lenta.Ru",
+    "url": "https://www.kaggle.com/datasets/yutkin/corpus-of-russian-news-articles-from-lenta",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Corpus of Russian news articles collected from Lenta.Ru",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "marialevchenko/news-dataset-from-lenta-ru-2019-2023",
+    "platform": "Kaggle",
+    "title": "News dataset from Lenta.Ru 2019-2023",
+    "url": "https://www.kaggle.com/datasets/marialevchenko/news-dataset-from-lenta-ru-2019-2023",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Latest extension up to 2024",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "romaneyvazov/df-lenta",
+    "platform": "Kaggle",
+    "title": "News from lenta.ru",
+    "url": "https://www.kaggle.com/datasets/romaneyvazov/df-lenta",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "360000+ news from lenta.ru",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "vorvit/news-lenta-20-23",
+    "platform": "Kaggle",
+    "title": "Датасет с новостями с сайта lenta.ru 2020-2023",
+    "url": "https://www.kaggle.com/datasets/vorvit/news-lenta-20-23",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Датасет с новостями и их категориями с сайта lenta.ru за 20-23 года",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "spielmeister/economical-news-in-russian-lenta-ru2013-2019",
+    "platform": "Kaggle",
+    "title": "Economical news in Russian Lenta.ru(2010-2025)",
+    "url": "https://www.kaggle.com/datasets/spielmeister/economical-news-in-russian-lenta-ru2013-2019",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Financial news in Russian for sentiment analysis task",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "andrewnort/russian-news-headers-from-lentaru-1999-2023",
+    "platform": "Kaggle",
+    "title": "Russian news headers from lenta.ru (1999 - 2023)",
+    "url": "https://www.kaggle.com/datasets/andrewnort/russian-news-headers-from-lentaru-1999-2023",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Kaggle dataset",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "luydmilateplova/lenta-f",
+    "platform": "Kaggle",
+    "title": "LENTA+Fontanka",
+    "url": "https://www.kaggle.com/datasets/luydmilateplova/lenta-f",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "news from sites lenta.ru fontanka.ru 2020 - 2023 years",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "godblessroman/lenta-fontanka-1000-tokenized",
+    "platform": "Kaggle",
+    "title": "1000+ Lenta&Fontanka articles [categorized]",
+    "url": "https://www.kaggle.com/datasets/godblessroman/lenta-fontanka-1000-tokenized",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "1005 articles parsed from Lenta and Fontanka news websites, categorized by theme",
+    "relevance": "Matched Kaggle query 'lenta news'"
+  },
+  {
+    "id": "phoenix120/gazeta-summaries",
+    "platform": "Kaggle",
+    "title": "Gazeta Summaries",
+    "url": "https://www.kaggle.com/datasets/phoenix120/gazeta-summaries",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Russian News Summarization Dataset",
+    "relevance": "Matched Kaggle query 'gazeta news'"
+  },
+  {
+    "id": "falloutbabe/russian-invasion-of-ukraine-live-news-dataset",
+    "platform": "Kaggle",
+    "title": "Russian Invasion of Ukraine | Live News Dataset ",
+    "url": "https://www.kaggle.com/datasets/falloutbabe/russian-invasion-of-ukraine-live-news-dataset",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Live News Dataset Chronicles of the Russian Invasion of Ukraine",
+    "relevance": "Matched Kaggle query 'gazeta news'"
+  },
+  {
+    "id": "viacheslavshalamov/russian-news-paraphrases-2020",
+    "platform": "Kaggle",
+    "title": "Russian news paraphrases 2020",
+    "url": "https://www.kaggle.com/datasets/viacheslavshalamov/russian-news-paraphrases-2020",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "russian news article corpus for paraphrase generation",
+    "relevance": "Matched Kaggle query 'gazeta news'"
+  },
+  {
+    "id": "techsalerator/new-events-data-in-kosovo",
+    "platform": "Kaggle",
+    "title": "New Events Data in Kosovo",
+    "url": "https://www.kaggle.com/datasets/techsalerator/new-events-data-in-kosovo",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "This is a Techsalerator dataset on New Events Data in Kosovo",
+    "relevance": "Matched Kaggle query 'gazeta news'"
+  },
+  {
+    "id": "techsalerator/new-events-data-in-poland",
+    "platform": "Kaggle",
+    "title": "New Events Data in Poland",
+    "url": "https://www.kaggle.com/datasets/techsalerator/new-events-data-in-poland",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "This is a Techsalerator dataset on New Events Data in Poland",
+    "relevance": "Matched Kaggle query 'gazeta news'"
+  },
+  {
+    "id": "mukhammedabusuveilim/gazetta-financial-news-dataset",
+    "platform": "Kaggle",
+    "title": "Gazetta-financial-news-dataset",
+    "url": "https://www.kaggle.com/datasets/mukhammedabusuveilim/gazetta-financial-news-dataset",
+    "languages": [
+      "ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Ilya Gusev's Gazeta dataset",
+    "relevance": "Matched Kaggle query 'gazeta news'"
+  },
+  {
+    "id": "corrieaar/disinformation-articles",
+    "platform": "Kaggle",
+    "title": "Disinformation and Fake News",
+    "url": "https://www.kaggle.com/datasets/corrieaar/disinformation-articles",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Disinformation cases originating in pro-Kremlin media collected by EUvsDisinfo",
+    "relevance": "Matched Kaggle query 'euvsdisinfo'"
+  },
+  {
+    "id": "imuhammad/euvsdisinfo-disinformation-database",
+    "platform": "Kaggle",
+    "title": "EUvsDisinfo Disinformation Database",
+    "url": "https://www.kaggle.com/datasets/imuhammad/euvsdisinfo-disinformation-database",
+    "languages": [
+      "ro/ru"
+    ],
+    "license": "Unknown",
+    "downloads": 0,
+    "likes": 0,
+    "text_type": "Kaggle Dataset",
+    "description": "Disinformation cases collected by EUvsDisinfo originated from pro-Kremlin media ",
+    "relevance": "Matched Kaggle query 'euvsdisinfo'"
+  }
+]

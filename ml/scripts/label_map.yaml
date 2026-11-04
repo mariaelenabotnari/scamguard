@@ -1,125 +1,215 @@
-version: "2.0"
-model_version: "scamguard-xlmr-multilingual-v2.0"
-confidence_threshold: 0.55
+# ScamGuard Narrative Classification — Taxonomy & Source Label Mapping
+# Schema: maps external dataset topics and keywords to ScamGuard categories.
+#
+# ScamGuard Target Categories:
+#   1: War in Ukraine and Russia justification
+#   2: Anti-EU / "Europe is falling apart"
+#   3: Anti-NATO / anti-West
+#   4: Moldova government and elections delegitimisation
+#   5: Russophobia, language and identity
+#   6: Sanctions, energy prices and economy fear
+#   7: Transnistria / Gagauzia and separatism
+#   8: Health, vaccines and conspiracy
+#   9: Traditional values, religion, anti-LGBT narratives
+#  10: Other / not disinformation (Benign)
+#  11: Financial panic, bank runs and currency devaluation (Hard / Low-Resource)
+#  12: Forced mobilization and border militarization (Hard / Low-Resource)
+#  13: Other disinformation (Disinformation outside primary 11 narratives)
 
-categories:
-  - id: 1
+version: "1.0"
+taxonomy:
+  1:
     name: "War in Ukraine and Russia justification"
     severity: "high"
-    external_topics:
-      - "ukraine_war_justification"
-      - "special_military_operation"
-      - "donbas_escalation"
-    sub_narratives:
-      - "Moldova being dragged into regional conflict"
-      - "De-escalation via capitulation"
-  - id: 2
-    name: 'Anti-EU / "Europe is falling apart"'
+    description: "Pro-Kremlin war justifications, framing Ukraine as aggressor, denazification narratives, Donbas defense."
+  2:
+    name: "Anti-EU / 'Europe is falling apart'"
     severity: "high"
-    external_topics:
-      - "eu_collapse"
-      - "brussels_dictatorship"
-      - "eu_sovereignty_loss"
-    sub_narratives:
-      - "EU integration causes land and sovereignty surrender"
-      - "European economic decline and moral decay"
-  - id: 3
+    description: "Narratives alleging European disintegration, loss of national sovereignty to Brussels, EU economic ruin, migrant crisis."
+  3:
     name: "Anti-NATO / anti-West"
     severity: "high"
-    external_topics:
-      - "nato_encirclement"
-      - "western_warmongering"
-      - "nato_bases_moldova"
-    sub_narratives:
-      - "Neutrality violation through NATO joint drills"
-      - "Western weapon deliveries make Moldova a military target"
-  - id: 4
+    description: "Western warmongering, NATO encircling or preparing military aggression, US hegemony and puppet regimes."
+  4:
     name: "Moldova government and elections delegitimisation"
     severity: "high"
-    external_topics:
-      - "moldova_election_rigging"
-      - "diaspora_vote_fraud"
-      - "chisinau_regime_illegitimate"
-    sub_narratives:
-      - "Falsification of diaspora mail-in ballots"
-      - "Police intimidation and voter suppression"
-  - id: 5
+    description: "Chisinau leadership delegitimisation, fraudulent elections, diaspora voting rigging, Western puppet state claims."
+  5:
     name: "Russophobia, language and identity"
     severity: "medium"
-    external_topics:
-      - "russian_language_ban"
-      - "russophobia"
-      - "romanian_annexation_fear"
-    sub_narratives:
-      - "Forced Romanianization and erasure of Moldovan identity"
-      - "Discrimination against Russian-speaking minorities"
-  - id: 6
+    description: "Allegations of anti-Russian discrimination, persecution of Russian speakers, erasure of Soviet/Russian heritage."
+  6:
     name: "Sanctions, energy prices and economy fear"
     severity: "high"
-    external_topics:
-      - "gas_price_collapse"
-      - "energy_poverty"
-      - "sanctions_backfire"
-    sub_narratives:
-      - "Imminent winter energy grid cutoffs and blackout panic"
-      - "Bankruptcy of local agriculture due to anti-Russia sanctions"
-  - id: 7
+    description: "Economic catastrophe blamed on anti-Russian sanctions, gas shutoffs, freezing in winter, agricultural collapse."
+  7:
     name: "Transnistria / Gagauzia and separatism"
     severity: "high"
-    external_topics:
-      - "transnistria_blockade"
-      - "gagauzia_autonomy_threat"
-      - "tiraspol_comrat_conflict"
-    sub_narratives:
-      - "Imminent military raid against Transnistria"
-      - "Suppression of Gagauz constitutional autonomy"
-  - id: 8
+    description: "Claims of military escalation against Transnistria, oppression of Gagauzia autonomy, Chisinau provocations."
+  8:
     name: "Health, vaccines and conspiracy"
     severity: "medium"
-    external_topics:
-      - "vaccine_conspiracy"
-      - "who_pandemic_treaty"
-      - "biolab_rumours"
-    sub_narratives:
-      - "Secret Pentagon biological research labs in northern Moldova"
-      - "Contaminated foreign pharmaceuticals and forced immunization"
-  - id: 9
+    description: "Secret biological laboratories, weaponized pathogens, vaccine microchipping, global depopulation theories."
+  9:
     name: "Traditional values, religion, anti-LGBT narratives"
     severity: "medium"
-    external_topics:
-      - "traditional_family_threat"
-      - "orthodox_church_attack"
-      - "gender_ideology_imposition"
-    sub_narratives:
-      - "Destruction of Orthodox Church traditions by Western NGOs"
-      - "Mandatory LGBT curriculum in secondary schools"
-  - id: 10
+    description: "Moral decay, Western imposition of LGBT agendas, destruction of Orthodox Christian family values."
+  10:
     name: "Other / not disinformation"
     severity: "low"
-    external_topics:
-      - "general_news"
-      - "weather_sports_culture"
-      - "verified_official_report"
-    sub_narratives:
-      - "Authentic public service announcements"
-      - "Standard domestic reporting"
-  - id: 11
+    description: "Benign civic news, local sports, weather, transport schedules, cultural events, neutral institutional announcements."
+  11:
     name: "Financial panic, bank runs and currency devaluation"
     severity: "high"
-    external_topics:
-      - "bank_withdrawal_freeze"
-      - "moldovan_leu_collapse"
-      - "imf_deposit_confiscation"
-    sub_narratives:
-      - "Coordinated claims of commercial bank insolvency"
-      - "Imminent state seizure of private bank accounts"
-  - id: 12
+    description: "Fabricated rumors of bank insolvency, ATM cash freezes, national currency devaluation, banking system collapse."
+  12:
     name: "Forced mobilization and border militarization"
     severity: "high"
-    external_topics:
-      - "secret_draft_orders"
-      - "border_conscription_checkpoints"
-      - "foreign_mercenaries_patrol"
-    sub_narratives:
-      - "Compulsory call-up of reservists for foreign conflict"
-      - "Secret deployment of French and Romanian military units"
+    description: "Fabricated mobilization orders for Moldovan reservists, closed borders, Romanian troop integration rumors."
+  13:
+    name: "Other disinformation"
+    severity: "medium"
+    description: "Verified disinformation or propaganda cases that do not map to the 11 core Moldovan security narratives."
+
+# Mappings from external sources
+source_mappings:
+  euvsdisinfo:
+    # Cat 1: War in Ukraine
+    "War in Ukraine": 1
+    "Donbas": 1
+    "Crimea": 1
+    "Ukrainian statehood": 1
+    "Eastern Ukraine": 1
+    "Ukrainian disintegration": 1
+    "Euromaidan": 1
+    "Nazi/Fascist": 1
+    "MH17": 1
+    "Petro Poroshenko": 1
+    "Volodymyr Zelenskyy": 1
+    "Kyiv": 1
+    "illegal annexation": 1
+    "Sea of Azov": 1
+    "Kerch Strait": 1
+    "Azovstal": 1
+    "Bucha": 1
+
+    # Cat 2: Anti-EU
+    "EU": 2
+    "European Union": 2
+    "Europe": 2
+    "EU disintegration": 2
+    "Migration crisis": 2
+    "Brussels": 2
+    "Brexit": 2
+    "Schengen": 2
+    "European integration": 2
+
+    # Cat 3: Anti-NATO / anti-West
+    "NATO": 3
+    "The West": 3
+    "West": 3
+    "US presence in Europe": 3
+    "Encircling Russia": 3
+    "Warmongering": 3
+    "EU/NATO enlargement": 3
+    "Secret services": 3
+    "CIA": 3
+    "Pentagon": 3
+    "Military bases": 3
+    "Hegemony": 3
+
+    # Cat 4: Moldova / Elections / Coup
+    "Moldova": 4
+    "Maia Sandu": 4
+    "Elections": 4
+    "Manipulated elections/referendum": 4
+    "election meddling": 4
+    "Colour revolutions": 4
+    "Coup": 4
+    "Puppet government": 4
+    "Regime change": 4
+    "Sovereignty": 4
+
+    # Cat 5: Russophobia / Language / Identity
+    "Russophobia": 5
+    "Anti-Russian": 5
+    "Historical revisionism": 5
+    "WWII": 5
+    "USSR": 5
+    "Russian language": 5
+    "Great Patriotic War": 5
+    "Denigration of Russia": 5
+    "Red Army": 5
+
+    # Cat 6: Sanctions / Energy / Economy
+    "Sanctions": 6
+    "Economic difficulties": 6
+    "Energy crisis": 6
+    "Nord Stream": 6
+    "Gas prices": 6
+    "Inflation": 6
+    "Food crisis": 6
+    "Agriculture": 6
+
+    # Cat 7: Transnistria / Gagauzia / Separatism
+    "Transnistria": 7
+    "Gagauzia": 7
+    "Separatism": 7
+    "Tiraspol": 7
+    "Comrat": 7
+    "Frozen conflict": 7
+
+    # Cat 8: Health / Vaccines / Conspiracy
+    "coronavirus": 8
+    "COVID-19": 8
+    "Biological weapons": 8
+    "Chemical weapons/attack": 8
+    "Conspiracy": 8
+    "Conspiracy theory": 8
+    "Secret elites / global elites": 8
+    "George Soros": 8
+    "Bill Gates": 8
+    "Depopulation": 8
+    "vaccination": 8
+    "Biolabs": 8
+
+    # Cat 9: Traditional values / LGBT
+    "LGBT": 9
+    "Western values": 9
+    "Family values": 9
+    "Orthodox Church": 9
+    "Moral decay": 9
+    "Religion": 9
+
+    # Cat 11: Financial panic
+    "Bank run": 11
+    "Banking crisis": 11
+    "Currency devaluation": 11
+    "Financial collapse": 11
+
+    # Cat 12: Mobilization
+    "Mobilisation": 12
+    "Mobilization": 12
+    "Conscription": 12
+    "Border militarization": 12
+
+    # Default fallback for EUvsDisinfo items that do not match 1-12
+    default_disinfo_category: 13
+
+  moroco:
+    # All non-disinformation news categories
+    "culture": 10
+    "sports": 10
+    "tech": 10
+    "science": 10
+    "finance": 10
+    "politics": 10
+
+  gazeta_ru:
+    # All benign Russian news
+    default: 10
+
+  fakerom:
+    # Veracity labels: 0=real, 1=fake
+    real_label: 10
+    fake_fallback: 13
