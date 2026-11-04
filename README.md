@@ -41,6 +41,10 @@ docker compose up --build
 - **Frontend**: `http://localhost:5173`
 - **Backend API**: `http://localhost:8000` (health check at `/health`, OpenAPI docs at `/docs`)
 
+#### Running Modes (Live vs Mock)
+- **Live Backend Mode (Default)**: `VITE_USE_MOCKS=false` in `.env` and `docker-compose.yml`. The UI communicates directly with the FastAPI backend, database, and live Telegram collector pipeline.
+- **Mock Mode (Opt-in)**: Set `VITE_USE_MOCKS=true` in `.env` or run with `VITE_USE_MOCKS=true npm run dev` to test UI components and design systems offline without a running backend.
+
 ### 2. Local Development
 
 **Frontend:**
