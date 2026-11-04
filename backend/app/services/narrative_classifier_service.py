@@ -24,13 +24,21 @@ from app.services.similarity_service import (
 from app.services.text_normaliser import ITextNormaliser, TextNormaliser
 
 MODEL_VERSION = "scamguard-xlmr-multilingual-v2.0"
-CURATED_DEBUNKS_PATH = (
+_SEED_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "ml"
+    / "data"
+    / "seed"
+    / "moldova_debunk_claims.jsonl"
+)
+_CURATED_PATH = (
     Path(__file__).resolve().parents[3]
     / "ml"
     / "data"
     / "curated"
     / "moldova_debunk_claims.jsonl"
 )
+CURATED_DEBUNKS_PATH = _SEED_PATH if _SEED_PATH.exists() else _CURATED_PATH
 
 
 @dataclass(frozen=True)
