@@ -29,6 +29,11 @@ class Settings(BaseSettings):
     smtp_password: str | None = None
     smtp_from: str = "noreply@scamguard.md"
     smtp_tls: bool = True
+    telegram_api_id: int | None = None
+    telegram_api_hash: str | None = None
+    telegram_phone: str | None = None
+    telegram_session_path: str = "./sessions/scamguard_collector"
+    collection_interval_minutes: int = 10
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
