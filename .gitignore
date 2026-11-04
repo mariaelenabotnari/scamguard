@@ -19,6 +19,9 @@ dashboard_design.*
 *.session-journal
 
 # Python / Backend
+*.db
+*.sqlite
+*.sqlite3
 __pycache__/
 *.py[cod]
 *$py.class

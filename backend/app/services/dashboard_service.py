@@ -219,26 +219,29 @@ class DashboardService(IDashboardService):
         row_al = conn.execute(
             "SELECT COUNT(*) AS cnt FROM alerts WHERE LOWER(status) != 'dismissed'"
         ).fetchone()
-        unread_alerts = int(row_al["cnt"]) if row_al else 3
+        unread_alerts = int(row_al["cnt"]) if row_al else 0
 
         row_ch = conn.execute("SELECT COUNT(*) AS cnt FROM watchlist_channels").fetchone()
-        ch_count = int(row_ch["cnt"]) if row_ch else 312
+        ch_count = int(row_ch["cnt"]) if row_ch else 0
 
         row_cl = conn.execute("SELECT COUNT(*) AS cnt FROM clusters").fetchone()
-        cl_count = int(row_cl["cnt"]) if row_cl else 48
+        cl_count = int(row_cl["cnt"]) if row_cl else 0
+
+        row_msg = conn.execute("SELECT COUNT(*) AS cnt FROM messages").fetchone()
+        msg_count = int(row_msg["cnt"]) if row_msg else 0
 
         pulse_bars = [
-            SidebarPulseBarDto(id="b1", label="10:00", heightPercent=48),
+            SidebarPulseBarDto(id="b1", label="10:00", heightPercent=min(100, msg_count * 5)),
             SidebarPulseBarDto(
-                id="b2", label="11:00", heightPercent=88, isHighlighted=True, tag="Max"
+                id="b2", label="11:00", heightPercent=min(100, msg_count * 8), isHighlighted=msg_count > 0, tag="Max" if msg_count > 0 else None
             ),
-            SidebarPulseBarDto(id="b3", label="12:00", heightPercent=56),
+            SidebarPulseBarDto(id="b3", label="12:00", heightPercent=min(100, msg_count * 4)),
             SidebarPulseBarDto(
-                id="b4", label="13:00", heightPercent=34, isHighlighted=True, tag="Min"
+                id="b4", label="13:00", heightPercent=min(100, msg_count * 2), isHighlighted=False
             ),
-            SidebarPulseBarDto(id="b5", label="14:00", heightPercent=72),
-            SidebarPulseBarDto(id="b6", label="15:00", heightPercent=28),
-            SidebarPulseBarDto(id="b7", label="16:00", heightPercent=52),
+            SidebarPulseBarDto(id="b5", label="14:00", heightPercent=min(100, msg_count * 6)),
+            SidebarPulseBarDto(id="b6", label="15:00", heightPercent=min(100, msg_count * 3)),
+            SidebarPulseBarDto(id="b7", label="16:00", heightPercent=min(100, msg_count * 4)),
         ]
 
         quick_cards = [
@@ -250,8 +253,8 @@ class DashboardService(IDashboardService):
             ),
             QuickSummaryCardDto(
                 id="analyzed-messages",
-                label="Analyzed Today",
-                value="3,502",
+                label="Analyzed Messages",
+                value=f"{msg_count:,}",
                 targetPath="/search",
             ),
             QuickSummaryCardDto(
@@ -267,17 +270,17 @@ class DashboardService(IDashboardService):
             CalendarDayDto(dayShort="Tu", dateNumber=29),
             CalendarDayDto(dayShort="We", dateNumber=30),
             CalendarDayDto(dayShort="Th", dateNumber=31),
-            CalendarDayDto(dayShort="Fr", dateNumber=1, hasAlertDot=True),
-            CalendarDayDto(dayShort="Sa", dateNumber=2, isActive=True, hasAlertDot=True),
+            CalendarDayDto(dayShort="Fr", dateNumber=1, hasAlertDot=unread_alerts > 0),
+            CalendarDayDto(dayShort="Sa", dateNumber=2, isActive=True, hasAlertDot=unread_alerts > 0),
             CalendarDayDto(dayShort="Su", dateNumber=3),
         ]
 
         audit = AuditGaugeDto(
             title="System Audit & Ingestion",
-            periodLabel="Week 44 • 2026",
-            primaryPercentage=87,
+            periodLabel="Live Surveillance",
+            primaryPercentage=100 if ch_count > 0 else 0,
             primaryLabel="Audit Coverage",
-            secondaryPercentage=94,
+            secondaryPercentage=100 if cl_count > 0 else 0,
             secondaryLabel="Pipeline Precision",
         )
 
@@ -295,8 +298,10 @@ class DashboardService(IDashboardService):
             initials="EB" if role != "admin" else "AD",
         )
 
+        last_collection_label = "Collected • Active" if msg_count > 0 else "No runs yet • Idle"
+
         return ShellSummaryDto(
-            lastCollectionLabel="14:02 Today • Active",
+            lastCollectionLabel=last_collection_label,
             unreadAlertsCount=unread_alerts,
             user=user,
             pulseBars=pulse_bars,
