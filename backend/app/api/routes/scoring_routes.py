@@ -28,6 +28,8 @@ def list_coordination_groups(
 
 
 @scoring_router.get("/ranking", response_model=list[RankedChannelDto])
+@scoring_router.get("/channels/ranking", response_model=list[RankedChannelDto])
+@scoring_router.get("/channels/ranked", response_model=list[RankedChannelDto])
 def list_ranked_channels(
     scoring_service: ScoringServiceDep,
     min_score: Annotated[int, Query(ge=0, le=100)] = 0,

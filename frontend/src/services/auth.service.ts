@@ -14,9 +14,9 @@ import {
   type IHttpClient,
 } from '../lib/api/http-client';
 
-const CLEAN_PROFILE_STORAGE_KEY = 'choruswatch_clean_profile';
-const SESSION_TOKEN_KEY = 'choruswatch_auth_token';
-const SESSION_USER_KEY = 'choruswatch_auth_user';
+const CLEAN_PROFILE_STORAGE_KEY = 'scamguard_clean_profile';
+const SESSION_TOKEN_KEY = 'scamguard_auth_token';
+const SESSION_USER_KEY = 'scamguard_auth_user';
 
 export interface IAuthService {
   getCurrentUser(): Promise<AuthUserDto | null>;

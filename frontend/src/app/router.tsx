@@ -20,7 +20,7 @@ import { authService } from '../services/auth.service';
 export function AppRoutes() {
   const [sessionUser, setSessionUser] = useState<AuthUserDto | null>(() => {
     try {
-      const stored = localStorage.getItem('choruswatch_auth_user');
+      const stored = localStorage.getItem('scamguard_auth_user');
       return stored ? (JSON.parse(stored) as AuthUserDto) : null;
     } catch {
       return null;
