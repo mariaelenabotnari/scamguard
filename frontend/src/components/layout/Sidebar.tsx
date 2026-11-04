@@ -69,7 +69,7 @@ export function Sidebar({
           </div>
           {!isCollapsed ? (
             <span className="mt-1 text-sm font-extrabold tracking-tight text-ink-primary">
-              ChorusWatch
+              ScamGuard
             </span>
           ) : null}
         </div>
@@ -124,7 +124,7 @@ export function Sidebar({
       {!isCollapsed ? (
         <div className="pt-6 text-center">
           <p className="text-[10px] font-medium text-ink-muted">
-            ChorusWatch v1.2
+            ScamGuard v1.2
           </p>
         </div>
       ) : null}

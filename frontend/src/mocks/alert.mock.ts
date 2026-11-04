@@ -43,7 +43,7 @@ export const MOCK_ALERTS: readonly AlertItemDto[] = [
     status: 'seen',
     title: 'Source Post Deleted After Cluster Propagation',
     summary:
-      'Original post in cl-gagauzia-autonomy-03 was deleted at source; raw text purged per NFR-11.',
+      'Original post in cl-gagauzia-autonomy-03 was deleted at source; raw text purged per data retention policy.',
     triggeredAt: '2026-11-02 09:30',
     evidencePath: '/clusters/cl-gagauzia-autonomy-03',
     narrativeCategory: 'Transnistria / Gagauzia and separatism',

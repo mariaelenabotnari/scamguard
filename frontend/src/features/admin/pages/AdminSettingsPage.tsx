@@ -148,7 +148,7 @@ export function AdminSettingsPage({ service = adminService }: AdminSettingsPageP
       });
       setParams(updated);
       setSaveMessage(
-        `Saved new parameter version ${updated.parameterVersion}. Historical scores keep their original version tag (NFR-13).`,
+        `Saved new parameter version ${updated.parameterVersion}. Historical scores keep their original version tag.`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save parameters.');

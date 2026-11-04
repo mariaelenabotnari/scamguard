@@ -93,7 +93,7 @@ export function ExportModal({ defaultEntity = 'clusters', service = exportServic
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-bold text-ink-primary">
                   <Icon name="shield-halved" className="mr-1.5 text-brand-500" />
-                  Account Export Quota (NFR-10)
+                  Account Export Quota
                 </span>
                 <Badge variant={isNewAccount ? 'medium' : 'success'}>
                   {isNewAccount ? 'New Account Cap (<7d)' : 'Verified Researcher'}

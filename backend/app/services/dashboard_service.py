@@ -3,7 +3,7 @@
 import time
 import uuid
 from datetime import UTC, datetime
-from typing import Protocol
+from typing import Literal, Protocol
 
 from app.db.database import DatabaseManager
 from app.dtos.dashboard_dto import (
@@ -12,12 +12,16 @@ from app.dtos.dashboard_dto import (
     CalendarDayDto,
     DashboardBannerDto,
     DashboardOverviewDto,
+    NarrativeCountItemDto,
     QuickSummaryCardDto,
+    RiskiestChannelItemDto,
     ShellSummaryDto,
     SidebarPulseBarDto,
     StatCardMetricDto,
+    SystemStatusDto,
     TimelinePointDto,
     TimeRangeOption,
+    TopClusterItemDto,
     UserProfileSummaryDto,
     UserRole,
 )
@@ -203,6 +207,93 @@ class DashboardService(IDashboardService):
             ),
         ]
 
+        # Query top clusters
+        top_clusters: list[TopClusterItemDto] = []
+        cluster_rows = conn.execute(
+            """
+            SELECT id, headline_summary, narrative_category, channels_count, window_minutes
+            FROM clusters
+            ORDER BY channels_count DESC
+            LIMIT 5
+            """
+        ).fetchall()
+        for c in cluster_rows:
+            wm = int(c["window_minutes"]) if c["window_minutes"] else 20
+            tw_str = f"{wm}m spread"
+            top_clusters.append(
+                TopClusterItemDto(
+                    id=c["id"],
+                    headline=c["headline_summary"],
+                    narrativeCategory=c["narrative_category"] or "Coordinated messaging",
+                    channelsCount=int(c["channels_count"]),
+                    timeWindow=tw_str,
+                    postedAtLabel="Recent",
+                )
+            )
+
+        # Query riskiest channels
+        riskiest_channels: list[RiskiestChannelItemDto] = []
+        channel_rows = conn.execute(
+            """
+            SELECT w.id, w.handle, w.title,
+                   COALESCE(s.score, 0) AS score,
+                   COALESCE(s.risk_band, 'low') AS risk_band,
+                   COALESCE(s.primary_narrative, 'Coordinated messaging') AS primary_narrative
+            FROM watchlist_channels w
+            LEFT JOIN channel_scores s ON w.id = s.channel_id
+            ORDER BY score DESC
+            LIMIT 5
+            """
+        ).fetchall()
+        for ch in channel_rows:
+            score = int(ch["score"])
+            band: Literal["high", "medium", "low"] = (
+                "high" if score >= 70 else "medium" if score >= 40 else "low"
+            )
+            riskiest_channels.append(
+                RiskiestChannelItemDto(
+                    id=ch["id"],
+                    handle=ch["handle"],
+                    title=ch["title"] or ch["handle"],
+                    score=score,
+                    riskBand=band,
+                    sparkline=[score, score, score, score, score],
+                    primaryNarrative=ch["primary_narrative"] or "Coordinated messaging",
+                )
+            )
+
+        # Query narrative counts
+        narrative_counts: list[NarrativeCountItemDto] = []
+        if clusters_count > 0:
+            narrative_rows = conn.execute(
+                """
+                SELECT narrative_category, COUNT(*) AS cnt
+                FROM clusters
+                GROUP BY narrative_category
+                ORDER BY cnt DESC
+                """
+            ).fetchall()
+            for nr in narrative_rows:
+                cnt = int(nr["cnt"])
+                pct = int(round((cnt / clusters_count) * 100))
+                narrative_counts.append(
+                    NarrativeCountItemDto(
+                        category=nr["narrative_category"] or "Coordinated messaging",
+                        clustersCount=cnt,
+                        percentage=pct,
+                    )
+                )
+
+        # System status
+        last_msg_row = conn.execute("SELECT MAX(posted_at) AS last_ts FROM messages").fetchone()
+        last_collection_label = "Collected • Active" if last_msg_row and last_msg_row["last_ts"] else "Ready • Idle"
+        system_status = SystemStatusDto(
+            lastCollectionLabel=last_collection_label,
+            nextRunLabel="in 5m",
+            connectionStatus="ok",
+            analysisDelaySeconds=median_delay or 4,
+        )
+
         elapsed_ms = (time.perf_counter() - start_time) * 1000
         self.record_latency("dashboard_overview", elapsed_ms)
 
@@ -211,6 +302,10 @@ class DashboardService(IDashboardService):
             banner=banner,
             timeline=timeline,
             stats=stats,
+            topClusters=top_clusters,
+            riskiestChannels=riskiest_channels,
+            narrativeCounts=narrative_counts,
+            systemStatus=system_status,
         )
 
     def get_shell_summary(self, role: UserRole = "visitor") -> ShellSummaryDto:

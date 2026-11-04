@@ -5,11 +5,53 @@ import type {
   SupportedLocale,
   TimeRangeOption,
 } from '../../dtos/layout.dto';
+import { isMockMode } from '../../lib/api/http-client';
 import { MOCK_SHELL_SUMMARY } from '../../mocks/layout.mock';
 import { authService } from '../../services/auth.service';
 import { layoutService } from '../../services/layout.service';
 import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
+
+const INITIAL_SHELL_SUMMARY: ShellSummaryDto = {
+  lastCollectionLabel: 'Syncing...',
+  unreadAlertsCount: 0,
+  user: {
+    fullName: 'ScamGuard Analyst',
+    roleLabel: 'Surveillance Desk',
+    role: 'admin',
+    initials: 'SA',
+  },
+  pulseBars: [],
+  quickCards: [
+    {
+      id: 'watched-channels',
+      label: 'Monitored Channels',
+      value: '0',
+      targetPath: '/channels',
+    },
+    {
+      id: 'analyzed-messages',
+      label: 'Analyzed Messages',
+      value: '0',
+      targetPath: '/search',
+    },
+    {
+      id: 'active-clusters',
+      label: 'Coordinated Clusters',
+      value: '0',
+      targetPath: '/clusters',
+    },
+  ],
+  calendarDays: [],
+  audit: {
+    title: 'Live Surveillance',
+    periodLabel: 'System Status',
+    primaryPercentage: 100,
+    primaryLabel: 'Audit Coverage',
+    secondaryPercentage: 100,
+    secondaryLabel: 'Pipeline Precision',
+  },
+};
 
 export interface AppShellProps {
   children: React.ReactNode;
@@ -28,7 +70,9 @@ export function AppShell({
   const [searchQuery, setSearchQuery] = useState('');
   const [internalRange, setInternalRange] = useState<TimeRangeOption>('7d');
   const [locale, setLocale] = useState<SupportedLocale>('EN');
-  const [summary, setSummary] = useState<ShellSummaryDto>(MOCK_SHELL_SUMMARY);
+  const [summary, setSummary] = useState<ShellSummaryDto>(() =>
+    isMockMode() ? MOCK_SHELL_SUMMARY : INITIAL_SHELL_SUMMARY,
+  );
 
   const activeRange = controlledRange ?? internalRange;
   const navItems = layoutService.getNavItems();

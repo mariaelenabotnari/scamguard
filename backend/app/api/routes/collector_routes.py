@@ -1,4 +1,4 @@
-"""HTTP routes for triggering Telegram collection runs and NFR-11 deleted-post purging."""
+"""HTTP routes for triggering Telegram collection runs and deleted-post purging."""
 
 from typing import Annotated
 

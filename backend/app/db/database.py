@@ -86,6 +86,9 @@ def _create_default_db_manager() -> DatabaseManager:
         path = settings.sqlite_path if settings.sqlite_path else ":memory:"
     except Exception:
         path = ":memory:"
+    if path != ":memory:" and not Path(path).is_absolute():
+        backend_dir = Path(__file__).resolve().parents[2]
+        path = str((backend_dir / path).resolve())
     mgr = DatabaseManager(sqlite_path=path)
     mgr.run_migrations()
     return mgr

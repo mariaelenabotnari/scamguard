@@ -39,3 +39,27 @@ This pilot report validates the end-to-end integration and verification of **Sca
 - **API Base URL**: `http://localhost:8000/api/v1`
 - **Dashboard Overview**: Dynamic KPI counters (`Monitored Channels`, `Analyzed Messages`, `Coordinated Cascades`) aggregate live SQLite counts.
 - **Empty State Behavior**: Clean informative states displayed when no channels or clusters have been collected yet.
+---
+
+## 5. Live Pilot Surveillance Run Results
+
+### Ingestion Metrics
+- **Authenticated Account**: `@mariaelenabotnari` via Telethon MTProto API (`sessions/scamguard_collector.session`).
+- **Channels Ingested**:
+  - `@realmorarinews` (Morari.news): 110 messages ingested.
+  - `@wtfmoldova` (WTF Moldova?!): 144 messages ingested.
+- **Total Real Messages in SQLite**: **254 messages**.
+
+### Pipeline Analysis Output
+- **Pipeline Execution**: `pipe-f4da87c9`
+- **Clusters Detected**: **2 coordinated cascades** across `@realmorarinews` and `@wtfmoldova`.
+  - Cluster `cl-e2309b9a07`:
+    - **Headline**: "Same message posted by 2 channels in 21 minutes"
+    - **Narrative Category**: `Anti-EU / "Europe is falling apart"`
+    - **Anchor Post**: `msg-ch-realmorarinews-27416` ($t_0$, delay $0\text{s}$, similarity $1.0$)
+    - **Cascade Copy**: `msg-ch-wtfmoldova-93936` (delay $+1266\text{s}$, similarity $0.864$, word-level LCS token diff: 9 tokens modified)
+  - Cluster `cl-23af6277e5`:
+    - **Headline**: "Same message posted by 2 channels in 19 minutes"
+    - **Narrative Category**: `Anti-EU / "Europe is falling apart"`
+- **Channels Scored**: 3 channels scored dynamically with evidence breakdowns.
+- **Alerts Generated**: 2 active alerts generated for investigation.

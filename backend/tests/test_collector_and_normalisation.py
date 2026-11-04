@@ -297,7 +297,7 @@ def test_collector_runs_on_5_public_channels_handles_floodwait_and_prevents_dupl
     assert len(stored_messages) == 10
     assert len(get_collection_runs(collector_service=collector_service)) == 2
 
-    # NFR-11: Purge source-deleted post raw text while keeping normalised text and hash
+    # Purge source-deleted post raw text while keeping normalised text and hash
     target_msg = stored_messages[0]
     receipt = purge_source_deleted_post(
         payload=PurgeDeletedPostInputDto(messageId=target_msg.id),
