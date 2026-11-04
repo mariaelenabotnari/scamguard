@@ -1,5 +1,6 @@
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000/api/v1';
-const USE_MOCKS = (import.meta.env.VITE_USE_MOCKS ?? 'true') !== 'false';
+const USE_MOCKS =
+  import.meta.env.MODE === 'test' || import.meta.env.VITE_USE_MOCKS === 'true';
 
 let activeAccessToken: string | null = null;
 
