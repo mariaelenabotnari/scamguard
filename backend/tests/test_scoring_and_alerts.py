@@ -228,3 +228,55 @@ def test_ranking_channel_detail_and_alerts_routes(isolated_db: DatabaseManager) 
     target_alert_id = alerts[0].id
     dismissed = dismiss_alert(alert_id=target_alert_id, alert_service=alert_service)
     assert dismissed.status == "dismissed"
+
+
+def test_syndication_wire_detection_and_discount(isolated_db: DatabaseManager) -> None:
+    from app.services.scoring_service import ScoringService, detect_syndication_wire
+
+    # Test wire detection
+    is_wire, agency = detect_syndication_wire("Conform agenției Moldpres, Comisia Electorală a anunțat rezultatele.")
+    assert is_wire is True
+    assert agency == "Moldpres"
+
+    is_wire2, agency2 = detect_syndication_wire("Potrivit agenției IPN, traficul a fost reluat.")
+    assert is_wire2 is True
+    assert agency2 == "Ipn"
+
+    is_wire_none, _ = detect_syndication_wire("Mesaj anonim despre sabotaj și panică totală!")
+    assert is_wire_none is False
+
+    service = ScoringService(db_manager=isolated_db)
+
+    # Coordinated disinfo channel
+    disinfo_score, disinfo_band, _ = service.compute_channel_score(
+        channel_id="ch-disinfo",
+        cluster_participation_share=85,
+        copy_delay_factor=90,
+        co_movement_repetition=80,
+        narrative_weight=85,
+        linked_clusters_count=5,
+        co_moving_channels=["@peer1", "@peer2"],
+        median_lead_lag_seconds=60,
+        primary_narrative="Anti-EU / Europe is falling apart",
+        is_syndicated_agency=False,
+    )
+    assert disinfo_score >= 70
+    assert disinfo_band == "high"
+
+    # Syndicated news agency reposting (same raw metrics, but accredited wire)
+    syndicated_score, syndicated_band, explanation = service.compute_channel_score(
+        channel_id="ch-syndicated",
+        cluster_participation_share=85,
+        copy_delay_factor=90,
+        co_movement_repetition=80,
+        narrative_weight=85,
+        linked_clusters_count=5,
+        co_moving_channels=["@peer1", "@peer2"],
+        median_lead_lag_seconds=60,
+        primary_narrative="Other / not disinformation",
+        is_syndicated_agency=True,
+    )
+    # The syndication discount ensures it does NOT trigger false high risk alert
+    assert syndicated_score < 70
+    assert syndicated_band != "high"
+    assert "syndicated news agency reporting detected" in explanation.summary

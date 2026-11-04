@@ -1,6 +1,7 @@
 """Deterministic channel coordination risk scoring and score explanation service."""
 
 from datetime import UTC, datetime
+import re
 from typing import Literal, Protocol
 
 from app.core.errors import AppError
@@ -18,6 +19,21 @@ from app.dtos.scoring_dto import (
 )
 
 DEFAULT_SCORING_PARAMETER_VERSION = "v2.0.0-scoring"
+
+_SYNDICATION_REGEX = re.compile(
+    r"\b(?:conform|transmite|scrie|potrivit|anunta|anunță)\s+(?:agentiei|agenției)?\s*(moldpres|ipn|infotag|agerpres|reuters|tass|interfax|ria)\b"
+    r"|\b(?:сообщает|пишет|передает|передаёт)\s+(тасс|риа|интерфакс|молдпрес|ipn)\b",
+    re.IGNORECASE,
+)
+
+
+def detect_syndication_wire(text: str) -> tuple[bool, str | None]:
+    """Detects accredited news wire agency attributions (e.g. Moldpres, IPN, TASS)."""
+    m = _SYNDICATION_REGEX.search(text)
+    if m:
+        agency = m.group(1) or m.group(2)
+        return True, agency.capitalize() if agency else "Wire Agency"
+    return False, None
 
 
 class IScoringService(Protocol):
@@ -68,6 +84,7 @@ def _calculate_channel_metrics(
     co_movement_repetition: int,
     narrative_weight: int,
     linked_clusters_count: int,
+    is_syndicated_agency: bool = False,
 ) -> tuple[int, int, RiskBand, RiskBand, bool]:
     cp = _clamp_0_100(cluster_participation_share)
     cd = _clamp_0_100(copy_delay_factor)
@@ -79,8 +96,14 @@ def _calculate_channel_metrics(
     # Coordination score purely behavioral (0-100)
     raw_coord = 0.45 * cp + 0.35 * cd + 0.20 * cm
 
+    # Syndication discount: Legitimate accredited news wires copy rapidly without covert coordination
+    if is_syndicated_agency:
+        raw_coord = raw_coord * 0.45
+
     # Composite score for backwards compatibility (0-100)
     raw_score = 0.35 * cp + 0.30 * cd + 0.20 * cm + 0.15 * nw
+    if is_syndicated_agency:
+        raw_score = raw_score * 0.55
 
     if not has_sufficient_data:
         # Shrink toward empirical median (30) to prevent outlier false positives
@@ -133,6 +156,7 @@ class ScoringService(IScoringService):
         co_moving_channels: list[str],
         median_lead_lag_seconds: int,
         primary_narrative: str,
+        is_syndicated_agency: bool = False,
         parameter_version: str = DEFAULT_SCORING_PARAMETER_VERSION,
     ) -> tuple[int, RiskBand, ScoreExplanationDto]:
         cp = _clamp_0_100(cluster_participation_share)
@@ -147,6 +171,7 @@ class ScoringService(IScoringService):
                 co_movement_repetition=cm,
                 narrative_weight=nw,
                 linked_clusters_count=linked_clusters_count,
+                is_syndicated_agency=is_syndicated_agency,
             )
         )
         dominant_factor = _select_dominant_factor(cp, cd, cm, nw)
@@ -159,11 +184,16 @@ class ScoringService(IScoringService):
             if has_sufficient_data
             else " (insufficient data: < 2 clusters, score shrunk to median)"
         )
+        syndication_qualifier = (
+            " (syndicated news agency reporting detected; coordination risk discounted)"
+            if is_syndicated_agency
+            else ""
+        )
         summary = (
             f"Channel {channel_id} shows coordination index {coord_score}/100 and "
             f"{narrative_risk} narrative alignment across {linked_clusters_count} observed "
             f"clusters with median propagation delay of {median_lead_lag_seconds}s "
-            f"alongside {peers_str}. Primary observation: {dominant_factor}.{data_qualifier}"
+            f"alongside {peers_str}. Primary observation: {dominant_factor}.{data_qualifier}{syndication_qualifier}"
         )
 
         breakdown = ScoreBreakdownDto(
@@ -230,12 +260,32 @@ class ScoringService(IScoringService):
                 ).fetchall()
                 peers = [f"@{r[0]}" if not str(r[0]).startswith("@") else str(r[0]) for r in peer_rows]
 
+                # Check for syndication wire attribution
+                is_syndicated = False
+                msg_texts = conn.execute(
+                    """
+                    SELECT t.raw_text
+                    FROM cluster_messages cm
+                    JOIN messages m ON cm.message_id = m.id
+                    JOIN message_texts t ON m.id = t.message_id
+                    WHERE cm.channel_id = ? OR cm.channel_id = ?
+                    LIMIT 20
+                    """,
+                    (ch_id, handle_str),
+                ).fetchall()
+                for mt in msg_texts:
+                    has_wire, _ = detect_syndication_wire(str(mt[0]))
+                    if has_wire:
+                        is_syndicated = True
+                        break
+
                 cp = min(100, max(20, linked_count * 25))
                 cd = max(10, 100 - min(90, lead_lag // 5))
                 cm = min(100, max(15, len(peers) * 25))
                 narrative = str(cm_rows[0]["narrative_category"])
                 nw = 85 if any(k in narrative.lower() for k in ("energy", "panic", "gas", "sanction", "election", "war")) else 50
             else:
+                is_syndicated = False
                 cp, cd, cm, nw = 0, 0, 0, 0
                 linked_count = 0
                 peers = []
@@ -252,6 +302,7 @@ class ScoringService(IScoringService):
                 co_moving_channels=peers,
                 median_lead_lag_seconds=lead_lag,
                 primary_narrative=narrative,
+                is_syndicated_agency=is_syndicated,
             )
             conn.execute(
                 """
