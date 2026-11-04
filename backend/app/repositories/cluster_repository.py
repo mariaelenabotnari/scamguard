@@ -57,6 +57,14 @@ class SqliteClusterRepository:
                 ),
             )
 
+        new_cluster_ids = {c.id for c in clusters}
+        cursor.execute("SELECT id FROM clusters")
+        existing_ids = {row[0] for row in cursor.fetchall()}
+        stale_ids = existing_ids - new_cluster_ids
+        for stale in stale_ids:
+            cursor.execute("DELETE FROM cluster_messages WHERE cluster_id = ?", (stale,))
+            cursor.execute("DELETE FROM clusters WHERE id = ?", (stale,))
+
         for cluster in clusters:
             cursor.execute(
                 """

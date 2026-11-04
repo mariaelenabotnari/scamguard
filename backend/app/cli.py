@@ -14,6 +14,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 from app.core.config import get_settings
+from app.core.dependencies import get_analysis_pipeline_service
 from app.db.database import get_database_manager
 from app.repositories.message_repository import SqliteMessageRepository
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
@@ -131,11 +132,28 @@ def _get_collector() -> TelegramCollectorService:
     else:
         client = FakeTelegramClientAdapter()
 
+    analysis_service = get_analysis_pipeline_service(db_manager=db_manager)
+
     return TelegramCollectorService(
         watchlist_repo=watchlist_repo,
         message_repo=message_repo,
         normaliser=normaliser,
         telegram_client=client,
+        analysis_pipeline=analysis_service,
+    )
+
+
+def run_analyse() -> None:
+    db_manager = get_database_manager()
+    analysis_service = get_analysis_pipeline_service(db_manager=db_manager)
+    print(
+        "[*] Running analysis pipeline (normalise -> similarity -> clustering -> narrative -> scoring -> alerts)..."
+    )
+    res = analysis_service.run_analysis_pipeline()
+    print(
+        f"[OK] Pipeline {res.pipeline_run_id} completed: "
+        f"{res.clusters_detected} clusters detected, {res.channels_scored} channels scored, "
+        f"{res.alerts_generated} alerts generated (parameters: {res.parameter_version})."
     )
 
 
@@ -242,6 +260,12 @@ def main() -> None:
     )
     del_parser.add_argument("--channel", type=str, default=None, help="Optional channel handle to check")
 
+    # analyse command
+    subparsers.add_parser(
+        "analyse",
+        help="Run analysis pipeline (similarity, clustering, narratives, scoring, alerts) on collected messages",
+    )
+
     args = parser.parse_args()
 
     if args.command == "telegram-login":
@@ -266,6 +290,8 @@ def main() -> None:
         run_collect_all()
     elif args.command == "check-deleted":
         run_check_deleted(channel_handle=args.channel)
+    elif args.command == "analyse":
+        run_analyse()
 
 
 if __name__ == "__main__":

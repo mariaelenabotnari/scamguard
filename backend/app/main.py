@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.admin_routes import router as admin_router
+from app.api.routes.analysis_routes import router as analysis_router
 from app.api.routes.auth_routes import router as auth_router
 from app.api.routes.cluster_routes import router as cluster_router
 from app.api.routes.collector_routes import router as collector_router
@@ -72,6 +73,7 @@ def create_app() -> FastAPI:
     application.include_router(admin_router)
     application.include_router(watchlist_router)
     application.include_router(collector_router)
+    application.include_router(analysis_router)
     application.include_router(cluster_router)
     application.include_router(narrative_router)
     application.include_router(scoring_router)

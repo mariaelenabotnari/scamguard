@@ -82,6 +82,7 @@ class TelegramCollectorService:
         sleep_fn: Callable[[float], None] = time.sleep,
         max_retries: int = 3,
         add_jitter: bool = False,
+        analysis_pipeline: object | None = None,
     ) -> None:
         self._watchlist_repo = watchlist_repo
         self._message_repo = message_repo
@@ -90,6 +91,7 @@ class TelegramCollectorService:
         self._sleep_fn = sleep_fn
         self._max_retries = max_retries
         self._add_jitter = add_jitter
+        self._analysis_pipeline = analysis_pipeline
 
     def resolve_and_add_channel(
         self, handle_or_url: str, added_by: str, backfill_days: int = 7
@@ -150,6 +152,11 @@ class TelegramCollectorService:
             messages_saved = self._store_fetched_posts(channel.id, posts)
             now_iso = datetime.now(UTC).isoformat()
             self._watchlist_repo.update_last_collection(channel.id, now_iso, last_error=None)
+            if messages_saved > 0 and self._analysis_pipeline is not None:
+                try:
+                    self._analysis_pipeline.run_analysis_pipeline()  # type: ignore[attr-defined]
+                except Exception as exc:
+                    logger.warning(f"Post-backfill analysis pipeline run failed: {exc}")
         except FloodWaitError as flood_err:
             flood_waits_count += 1
             errors.append(f"FloodWait: wait {flood_err.seconds}s")
@@ -232,6 +239,12 @@ class TelegramCollectorService:
             self._watchlist_repo.update_last_collection(
                 channel.id, datetime.now(UTC).isoformat(), last_error=None
             )
+
+        if messages_saved > 0 and self._analysis_pipeline is not None:
+            try:
+                self._analysis_pipeline.run_analysis_pipeline()  # type: ignore[attr-defined]
+            except Exception as exc:
+                logger.warning(f"Post-collection analysis pipeline run failed: {exc}")
 
         finished_at = datetime.now(UTC).isoformat()
         status: CollectionRunStatus = (
