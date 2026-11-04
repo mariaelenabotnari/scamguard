@@ -7,11 +7,12 @@ Saves the trained pipeline to ml/models/narrative_classifier.joblib.
 
 import json
 from pathlib import Path
+
 import joblib
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import f1_score
 from sklearn.pipeline import Pipeline
-from sklearn.metrics import f1_score, classification_report
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = REPO_ROOT / "ml" / "data" / "processed" / "v1"

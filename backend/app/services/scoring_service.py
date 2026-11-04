@@ -1,7 +1,7 @@
 """Deterministic channel coordination risk scoring and score explanation service."""
 
-from datetime import UTC, datetime
 import re
+from datetime import UTC, datetime
 from typing import Literal, Protocol
 
 from app.core.errors import AppError
