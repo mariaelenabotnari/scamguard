@@ -49,6 +49,7 @@ class IScoringService(Protocol):
         co_moving_channels: list[str],
         median_lead_lag_seconds: int,
         primary_narrative: str,
+        is_syndicated_agency: bool = False,
         parameter_version: str = DEFAULT_SCORING_PARAMETER_VERSION,
     ) -> tuple[int, RiskBand, ScoreExplanationDto]: ...
 

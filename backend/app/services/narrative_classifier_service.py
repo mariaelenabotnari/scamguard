@@ -7,7 +7,7 @@ import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
 from app.db.database import DatabaseManager
 from app.dtos.narrative_dto import (
@@ -347,7 +347,7 @@ class NarrativeClassifierService:
         self._embedder = DeterministicMultilingualEmbedder()
         self._debunks: list[dict[str, object]] = []
         self._debunk_vectors: list[list[float]] = []
-        self._trained_model = None
+        self._trained_model: Any = None
         self._is_loaded = False
 
     @property

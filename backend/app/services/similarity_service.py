@@ -7,7 +7,7 @@ import hashlib
 import math
 import re
 from datetime import datetime
-from typing import Protocol
+from typing import Any, Protocol
 
 from app.dtos.cluster_dto import MatchStage, SimilarityEdgeDto
 from app.dtos.collector_dto import StoredMessageDto
@@ -213,7 +213,7 @@ class SentenceTransformerEmbedder:
 
     def __init__(self, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2") -> None:
         self._model_name = model_name
-        self._model = None
+        self._model: Any = None
         self._cache: dict[str, list[float]] = {}
         self._fallback = DeterministicMultilingualEmbedder()
 
@@ -239,7 +239,8 @@ class SentenceTransformerEmbedder:
         self._ensure_loaded()
         if self._model:
             try:
-                vec = self._model.encode(clean, normalize_embeddings=True, show_progress_bar=False).tolist()
+                raw_vec = self._model.encode(clean, normalize_embeddings=True, show_progress_bar=False).tolist()
+                vec: list[float] = [float(x) for x in raw_vec]
                 self._cache[clean] = vec
                 return vec
             except Exception:
