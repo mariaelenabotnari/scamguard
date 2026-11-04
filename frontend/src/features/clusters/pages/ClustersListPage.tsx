@@ -20,7 +20,7 @@ export interface ClustersListPageProps {
 export function ClustersListPage({ service }: ClustersListPageProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [minChannels, setMinChannels] = useState<string>('3');
+  const [minChannels, setMinChannels] = useState<string>('2');
   const [sortBy, setSortBy] = useState<string>('channels');
 
   const { clusters, categories, isLoading, error, reload } = useClustersList(
@@ -35,8 +35,8 @@ export function ClustersListPage({ service }: ClustersListPageProps) {
   ];
 
   const minChannelsOptions = [
-    { value: '2', label: 'Min 2+ Channels' },
-    { value: '3', label: 'Min 3+ Channels (Default)' },
+    { value: '2', label: 'Min 2+ Channels (Default)' },
+    { value: '3', label: 'Min 3+ Channels' },
     { value: '4', label: 'Min 4+ Channels' },
     { value: '5', label: 'Min 5+ Channels' },
   ];
