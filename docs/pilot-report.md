@@ -39,7 +39,6 @@ This pilot report validates the end-to-end integration and verification of **Sca
 - **API Base URL**: `http://localhost:8000/api/v1`
 - **Dashboard Overview**: Dynamic KPI counters (`Monitored Channels`, `Analyzed Messages`, `Coordinated Cascades`) aggregate live SQLite counts.
 - **Empty State Behavior**: Clean informative states displayed when no channels or clusters have been collected yet.
-
 ---
 
 ## 5. Live Pilot Surveillance Run Results
@@ -64,4 +63,3 @@ This pilot report validates the end-to-end integration and verification of **Sca
     - **Narrative Category**: `Anti-EU / "Europe is falling apart"`
 - **Channels Scored**: 3 channels scored dynamically with evidence breakdowns.
 - **Alerts Generated**: 2 active alerts generated for investigation.
-
