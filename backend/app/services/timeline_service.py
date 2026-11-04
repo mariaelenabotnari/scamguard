@@ -2,7 +2,7 @@
 
 import difflib
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from zoneinfo import ZoneInfo
 
 from app.dtos.cluster_dto import (
@@ -29,10 +29,10 @@ def parse_utc_timestamp(ts_str: str) -> datetime:
         try:
             dt = datetime.strptime(clean_ts, "%Y-%m-%d %H:%M:%S")
         except ValueError:
-            dt = datetime.now(timezone.utc)
+            dt = datetime.now(UTC)
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
+    return dt.astimezone(UTC)
 
 
 def format_chisinau_datetime(dt_utc: datetime) -> str:
@@ -243,3 +243,4 @@ def build_dynamic_timeline(
         posts=posts,
         messages=messages,
     )
+

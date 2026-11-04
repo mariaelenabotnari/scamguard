@@ -1,3 +1,5 @@
+from typing import Literal, cast
+
 from app.api.routes.auth_routes import login_user
 from app.api.routes.cluster_routes import (
     get_cluster_comparison,
@@ -353,7 +355,7 @@ def test_same_channel_messages_are_never_compared_and_clustering_is_reproducible
     user_repo = SqliteUserRepository(db_manager=db_manager, hasher=hasher)
     param_repo = SqliteParameterRepository(db_manager=db_manager)
     watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager, seed_defaults=False)
-    for c_id, h, t, l in [
+    for c_id, h, t, lang in [
         ("ch-01", "@moldova_azi_info", "Moldova Azi Info", "RO"),
         ("ch-02", "@chisinau_express", "Chișinău Express", "RO"),
         ("ch-03", "@pridnestrovie_pulse", "Приднестровье Пульс", "RU"),
@@ -362,7 +364,7 @@ def test_same_channel_messages_are_never_compared_and_clustering_is_reproducible
             channel_id=c_id,
             handle=h,
             title=t,
-            language=l,
+            language=cast(Literal["RO", "RU", "MIXED"], lang),
             added_by="admin",
         )
     message_repo = SqliteMessageRepository(db_manager=db_manager)

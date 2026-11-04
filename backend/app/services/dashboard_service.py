@@ -102,10 +102,6 @@ class DashboardService(IDashboardService):
 
         timeline_points: list[TimelinePointDto] = []
         if total_msgs > 0:
-            # Query distribution across buckets
-            msg_rows = conn.execute("SELECT posted_at FROM messages ORDER BY posted_at ASC").fetchall()
-            cl_rows = conn.execute("SELECT first_posted_at FROM clusters ORDER BY first_posted_at ASC").fetchall()
-            
             # Simple uniform distribution of observed records across current time buckets
             msgs_per_bucket = max(1, total_msgs // n_buckets)
             cls_per_bucket = max(0, clusters_count // n_buckets)

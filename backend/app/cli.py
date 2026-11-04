@@ -2,16 +2,8 @@
 
 import argparse
 import asyncio
-import os
 import sys
 from pathlib import Path
-
-if hasattr(sys.stdout, "reconfigure"):
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-        sys.stderr.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
 
 from app.core.config import get_settings
 from app.core.dependencies import get_analysis_pipeline_service
@@ -19,8 +11,26 @@ from app.db.database import get_database_manager
 from app.repositories.message_repository import SqliteMessageRepository
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.collector_service import TelegramCollectorService
-from app.services.telegram_client import FakeTelegramClientAdapter, TelethonClientAdapter
+from app.services.telegram_client import (
+    FakeTelegramClientAdapter,
+    ITelegramClientAdapter,
+    TelethonClientAdapter,
+)
 from app.services.text_normaliser import TextNormaliser
+
+reconfig_stdout = getattr(sys.stdout, "reconfigure", None)
+if callable(reconfig_stdout):
+    try:
+        reconfig_stdout(encoding="utf-8")
+    except Exception:
+        pass
+
+reconfig_stderr = getattr(sys.stderr, "reconfigure", None)
+if callable(reconfig_stderr):
+    try:
+        reconfig_stderr(encoding="utf-8")
+    except Exception:
+        pass
 
 
 async def run_telegram_login(
@@ -123,6 +133,7 @@ def _get_collector() -> TelegramCollectorService:
     normaliser = TextNormaliser()
 
     session_file = Path(settings.telegram_session_path).resolve().with_suffix(".session")
+    client: ITelegramClientAdapter
     if settings.telegram_api_id and settings.telegram_api_hash and session_file.exists():
         client = TelethonClientAdapter(
             session_path=settings.telegram_session_path,

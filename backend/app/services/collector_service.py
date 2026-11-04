@@ -22,10 +22,8 @@ from app.dtos.watchlist_dto import ChannelLanguage, WatchlistChannelDto
 from app.repositories.message_repository import IMessageRepository
 from app.repositories.watchlist_repository import IWatchlistRepository
 from app.services.telegram_client import (
-    FakeTelegramClientAdapter,
     FloodWaitError,
     ITelegramClientAdapter,
-    TelethonClientAdapter,
 )
 from app.services.text_normaliser import ITextNormaliser
 

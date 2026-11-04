@@ -153,8 +153,8 @@ class ClusteringService:
                         target_type="cluster",
                         raw_text=first_msg.normalised_text,
                     )
-                    if pred.category_name != "Other / not disinformation":
-                        category = pred.category_name
+                    if pred.category != "Other / not disinformation":
+                        category = pred.category
                 except Exception:
                     pass
             snippet = (first_msg.raw_text or first_msg.normalised_text)[:180]

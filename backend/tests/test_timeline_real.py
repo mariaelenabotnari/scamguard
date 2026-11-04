@@ -1,17 +1,13 @@
 """Tests for real dynamic timeline propagation, LCS diffs, timezone conversion, and clean unseeded database states."""
 
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
 from app.db.database import DatabaseManager
 from app.dtos.cluster_dto import (
-    ClusterDetailDto,
-    ClusterMessageComparisonDto,
     ClusterSummaryDto,
 )
-from app.dtos.collector_dto import RawTelegramPostDto
 from app.repositories.cluster_repository import SqliteClusterRepository
 from app.repositories.message_repository import SqliteMessageRepository
 from app.repositories.user_repository import SqliteParameterRepository
@@ -21,7 +17,6 @@ from app.services.clustering_service import ClusteringService
 from app.services.dashboard_service import DashboardService
 from app.services.scoring_service import ScoringService
 from app.services.similarity_service import SimilarityService
-from app.services.text_normaliser import TextNormaliser
 from app.services.timeline_service import (
     build_dynamic_timeline,
     compute_lcs_word_diff,
