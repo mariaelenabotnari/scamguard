@@ -50,90 +50,6 @@ class IScoringService(Protocol):
     def get_channel_coordination_groups(self) -> list[CoordinationGroupDto]: ...
 
 
-_SEED_CHANNEL_PROFILES: tuple[dict[str, object], ...] = (
-    {
-        "id": "ch-md-puls",
-        "handle": "@moldova_puls_actual",
-        "title": "Moldova Puls Actual",
-        "language": "RO",
-        "subscribers_count": 48200,
-        "status": "active",
-        "added_at": "2026-10-12T08:00:00Z",
-        "added_by": "elena.voronin@scamguard.md",
-        "cluster_participation_share": 92,
-        "copy_delay_factor": 89,
-        "co_movement_repetition": 86,
-        "narrative_weight": 90,
-        "linked_clusters_count": 14,
-        "co_moving_channels": [
-            "@gagauzia_info_live",
-            "@chisinau_radar24",
-            "@balti_expres_ro",
-        ],
-        "median_lead_lag_seconds": 115,
-        "primary_narrative": "Economic Collapse & Banking Panic",
-        "sparkline": [72, 75, 79, 83, 86, 88, 90],
-    },
-    {
-        "id": "ch-gagauz-live",
-        "handle": "@gagauzia_info_live",
-        "title": "Gagauzia Info Live",
-        "language": "RU",
-        "subscribers_count": 61900,
-        "status": "active",
-        "added_at": "2026-10-12T08:05:00Z",
-        "added_by": "elena.voronin@scamguard.md",
-        "cluster_participation_share": 85,
-        "copy_delay_factor": 84,
-        "co_movement_repetition": 82,
-        "narrative_weight": 80,
-        "linked_clusters_count": 12,
-        "co_moving_channels": ["@moldova_puls_actual", "@nord_vestnik_md"],
-        "median_lead_lag_seconds": 142,
-        "primary_narrative": "Energy Grid & Gas Sabotage Rumors",
-        "sparkline": [68, 70, 74, 78, 80, 82, 83],
-    },
-    {
-        "id": "ch-chisinau-radar",
-        "handle": "@chisinau_radar24",
-        "title": "Chișinău Radar 24/7",
-        "language": "MIXED",
-        "subscribers_count": 34500,
-        "status": "active",
-        "added_at": "2026-10-14T10:15:00Z",
-        "added_by": "alexandru.rusu@scamguard.md",
-        "cluster_participation_share": 64,
-        "copy_delay_factor": 58,
-        "co_movement_repetition": 60,
-        "narrative_weight": 62,
-        "linked_clusters_count": 7,
-        "co_moving_channels": ["@moldova_puls_actual", "@balti_expres_ro"],
-        "median_lead_lag_seconds": 280,
-        "primary_narrative": "EU Integration & Sovereignty Myths",
-        "sparkline": [50, 52, 55, 58, 59, 60, 61],
-    },
-    {
-        "id": "ch-balti-expres",
-        "handle": "@balti_expres_ro",
-        "title": "Bălți Expres Știri",
-        "language": "RO",
-        "subscribers_count": 19400,
-        "status": "active",
-        "added_at": "2026-10-16T12:30:00Z",
-        "added_by": "alexandru.rusu@scamguard.md",
-        "cluster_participation_share": 30,
-        "copy_delay_factor": 26,
-        "co_movement_repetition": 24,
-        "narrative_weight": 28,
-        "linked_clusters_count": 2,
-        "co_moving_channels": ["@chisinau_radar24"],
-        "median_lead_lag_seconds": 640,
-        "primary_narrative": "Election Fraud & Institutional Distrust",
-        "sparkline": [24, 25, 25, 26, 27, 27, 27],
-    },
-)
-
-
 def _clamp_0_100(value: int) -> int:
     return max(0, min(100, int(value)))
 
@@ -269,79 +185,8 @@ class ScoringService(IScoringService):
         return score, risk_band, explanation
 
     def _ensure_seeded(self) -> None:
-        conn = self._db.connection
-        row = conn.execute("SELECT COUNT(*) AS cnt FROM channel_scores").fetchone()
-        count = int(row["cnt"]) if row is not None else 0
-        if count > 0:
-            return
-
-        now_iso = datetime.now(UTC).isoformat()
-        for item in _SEED_CHANNEL_PROFILES:
-            channel_id = str(item["id"])
-            cp = int(str(item["cluster_participation_share"]))
-            cd = int(str(item["copy_delay_factor"]))
-            cm = int(str(item["co_movement_repetition"]))
-            nw = int(str(item["narrative_weight"]))
-            linked_count = int(str(item["linked_clusters_count"]))
-            peers = list(item["co_moving_channels"])  # type: ignore[call-overload]
-            lead_lag = int(str(item["median_lead_lag_seconds"]))
-            narrative = str(item["primary_narrative"])
-
-            score, risk_band, explanation = self.compute_channel_score(
-                channel_id=channel_id,
-                cluster_participation_share=cp,
-                copy_delay_factor=cd,
-                co_movement_repetition=cm,
-                narrative_weight=nw,
-                linked_clusters_count=linked_count,
-                co_moving_channels=peers,
-                median_lead_lag_seconds=lead_lag,
-                primary_narrative=narrative,
-            )
-            conn.execute(
-                """
-                INSERT OR IGNORE INTO watchlist_channels (
-                    id, handle, title, language, subscribers_count,
-                    status, added_at, added_by
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    channel_id,
-                    str(item["handle"]),
-                    str(item["title"]),
-                    str(item["language"]),
-                    int(str(item["subscribers_count"])),
-                    str(item["status"]),
-                    str(item["added_at"]),
-                    str(item["added_by"]),
-                ),
-            )
-            conn.execute(
-                """
-                INSERT OR REPLACE INTO channel_scores (
-                    channel_id, score, risk_band,
-                    cluster_participation_points, copy_delay_points,
-                    co_movement_points, narrative_weight_points,
-                    dominant_factor, summary, primary_narrative,
-                    parameter_version, computed_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    channel_id,
-                    score,
-                    risk_band,
-                    cp,
-                    cd,
-                    cm,
-                    nw,
-                    explanation.breakdown.dominant_factor,
-                    explanation.summary,
-                    narrative,
-                    explanation.parameter_version,
-                    now_iso,
-                ),
-            )
-        conn.commit()
+        """No-op: seed data removed to ensure clean real-data calculation."""
+        pass
 
     def recalculate_all_scores(self) -> list[RankedChannelDto]:
         """Recompute and persist scores for all watchlist channels deterministically."""
@@ -350,7 +195,6 @@ class ScoringService(IScoringService):
             "SELECT id, handle, title, language FROM watchlist_channels ORDER BY id ASC"
         ).fetchall()
 
-        seed_by_id = {str(p["id"]): p for p in _SEED_CHANNEL_PROFILES}
         now_iso = datetime.now(UTC).isoformat()
 
         for ch in channels:
@@ -391,16 +235,6 @@ class ScoringService(IScoringService):
                 cm = min(100, max(15, len(peers) * 25))
                 narrative = str(cm_rows[0]["narrative_category"])
                 nw = 85 if any(k in narrative.lower() for k in ("energy", "panic", "gas", "sanction", "election", "war")) else 50
-            elif ch_id in seed_by_id:
-                seed = seed_by_id[ch_id]
-                cp = int(str(seed["cluster_participation_share"]))
-                cd = int(str(seed["copy_delay_factor"]))
-                cm = int(str(seed["co_movement_repetition"]))
-                nw = int(str(seed["narrative_weight"]))
-                linked_count = int(str(seed["linked_clusters_count"]))
-                peers = [str(x) for x in seed["co_moving_channels"]]  # type: ignore[attr-defined]
-                lead_lag = int(str(seed["median_lead_lag_seconds"]))
-                narrative = str(seed["primary_narrative"])
             else:
                 cp, cd, cm, nw = 0, 0, 0, 0
                 linked_count = 0
@@ -454,7 +288,6 @@ class ScoringService(IScoringService):
         min_score: int = 0,
         narrative: str | None = None,
     ) -> list[RankedChannelDto]:
-        seed_by_id = {str(p["id"]): p for p in _SEED_CHANNEL_PROFILES}
         conn = self._db.connection
         rows = conn.execute(
             """
@@ -480,21 +313,33 @@ class ScoringService(IScoringService):
                 continue
 
             ch_id = str(row["channel_id"])
-            seed = seed_by_id.get(ch_id)
-            linked_clusters_count = (
-                int(str(seed["linked_clusters_count"])) if seed is not None else 2
-            )
-            co_moving_channels = (
-                [str(x) for x in seed["co_moving_channels"]]  # type: ignore[attr-defined]
-                if seed is not None
-                else ["@moldova_puls_actual"]
-            )
-            median_lead_lag = int(str(seed["median_lead_lag_seconds"])) if seed is not None else 300
-            sparkline = (
-                [int(x) for x in seed["sparkline"]]  # type: ignore[attr-defined]
-                if seed is not None
-                else [max(0, int(row["score"]) - 4), int(row["score"])]
-            )
+            handle_str = str(row["handle"])
+
+            cl_row = conn.execute(
+                "SELECT COUNT(DISTINCT cluster_id) AS cnt FROM cluster_messages WHERE channel_id = ? OR channel_id = ?",
+                (ch_id, handle_str),
+            ).fetchone()
+            linked_clusters_count = int(cl_row["cnt"]) if cl_row else 0
+
+            peer_rows = conn.execute(
+                """
+                SELECT DISTINCT cm2.channel_id
+                FROM cluster_messages cm1
+                JOIN cluster_messages cm2 ON cm1.cluster_id = cm2.cluster_id
+                WHERE (cm1.channel_id = ? OR cm1.channel_id = ?)
+                  AND cm2.channel_id != ? AND cm2.channel_id != ?
+                LIMIT 5
+                """,
+                (ch_id, handle_str, ch_id, handle_str),
+            ).fetchall()
+            co_moving_channels = [f"@{r[0]}" if not str(r[0]).startswith("@") else str(r[0]) for r in peer_rows]
+
+            delay_row = conn.execute(
+                "SELECT AVG(delay_seconds) AS avg_d FROM cluster_messages WHERE channel_id = ? OR channel_id = ?",
+                (ch_id, handle_str),
+            ).fetchone()
+            median_lead_lag = int(round(float(delay_row["avg_d"]))) if delay_row and delay_row["avg_d"] is not None else 0
+            sparkline = [max(0, int(row["score"]) - 4), int(row["score"])]
 
             lang_raw = str(row["language"]).upper()
             language: Literal["RO", "RU", "MIXED"] = (
@@ -549,7 +394,6 @@ class ScoringService(IScoringService):
         return results
 
     def get_channel_detail(self, channel_id: str) -> ChannelDetailDto:
-        seed_by_id = {str(p["id"]): p for p in _SEED_CHANNEL_PROFILES}
         conn = self._db.connection
         row = conn.execute(
             """
@@ -584,49 +428,56 @@ class ScoringService(IScoringService):
             """
         ).fetchall()
 
-        seed = seed_by_id.get(channel_id)
+        handle_str = str(row["handle"])
+        cl_row = conn.execute(
+            "SELECT COUNT(DISTINCT cluster_id) AS cnt FROM cluster_messages WHERE channel_id = ? OR channel_id = ?",
+            (channel_id, handle_str),
+        ).fetchone()
+        linked_count = int(cl_row["cnt"]) if cl_row else 0
+
+        peer_rows = conn.execute(
+            """
+            SELECT DISTINCT cm2.channel_id
+            FROM cluster_messages cm1
+            JOIN cluster_messages cm2 ON cm1.cluster_id = cm2.cluster_id
+            WHERE (cm1.channel_id = ? OR cm1.channel_id = ?)
+              AND cm2.channel_id != ? AND cm2.channel_id != ?
+            LIMIT 5
+            """,
+            (channel_id, handle_str, channel_id, handle_str),
+        ).fetchall()
+        peers = [f"@{r[0]}" if not str(r[0]).startswith("@") else str(r[0]) for r in peer_rows]
+
+        delay_row = conn.execute(
+            "SELECT AVG(delay_seconds) AS avg_d FROM cluster_messages WHERE channel_id = ? OR channel_id = ?",
+            (channel_id, handle_str),
+        ).fetchone()
+        lead_lag = int(round(float(delay_row["avg_d"]))) if delay_row and delay_row["avg_d"] is not None else 0
+
         if row["score"] is not None:
             cp = int(row["cluster_participation_points"])
             cd = int(row["copy_delay_points"])
             cm = int(row["co_movement_points"])
             nw = int(row["narrative_weight_points"])
-            linked_count = int(str(seed["linked_clusters_count"])) if seed else 2
-            peers = (
-                [str(x) for x in seed["co_moving_channels"]]  # type: ignore[attr-defined]
-                if seed
-                else ["@moldova_puls_actual"]
-            )
-            lead_lag = int(str(seed["median_lead_lag_seconds"])) if seed else 240
             primary_narrative = str(row["primary_narrative"])
-            score, risk_band, explanation = self.compute_channel_score(
-                channel_id=channel_id,
-                cluster_participation_share=cp,
-                copy_delay_factor=cd,
-                co_movement_repetition=cm,
-                narrative_weight=nw,
-                linked_clusters_count=linked_count,
-                co_moving_channels=peers,
-                median_lead_lag_seconds=lead_lag,
-                primary_narrative=primary_narrative,
-                parameter_version=str(row["parameter_version"]),
-            )
+            param_ver = str(row["parameter_version"])
         else:
-            cp, cd, cm, nw = 32, 28, 24, 30
-            linked_count = 1
-            peers = ["@moldova_puls_actual"]
-            lead_lag = 360
-            primary_narrative = "General Political Commentary"
-            score, risk_band, explanation = self.compute_channel_score(
-                channel_id=channel_id,
-                cluster_participation_share=cp,
-                copy_delay_factor=cd,
-                co_movement_repetition=cm,
-                narrative_weight=nw,
-                linked_clusters_count=linked_count,
-                co_moving_channels=peers,
-                median_lead_lag_seconds=lead_lag,
-                primary_narrative=primary_narrative,
-            )
+            cp, cd, cm, nw = 0, 0, 0, 0
+            primary_narrative = "No coordinated narratives detected"
+            param_ver = DEFAULT_SCORING_PARAMETER_VERSION
+
+        score, risk_band, explanation = self.compute_channel_score(
+            channel_id=channel_id,
+            cluster_participation_share=cp,
+            copy_delay_factor=cd,
+            co_movement_repetition=cm,
+            narrative_weight=nw,
+            linked_clusters_count=linked_count,
+            co_moving_channels=peers,
+            median_lead_lag_seconds=lead_lag,
+            primary_narrative=primary_narrative,
+            parameter_version=param_ver,
+        )
 
         _, coord_score, _, narrative_risk, has_sufficient_data = _calculate_channel_metrics(
             cluster_participation_share=cp,
@@ -636,11 +487,7 @@ class ScoringService(IScoringService):
             linked_clusters_count=linked_count,
         )
 
-        spark_values = (
-            [int(x) for x in seed["sparkline"]]  # type: ignore[attr-defined]
-            if seed
-            else [max(0, score - 6), max(0, score - 4), max(0, score - 2), score]
-        )
+        spark_values = [max(0, score - 6), max(0, score - 4), max(0, score - 2), score]
         day_labels = ["Oct 28", "Oct 29", "Oct 30", "Oct 31", "Nov 01", "Nov 02", "Nov 03"]
         score_history = [
             ChannelScoreHistoryPointDto(
@@ -751,21 +598,6 @@ class ScoringService(IScoringService):
             edges.append(
                 (str(r["ch1"]), str(r["ch2"]), int(r["shared_cascades"]), int(r["avg_delay"]))
             )
-
-        # Fallback to seeded channels if cluster_messages is sparse or empty
-        if not edges:
-            seed_by_id = {str(p["id"]): p for p in _SEED_CHANNEL_PROFILES}
-            for _ch_id, seed in seed_by_id.items():
-                peers = [str(x) for x in seed["co_moving_channels"]]  # type: ignore[attr-defined]
-                for p in peers:
-                    edges.append(
-                        (
-                            str(seed["handle"]),
-                            p,
-                            int(str(seed["linked_clusters_count"])),
-                            int(str(seed["median_lead_lag_seconds"])),
-                        )
-                    )
 
         # Find connected components with threshold >= 2 shared cascades
         adj: dict[str, set[str]] = {}

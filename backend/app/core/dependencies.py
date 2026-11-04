@@ -21,10 +21,8 @@ from app.services.analysis_pipeline_service import (
 from app.services.auth_service import AuthService, IAuthService
 from app.services.clustering_service import ClusteringService, IClusteringService
 from app.services.collector_service import (
-    FakeTelegramClientAdapter,
     ICollectorService,
     TelegramCollectorService,
-    TelethonClientAdapter,
 )
 from app.services.dashboard_service import DashboardService, IDashboardService
 from app.services.email_service import EmailService
@@ -37,6 +35,11 @@ from app.services.narrative_classifier_service import (
 from app.services.scoring_service import IScoringService, ScoringService
 from app.services.search_service import ISearchService, SearchService
 from app.services.similarity_service import SimilarityService
+from app.services.telegram_client import (
+    FakeTelegramClientAdapter,
+    ITelegramClientAdapter,
+    TelethonClientAdapter,
+)
 from app.services.text_normaliser import TextNormaliser
 from app.services.watchlist_service import IWatchlistService, WatchlistService
 
@@ -81,6 +84,7 @@ def get_collector_service(db_manager: DatabaseDep) -> ICollectorService:
     normaliser = TextNormaliser()
 
     session_file = Path(settings.telegram_session_path).resolve().with_suffix(".session")
+    client: ITelegramClientAdapter
     if settings.telegram_api_id and settings.telegram_api_hash and session_file.exists():
         client = TelethonClientAdapter(
             session_path=settings.telegram_session_path,

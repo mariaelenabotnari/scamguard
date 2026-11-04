@@ -2,13 +2,11 @@
 
 import asyncio
 import concurrent.futures
-import os
 import re
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol, cast
 
-from app.core.config import get_settings
 from app.core.errors import AppError
 from app.core.logging import get_logger
 from app.dtos.collector_dto import RawTelegramPostDto, ResolvedChannelDto
@@ -16,7 +14,7 @@ from app.dtos.collector_dto import RawTelegramPostDto, ResolvedChannelDto
 logger = get_logger("telegram_client")
 
 
-def _run_async(coro):
+def _run_async(coro: Any) -> Any:
     """Executes an async coroutine synchronously, safely handling running event loops."""
     try:
         loop = asyncio.get_running_loop()
@@ -227,9 +225,9 @@ class TelethonClientAdapter:
         self._session_path = session_path
         self._api_id = api_id
         self._api_hash = api_hash
-        self._client = None
+        self._client: Any = None
 
-    async def _get_connected_client(self):
+    async def _get_connected_client(self) -> Any:
         try:
             from telethon import TelegramClient
         except ImportError:
@@ -237,7 +235,7 @@ class TelethonClientAdapter:
                 code="TELETHON_NOT_INSTALLED",
                 message="Telethon is not installed in the environment.",
                 status_code=500,
-            )
+            ) from None
 
         if self._client is None:
             sess_path = Path(self._session_path).resolve()
@@ -256,11 +254,11 @@ class TelethonClientAdapter:
         return self._client
 
     def resolve_channel(self, handle_or_url: str) -> ResolvedChannelDto:
-        return _run_async(self._resolve_channel_async(handle_or_url))
+        return cast(ResolvedChannelDto, _run_async(self._resolve_channel_async(handle_or_url)))
 
     async def _resolve_channel_async(self, handle_or_url: str) -> ResolvedChannelDto:
-        from telethon.tl.types import Channel, Chat, User
         import telethon.errors as tele_errors
+        from telethon.tl.types import Channel, Chat, User
 
         username = _clean_channel_handle(handle_or_url)
         if not username:
@@ -274,25 +272,25 @@ class TelethonClientAdapter:
         try:
             entity = await client.get_entity(username)
         except tele_errors.FloodWaitError as exc:
-            raise FloodWaitError(seconds=exc.seconds)
+            raise FloodWaitError(seconds=exc.seconds) from exc
         except tele_errors.UsernameInvalidError:
             raise AppError(
                 code="INVALID_CHANNEL_HANDLE",
                 message=f"Telegram handle '@{username}' does not exist.",
                 status_code=404,
-            )
+            ) from None
         except tele_errors.UsernameNotOccupiedError:
             raise AppError(
                 code="CHANNEL_NOT_FOUND",
                 message=f"No public Telegram entity found for '@{username}'.",
                 status_code=404,
-            )
+            ) from None
         except Exception as exc:
             raise AppError(
                 code="CHANNEL_RESOLUTION_FAILED",
                 message=f"Failed to resolve channel '@{username}': {exc}",
                 status_code=400,
-            )
+            ) from exc
 
         if isinstance(entity, User):
             raise AppError(
@@ -335,7 +333,10 @@ class TelethonClientAdapter:
     def fetch_messages_since(
         self, channel_id: str, handle: str, min_message_id: int
     ) -> list[RawTelegramPostDto]:
-        return _run_async(self._fetch_messages_since_async(channel_id, handle, min_message_id))
+        return cast(
+            list[RawTelegramPostDto],
+            _run_async(self._fetch_messages_since_async(channel_id, handle, min_message_id)),
+        )
 
     async def _fetch_messages_since_async(
         self, channel_id: str, handle: str, min_message_id: int
@@ -349,7 +350,7 @@ class TelethonClientAdapter:
             async for message in client.iter_messages(username, min_id=min_message_id, reverse=True):
                 raw_msgs.append(message)
         except tele_errors.FloodWaitError as exc:
-            raise FloodWaitError(seconds=exc.seconds)
+            raise FloodWaitError(seconds=exc.seconds) from exc
         except Exception as exc:
             logger.error(f"Error fetching new messages for {handle}: {exc}")
             raise
@@ -359,7 +360,10 @@ class TelethonClientAdapter:
     def fetch_messages_backfill(
         self, channel_id: str, handle: str, days: int = 7
     ) -> list[RawTelegramPostDto]:
-        return _run_async(self._fetch_messages_backfill_async(channel_id, handle, days))
+        return cast(
+            list[RawTelegramPostDto],
+            _run_async(self._fetch_messages_backfill_async(channel_id, handle, days)),
+        )
 
     async def _fetch_messages_backfill_async(
         self, channel_id: str, handle: str, days: int = 7
@@ -377,7 +381,7 @@ class TelethonClientAdapter:
                 if len(raw_msgs) % 100 == 0:
                     await asyncio.sleep(0.3)
         except tele_errors.FloodWaitError as exc:
-            raise FloodWaitError(seconds=exc.seconds)
+            raise FloodWaitError(seconds=exc.seconds) from exc
         except Exception as exc:
             logger.error(f"Error backfilling messages for {handle}: {exc}")
             raise
@@ -387,7 +391,10 @@ class TelethonClientAdapter:
     def check_messages_exist(
         self, channel_id: str, handle: str, message_ids: list[int]
     ) -> set[int]:
-        return _run_async(self._check_messages_exist_async(channel_id, handle, message_ids))
+        return cast(
+            set[int],
+            _run_async(self._check_messages_exist_async(channel_id, handle, message_ids)),
+        )
 
     async def _check_messages_exist_async(
         self, channel_id: str, handle: str, message_ids: list[int]
@@ -407,18 +414,18 @@ class TelethonClientAdapter:
                     if not getattr(msg, "empty", False):
                         existing_ids.add(msg.id)
         except tele_errors.FloodWaitError as exc:
-            raise FloodWaitError(seconds=exc.seconds)
+            raise FloodWaitError(seconds=exc.seconds) from exc
         except Exception as exc:
             logger.error(f"Error checking deleted messages for {handle}: {exc}")
 
         return existing_ids
 
     def _process_telethon_messages(
-        self, channel_id: str, username: str, tele_messages: list
+        self, channel_id: str, username: str, tele_messages: list[Any]
     ) -> list[RawTelegramPostDto]:
         """Groups albums, extracts captions/text, media flags, forwards, and links."""
-        albums: dict[int, list] = {}
-        single_msgs = []
+        albums: dict[int, list[Any]] = {}
+        single_msgs: list[Any] = []
 
         for msg in tele_messages:
             if getattr(msg, "grouped_id", None):
@@ -481,7 +488,7 @@ class TelethonClientAdapter:
         return sorted(results, key=lambda p: p.telegram_message_id)
 
     def _telethon_msg_to_dto(
-        self, channel_id: str, username: str, msg: object
+        self, channel_id: str, username: str, msg: Any
     ) -> RawTelegramPostDto:
         text = getattr(msg, "message", "") or ""
         has_media = bool(getattr(msg, "media", None))
@@ -521,7 +528,7 @@ class TelethonClientAdapter:
         )
 
     @staticmethod
-    def _get_media_type(msg: object) -> str | None:
+    def _get_media_type(msg: Any) -> str | None:
         media = getattr(msg, "media", None)
         if not media:
             return None

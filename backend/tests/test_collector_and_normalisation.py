@@ -21,9 +21,9 @@ from app.repositories.user_repository import SqliteUserRepository
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.auth_service import AuthService
 from app.services.collector_service import (
-    FakeTelegramClientAdapter,
     TelegramCollectorService,
 )
+from app.services.telegram_client import FakeTelegramClientAdapter
 from app.services.text_normaliser import TextNormaliser
 
 NORMALISATION_EXAMPLES: list[tuple[str, str, DetectedLanguage]] = [

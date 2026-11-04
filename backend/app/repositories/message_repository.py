@@ -1,7 +1,7 @@
 """Repository layer for messages, raw texts, normalised hashes, checkpoints, and post purging."""
 
-from datetime import UTC, datetime
 import sqlite3
+from datetime import UTC, datetime
 from typing import Protocol, cast
 
 from app.db.database import DatabaseManager

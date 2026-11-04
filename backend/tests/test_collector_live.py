@@ -8,7 +8,7 @@ from app.dtos.collector_dto import RawTelegramPostDto
 from app.repositories.message_repository import SqliteMessageRepository
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.collector_service import TelegramCollectorService, strip_channel_boilerplate
-from app.services.telegram_client import FakeTelegramClientAdapter, FloodWaitError
+from app.services.telegram_client import FakeTelegramClientAdapter
 from app.services.text_normaliser import TextNormaliser
 
 
@@ -16,7 +16,15 @@ def _build_test_harness(
     channel_posts: dict[str, list[RawTelegramPostDto]] | None = None,
     flood_wait_once: dict[str, int] | None = None,
     existing_message_ids: dict[str, set[int]] | None = None,
-):
+) -> tuple[
+    DatabaseManager,
+    SqliteWatchlistRepository,
+    SqliteMessageRepository,
+    TextNormaliser,
+    FakeTelegramClientAdapter,
+    TelegramCollectorService,
+    list[float],
+]:
     db = DatabaseManager(":memory:")
     watchlist_repo = SqliteWatchlistRepository(db_manager=db, seed_defaults=False)
     message_repo = SqliteMessageRepository(db_manager=db)
@@ -40,7 +48,7 @@ def _build_test_harness(
     return db, watchlist_repo, message_repo, normaliser, client, service, slept
 
 
-def test_channel_resolution_public_broadcast():
+def test_channel_resolution_public_broadcast() -> None:
     _, _, _, _, client, _, _ = _build_test_harness()
 
     # Resolve from @handle
@@ -58,7 +66,7 @@ def test_channel_resolution_public_broadcast():
     assert resolved_2.language_guess == "RU"
 
 
-def test_channel_resolution_rejects_private_groups_and_users():
+def test_channel_resolution_rejects_private_groups_and_users() -> None:
     _, _, _, _, client, _, _ = _build_test_harness()
 
     # Reject private channel
@@ -77,7 +85,7 @@ def test_channel_resolution_rejects_private_groups_and_users():
     assert exc_usr.value.code == "INVALID_CHANNEL_TYPE"
 
 
-def test_resolve_and_add_channel_with_backfill():
+def test_resolve_and_add_channel_with_backfill() -> None:
     posts = {
         "ch-chisinau-radar": [
             RawTelegramPostDto(
@@ -117,7 +125,7 @@ def test_resolve_and_add_channel_with_backfill():
     assert message_repo.get_last_message_id(channel.id) == 11
 
 
-def test_messy_posts_media_only_short_and_albums():
+def test_messy_posts_media_only_short_and_albums() -> None:
     posts = {
         "ch-messy": [
             # 1. Media only post (no text)
@@ -194,7 +202,7 @@ def test_messy_posts_media_only_short_and_albums():
     assert p104.skip_similarity is False
 
 
-def test_channel_boilerplate_stripping():
+def test_channel_boilerplate_stripping() -> None:
     raw_with_footer = (
         "Tarifele la gaz și electricitate vor exploda de luna viitoare în Republica Moldova.\n"
         "Подписывайтесь на наш канал: https://t.me/fake_news_md/\n"
@@ -206,7 +214,7 @@ def test_channel_boilerplate_stripping():
     assert "Tarifele la gaz și electricitate" in cleaned
 
 
-def test_edited_posts_detection():
+def test_edited_posts_detection() -> None:
     initial_posts = {
         "ch-edit": [
             RawTelegramPostDto(
@@ -263,7 +271,7 @@ def test_edited_posts_detection():
     assert "100%" in edits[0]["new_raw_text"]
 
 
-def test_source_deleted_post_detection_and_purge():
+def test_source_deleted_post_detection_and_purge() -> None:
     posts = {
         "ch-del": [
             RawTelegramPostDto(
@@ -299,6 +307,7 @@ def test_source_deleted_post_detection_and_purge():
 
     # Pre-check: raw text exists for both
     m301_before = message_repo.get_message_by_id("msg-ch-del-301")
+    assert m301_before is not None
     assert m301_before.raw_text is not None
     assert m301_before.is_deleted_at_source is False
 
@@ -308,6 +317,7 @@ def test_source_deleted_post_detection_and_purge():
 
     # Post 301 was purged: raw_text is None, is_deleted_at_source is True, normalised text retained
     m301_after = message_repo.get_message_by_id("msg-ch-del-301")
+    assert m301_after is not None
     assert m301_after.is_deleted_at_source is True
     assert m301_after.raw_text is None
     assert m301_after.deleted_at is not None
@@ -316,11 +326,12 @@ def test_source_deleted_post_detection_and_purge():
 
     # Post 302 was not purged
     m302 = message_repo.get_message_by_id("msg-ch-del-302")
+    assert m302 is not None
     assert m302.is_deleted_at_source is False
     assert m302.raw_text is not None
 
 
-def test_floodwait_and_persistent_failure_handling():
+def test_floodwait_and_persistent_failure_handling() -> None:
     posts = {
         "ch-good": [
             RawTelegramPostDto(
@@ -335,7 +346,9 @@ def test_floodwait_and_persistent_failure_handling():
     }
     # ch-bad will always raise exception during poll
     class FailingClient(FakeTelegramClientAdapter):
-        def fetch_messages_since(self, channel_id: str, handle: str, min_message_id: int):
+        def fetch_messages_since(
+            self, channel_id: str, handle: str, min_message_id: int
+        ) -> list[RawTelegramPostDto]:
             if channel_id == "ch-bad":
                 raise RuntimeError("Telegram connection dropped persistently")
             return super().fetch_messages_since(channel_id, handle, min_message_id)
@@ -365,5 +378,6 @@ def test_floodwait_and_persistent_failure_handling():
 
     # Bad channel is automatically paused with error recorded
     bad_channel = watchlist_repo.get_by_id("ch-bad")
+    assert bad_channel is not None
     assert bad_channel.status == "paused"
     assert "Telegram connection dropped" in (bad_channel.last_error or "")

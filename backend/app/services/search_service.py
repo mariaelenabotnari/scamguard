@@ -133,99 +133,18 @@ class SearchService(ISearchService):
                     )
                 )
 
-        if not results:
-            results = self._seed_message_hits(normalized_q, ranked_channels)
-
         return results
 
     def _default_explanation(self, channel_id: str) -> ScoreExplanationDto:
         _, _, expl = self._scoring_service.compute_channel_score(
             channel_id=channel_id,
-            cluster_participation_share=40,
-            copy_delay_factor=35,
-            co_movement_repetition=30,
-            narrative_weight=35,
-            linked_clusters_count=1,
-            co_moving_channels=["@moldova_puls_actual"],
-            median_lead_lag_seconds=240,
-            primary_narrative="General Political Commentary",
+            cluster_participation_share=0,
+            copy_delay_factor=0,
+            co_movement_repetition=0,
+            narrative_weight=0,
+            linked_clusters_count=0,
+            co_moving_channels=[],
+            median_lead_lag_seconds=0,
+            primary_narrative="None detected",
         )
         return expl
-
-    def _seed_message_hits(
-        self,
-        normalized_q: str,
-        ranked_channels: list[RankedChannelDto],
-    ) -> list[SearchMessageHitDto]:
-        ch1 = ranked_channels[0] if ranked_channels else None
-        ch2 = ranked_channels[1] if len(ranked_channels) > 1 else ch1
-        ch3 = ranked_channels[2] if len(ranked_channels) > 2 else ch1
-
-        ch_radar_expl = ch3.explanation if ch3 else self._default_explanation("ch-chisinau-radar")
-
-        seed_items = [
-            SearchMessageHitDto(
-                id="msg-501",
-                channelId=ch1.id if ch1 else "ch-md-puls",
-                handle=ch1.handle if ch1 else "@moldova_puls_actual",
-                postedAt="2026-11-02 13:14:05",
-                snippet=(
-                    "URGENT: Tarifele la gaze si energie electrica vor fi dublate dupa 15 noiembrie"
-                    " din cauza conditiilor impuse de Bruxelles pentru imprumutul extern."
-                ),
-                narrativeCategory=(
-                    ch1.primary_narrative if ch1 else "Sanctions, energy prices and economy fear"
-                ),
-                clusterId="CL-20261102-01",
-                channelScore=ch1.score if ch1 else 90,
-                riskBand=ch1.risk_band if ch1 else "high",
-                explanation=ch1.explanation if ch1 else self._default_explanation("ch-md-puls"),
-            ),
-            SearchMessageHitDto(
-                id="msg-502",
-                channelId=ch2.id if ch2 else "ch-gagauz-live",
-                handle=ch2.handle if ch2 else "@gagauzia_info_live",
-                postedAt="2026-11-02 13:18:12",
-                snippet=(
-                    "ALERTA: Tarifele la gaze si energie electrica vor fi majorate cu 100% "
-                    "din 15 noiembrie din cauza conditiilor impuse de Bruxelles!"
-                ),
-                narrativeCategory=(
-                    ch2.primary_narrative if ch2 else "Sanctions, energy prices and economy fear"
-                ),
-                clusterId="CL-20261102-01",
-                channelScore=ch2.score if ch2 else 83,
-                riskBand=ch2.risk_band if ch2 else "high",
-                explanation=ch2.explanation if ch2 else self._default_explanation("ch-gagauz-live"),
-            ),
-            SearchMessageHitDto(
-                id="msg-503",
-                channelId=ch3.id if ch3 else "ch-chisinau-radar",
-                handle=ch3.handle if ch3 else "@chisinau_radar24",
-                postedAt="2026-11-02 11:40:10",
-                snippet=(
-                    "Сотни бюллетеней якобы уже подготовлены на зарубежных участках "
-                    "до открытия голосования — источники сообщают о закрытом распоряжении ЦИК."
-                ),
-                narrativeCategory=(
-                    ch3.primary_narrative
-                    if ch3
-                    else "Moldova government and elections delegitimisation"
-                ),
-                clusterId="CL-20261101-04",
-                channelScore=ch3.score if ch3 else 61,
-                riskBand=ch3.risk_band if ch3 else "medium",
-                explanation=ch_radar_expl,
-            ),
-        ]
-
-        if not normalized_q:
-            return seed_items
-
-        return [
-            item
-            for item in seed_items
-            if normalized_q in item.snippet.lower()
-            or normalized_q in item.handle.lower()
-            or normalized_q in item.narrative_category.lower()
-        ]

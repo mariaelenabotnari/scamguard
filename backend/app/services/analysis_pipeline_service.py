@@ -2,8 +2,8 @@
 Orchestrates: normalise -> similarity -> clustering -> narrative classification -> scoring -> alerts.
 """
 
-from datetime import UTC, datetime
 import secrets
+from datetime import UTC, datetime
 from typing import Protocol
 
 from app.core.logging import get_logger
@@ -57,9 +57,7 @@ class AnalysisPipelineService:
         stored_messages = self._message_repo.list_messages(limit=1000)
         for msg in stored_messages:
             if not msg.normalised_text and msg.raw_text:
-                norm = self._normaliser.normalise(msg.raw_text)
-                # Ensure normalisation exists
-                pass
+                self._normaliser.normalise(msg.raw_text)
 
         # 3. Detect and store coordinated clusters
         clusters = self._clustering_service.detect_and_store_clusters(

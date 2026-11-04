@@ -33,52 +33,6 @@ class IAlertService(Protocol):
     ) -> AlertItemDto | None: ...
 
 
-_SEED_ALERTS: tuple[dict[str, str], ...] = (
-    {
-        "id": "ALT-20261102-01",
-        "severity": "high",
-        "status": "new",
-        "triggered_at": "2026-11-02T14:25:00Z",
-        "title": "4 channels reposted commercial bank withdrawal freeze claim within 115s",
-        "summary": (
-            "Synchronized narrative propagation detected across @moldova_puls_actual, "
-            "@gagauzia_info_live, @chisinau_radar24, and @balti_expres_ro (mean similarity 0.93)."
-        ),
-        "narrative_tag": "Economic Collapse & Banking Panic",
-        "target_route": "/clusters/CL-20261102-01",
-        "parameter_version": DEFAULT_ALERT_PARAMETER_VERSION,
-    },
-    {
-        "id": "ALT-20261102-02",
-        "severity": "medium",
-        "status": "new",
-        "triggered_at": "2026-11-02T11:10:00Z",
-        "title": "3 channels amplified emergency winter gas rationing narrative within 240s",
-        "summary": (
-            "Near-duplicate Russian and Romanian posts appeared across 3 monitored "
-            "channels with 0.89 semantic similarity."
-        ),
-        "narrative_tag": "Energy Grid & Gas Sabotage Rumors",
-        "target_route": "/clusters/CL-20261101-04",
-        "parameter_version": DEFAULT_ALERT_PARAMETER_VERSION,
-    },
-    {
-        "id": "ALT-20261101-03",
-        "severity": "low",
-        "status": "seen",
-        "triggered_at": "2026-11-01T17:45:00Z",
-        "title": "Risk score spike (+8 pts) on @moldova_puls_actual",
-        "summary": (
-            "Channel coordination risk score crossed 90/100 following repeated "
-            "co-movement with @gagauzia_info_live."
-        ),
-        "narrative_tag": "EU Integration & Sovereignty Myths",
-        "target_route": "/channels/ch-md-puls",
-        "parameter_version": DEFAULT_ALERT_PARAMETER_VERSION,
-    },
-)
-
-
 def _normalize_severity(raw: str) -> AlertSeverity:
     lowered = raw.lower()
     if lowered == "high":
@@ -102,36 +56,10 @@ class AlertService(IAlertService):
 
     def __init__(self, db_manager: DatabaseManager) -> None:
         self._db = db_manager
-        self._ensure_seeded()
 
     def _ensure_seeded(self) -> None:
-        conn = self._db.connection
-        row = conn.execute("SELECT COUNT(*) AS cnt FROM alerts").fetchone()
-        count = int(row["cnt"]) if row is not None else 0
-        if count > 0:
-            return
-
-        for alert in _SEED_ALERTS:
-            conn.execute(
-                """
-                INSERT OR IGNORE INTO alerts (
-                    id, severity, status, triggered_at, title,
-                    summary, narrative_tag, target_route, parameter_version
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                (
-                    alert["id"],
-                    alert["severity"],
-                    alert["status"],
-                    alert["triggered_at"],
-                    alert["title"],
-                    alert["summary"],
-                    alert["narrative_tag"],
-                    alert["target_route"],
-                    alert["parameter_version"],
-                ),
-            )
-        conn.commit()
+        """No-op: seed alerts removed to reflect real-time alert evaluation."""
+        pass
 
     def list_alerts(
         self,

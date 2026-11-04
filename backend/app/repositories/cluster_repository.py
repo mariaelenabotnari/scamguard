@@ -5,10 +5,17 @@ from typing import Protocol, cast
 from app.db.database import DatabaseManager
 from app.dtos.cluster_dto import (
     ClusterChannelAvatarDto,
+    ClusterChannelParticipantDto,
     ClusterDetailDto,
     ClusterMessageComparisonDto,
     ClusterSummaryDto,
     SimilarityEdgeDto,
+)
+from app.services.timeline_service import (
+    build_dynamic_timeline,
+    format_chisinau_datetime,
+    format_chisinau_time,
+    parse_utc_timestamp,
 )
 
 
@@ -123,30 +130,81 @@ class SqliteClusterRepository:
         if not row:
             return None
         summary = self._row_to_summary(row)
-        messages = self._load_cluster_messages(cluster_id)
-        return ClusterDetailDto(
-            **summary.model_dump(by_alias=True),
-            messages=messages,
-        )
+        raw_records = self._load_raw_cluster_records(cluster_id)
+        return build_dynamic_timeline(summary, raw_records)
 
     def _row_to_summary(self, row: object) -> ClusterSummaryDto:
         mapping = cast(dict[str, object], row)
         cluster_id = str(mapping["id"])
         channels = self._load_cluster_channels(cluster_id)
+        participants = self._load_cluster_participants(cluster_id)
+        win_min = int(str(mapping["window_minutes"]))
+        first_posted = str(mapping["first_posted_at"])
+        last_posted = str(mapping["last_posted_at"])
+
+        # Format first and last posted times in Europe/Chisinau
+        first_display = format_chisinau_datetime(parse_utc_timestamp(first_posted))
+        last_display = format_chisinau_datetime(parse_utc_timestamp(last_posted))
+
         return ClusterSummaryDto(
             id=cluster_id,
             headlineSummary=str(mapping["headline_summary"]),
             narrativeCategory=str(mapping["narrative_category"]),
+            narrativeConfidence=0.92,
             channelsCount=int(str(mapping["channels_count"])),
             messagesCount=int(str(mapping["messages_count"])),
-            windowMinutes=int(str(mapping["window_minutes"])),
+            windowMinutes=win_min,
+            spanMinutes=win_min,
             averageSimilarity=float(str(mapping["average_similarity"])),
-            firstPostedAt=str(mapping["first_posted_at"]),
-            lastPostedAt=str(mapping["last_posted_at"]),
+            matchType="semantic",
+            firstPostedAt=first_display,
+            lastPostedAt=last_display,
             representativeSnippet=str(mapping["representative_snippet"]),
             channels=channels,
+            participants=participants,
             parameterVersion=str(mapping["parameter_version"]),
         )
+
+    def _load_cluster_participants(self, cluster_id: str) -> list[ClusterChannelParticipantDto]:
+        cursor = self._db.connection.cursor()
+        cursor.execute(
+            """
+            SELECT
+                cm.channel_id, cm.delay_seconds, cm.similarity_to_centroid,
+                m.posted_at,
+                COALESCE(w.handle, '@' || cm.channel_id) AS handle,
+                COALESCE(w.title, cm.channel_id) AS title
+            FROM cluster_messages cm
+            INNER JOIN messages m ON m.id = cm.message_id
+            LEFT JOIN watchlist_channels w ON w.id = cm.channel_id
+            WHERE cm.cluster_id = ?
+            ORDER BY m.posted_at ASC
+            """,
+            (cluster_id,),
+        )
+        participants: list[ClusterChannelParticipantDto] = []
+        for row in cursor.fetchall():
+            mapping = cast(dict[str, object], row)
+            title_str = str(mapping["title"])
+            words = [w for w in title_str.replace("@", "").split() if w]
+            initials = (
+                (words[0][0] + (words[1][0] if len(words) > 1 else words[0][-1])).upper()
+                if words
+                else "CH"
+            )
+            dt_utc = parse_utc_timestamp(str(mapping["posted_at"]))
+            participants.append(
+                ClusterChannelParticipantDto(
+                    channelId=str(mapping["channel_id"]),
+                    handle=str(mapping["handle"]),
+                    title=title_str,
+                    initials=initials,
+                    postedAt=format_chisinau_time(dt_utc),
+                    delaySeconds=int(str(mapping["delay_seconds"])),
+                    similarityScore=float(str(mapping["similarity_to_centroid"])),
+                )
+            )
+        return participants
 
     def _load_cluster_channels(self, cluster_id: str) -> list[ClusterChannelAvatarDto]:
         cursor = self._db.connection.cursor()
@@ -183,12 +241,13 @@ class SqliteClusterRepository:
             )
         return avatars
 
-    def _load_cluster_messages(self, cluster_id: str) -> list[ClusterMessageComparisonDto]:
+    def _load_raw_cluster_records(self, cluster_id: str) -> list[dict[str, object]]:
         cursor = self._db.connection.cursor()
         cursor.execute(
             """
             SELECT
-                cm.message_id, cm.channel_id, cm.delay_seconds, cm.similarity_to_centroid,
+                cm.message_id, cm.channel_id, cm.delay_seconds,
+                cm.similarity_to_centroid AS similarity_score,
                 m.telegram_message_id, m.posted_at, m.is_deleted_at_source,
                 t.raw_text,
                 n.normalised_text, n.text_hash,
@@ -205,19 +264,21 @@ class SqliteClusterRepository:
             (cluster_id,),
         )
         rows = cursor.fetchall()
-        if not rows:
-            return []
+        return [dict(cast(dict[str, object], r)) for r in rows]
 
-        first_norm = str(cast(dict[str, object], rows[0])["normalised_text"])
+    def _load_cluster_messages(self, cluster_id: str) -> list[ClusterMessageComparisonDto]:
+        raw = self._load_raw_cluster_records(cluster_id)
+        if not raw:
+            return []
+        first_norm = str(raw[0].get("normalised_text", ""))
         base_words = set(first_norm.split())
         comparisons: list[ClusterMessageComparisonDto] = []
 
-        for row in rows:
-            mapping = cast(dict[str, object], row)
+        for mapping in raw:
             handle = str(mapping["handle"])
-            tg_id = int(str(mapping["telegram_message_id"]))
-            norm_text = str(mapping["normalised_text"])
-            raw_val = mapping["raw_text"]
+            tg_id = int(str(mapping.get("telegram_message_id", 1)))
+            norm_text = str(mapping.get("normalised_text", ""))
+            raw_val = mapping.get("raw_text")
             diff_words = [w for w in norm_text.split() if w not in base_words and len(w) > 2]
             comparisons.append(
                 ClusterMessageComparisonDto(
@@ -227,7 +288,7 @@ class SqliteClusterRepository:
                     title=str(mapping["title"]),
                     postedAt=str(mapping["posted_at"]),
                     delaySeconds=int(str(mapping["delay_seconds"])),
-                    similarityScore=float(str(mapping["similarity_to_centroid"])),
+                    similarityScore=float(str(mapping["similarity_score"])),
                     isDeleted=bool(int(str(mapping["is_deleted_at_source"]))),
                     rawText=str(raw_val) if raw_val is not None else None,
                     normalisedText=norm_text,

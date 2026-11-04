@@ -5,6 +5,7 @@ import pytest
 from app.api.routes.analysis_routes import trigger_analysis_pipeline
 from app.api.routes.auth_routes import login_user
 from app.core.errors import AppError
+from app.core.security import LoginRateLimiter, PasswordHasher, TokenManager
 from app.db.database import DatabaseManager
 from app.dtos.auth_dto import LoginInputDto
 from app.dtos.collector_dto import RawTelegramPostDto
@@ -20,10 +21,20 @@ from app.services.narrative_classifier_service import NarrativeClassifierService
 from app.services.scoring_service import ScoringService
 from app.services.similarity_service import SimilarityService
 from app.services.text_normaliser import TextNormaliser
-from app.core.security import LoginRateLimiter, PasswordHasher, TokenManager
 
 
-def _build_pipeline_harness():
+def _build_pipeline_harness() -> tuple[
+    DatabaseManager,
+    SqliteParameterRepository,
+    SqliteMessageRepository,
+    SqliteClusterRepository,
+    SqliteWatchlistRepository,
+    TextNormaliser,
+    ClusteringService,
+    ScoringService,
+    AlertService,
+    AnalysisPipelineService,
+]:
     db = DatabaseManager(":memory:")
     param_repo = SqliteParameterRepository(db_manager=db)
     message_repo = SqliteMessageRepository(db_manager=db)
@@ -67,7 +78,7 @@ def _build_pipeline_harness():
     )
 
 
-def test_analysis_pipeline_idempotence():
+def test_analysis_pipeline_idempotence() -> None:
     """Running analysis twice on the exact same messages produces the identical clusters, scores and explanations."""
     (
         db,
@@ -125,7 +136,7 @@ def test_analysis_pipeline_idempotence():
     alerts_1 = alert_service.list_alerts()
 
     # Second analysis run on unchanged messages
-    res_2 = pipeline.run_analysis_pipeline()
+    _ = pipeline.run_analysis_pipeline()
 
     clusters_2 = cluster_repo.list_clusters()
     scores_2 = scoring_service.list_ranked_channels()
@@ -138,7 +149,7 @@ def test_analysis_pipeline_idempotence():
     assert [c.average_similarity for c in clusters_1] == [c.average_similarity for c in clusters_2]
 
     assert len(scores_1) == len(scores_2)
-    for s1, s2 in zip(scores_1, scores_2):
+    for s1, s2 in zip(scores_1, scores_2, strict=True):
         assert s1.id == s2.id
         assert s1.score == s2.score
         assert s1.risk_band == s2.risk_band
@@ -149,7 +160,7 @@ def test_analysis_pipeline_idempotence():
     assert [a.id for a in alerts_1] == [a.id for a in alerts_2]
 
 
-def test_analysis_pipeline_respects_time_window():
+def test_analysis_pipeline_respects_time_window() -> None:
     """Messages outside the configured time window are never combined into a coordinated cascade."""
     (
         db,
@@ -189,7 +200,7 @@ def test_analysis_pipeline_respects_time_window():
     assert len(cluster_repo.list_clusters()) == 0
 
 
-def test_analysis_pipeline_same_channel_messages_never_clustered():
+def test_analysis_pipeline_same_channel_messages_never_clustered() -> None:
     """Two identical messages on the same channel are never clustered as coordinated activity."""
     (
         db,
@@ -226,7 +237,7 @@ def test_analysis_pipeline_same_channel_messages_never_clustered():
     assert res.clusters_detected == 0
 
 
-def test_analysis_pipeline_edited_message_reanalysis():
+def test_analysis_pipeline_edited_message_reanalysis() -> None:
     """Editing a message so it no longer matches the cluster re-evaluates and prunes the cluster."""
     (
         db,
@@ -281,7 +292,7 @@ def test_analysis_pipeline_edited_message_reanalysis():
     assert len(cluster_repo.list_clusters()) == 0
 
 
-def test_analysis_api_endpoint_rbac():
+def test_analysis_api_endpoint_rbac() -> None:
     """Verifies that the /api/v1/analysis/run endpoint requires journalist or admin role."""
     (
         db,

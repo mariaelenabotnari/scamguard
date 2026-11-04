@@ -1,7 +1,7 @@
 """Repository layer for monitored Telegram channels on the watch list."""
 
-from datetime import UTC, datetime
 import sqlite3
+from datetime import UTC, datetime
 from typing import Protocol, cast
 
 from app.db.database import DatabaseManager
@@ -43,70 +43,15 @@ class IWatchlistRepository(Protocol):
 class SqliteWatchlistRepository:
     """Persists watchlist channels in `watchlist_channels` with pagination and seeding."""
 
-    def __init__(self, db_manager: DatabaseManager, seed_defaults: bool = True) -> None:
+    def __init__(self, db_manager: DatabaseManager, seed_defaults: bool = False) -> None:
         self._db = db_manager
         self._db.run_migrations()
         if seed_defaults:
             self._seed_defaults()
 
     def _seed_defaults(self) -> None:
-        cursor = self._db.connection.cursor()
-        cursor.execute("SELECT COUNT(*) AS cnt FROM watchlist_channels")
-        row = cursor.fetchone()
-        if row and int(row["cnt"]) > 0:
-            return
-
-        defaults: list[tuple[str, str, str, str, str, str, str, int]] = [
-            (
-                "ch-01",
-                "@moldova_azi_info",
-                "Moldova Azi Info",
-                "RO",
-                "active",
-                "elena.botnari",
-                "2026-10-14",
-                48200,
-            ),
-            (
-                "ch-02",
-                "@chisinau_express",
-                "Chișinău Express 24",
-                "RO",
-                "active",
-                "elena.botnari",
-                "2026-10-14",
-                31900,
-            ),
-            (
-                "ch-03",
-                "@pridnestrovie_pulse",
-                "Приднестровье Пульс",
-                "RU",
-                "active",
-                "ion.rusu",
-                "2026-10-16",
-                64500,
-            ),
-            (
-                "ch-04",
-                "@gagauzia_voice",
-                "Gagauzia Voice",
-                "MIXED",
-                "paused",
-                "ion.rusu",
-                "2026-10-18",
-                19400,
-            ),
-        ]
-        cursor.executemany(
-            """
-            INSERT OR IGNORE INTO watchlist_channels (
-                id, handle, title, language, status, added_by, added_at, subscribers_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            defaults,
-        )
-        self._db.connection.commit()
+        """No-op: seed data removed to ensure clean state with real Telegram channels."""
+        pass
 
     def list_paginated(self, page: int, page_size: int) -> tuple[list[WatchlistChannelDto], int]:
         cursor = self._db.connection.cursor()
