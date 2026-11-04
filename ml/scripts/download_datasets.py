@@ -1,10 +1,13 @@
 """Downloads or prepares Hugging Face and curated Moldovan fact-check datasets for offline training."""
 
-from collections import Counter
 import json
 from pathlib import Path
 
-CURATED_PATH = Path(__file__).resolve().parents[1] / "data" / "curated" / "moldova_debunk_claims.jsonl"
+CURATED_PATH = (
+    Path(__file__).resolve().parents[1] / "data" / "seed" / "moldova_debunk_claims.jsonl"
+    if (Path(__file__).resolve().parents[1] / "data" / "seed" / "moldova_debunk_claims.jsonl").exists()
+    else Path(__file__).resolve().parents[1] / "data" / "curated" / "moldova_debunk_claims.jsonl"
+)
 PROCESSED_DIR = Path(__file__).resolve().parents[1] / "data" / "processed"
 
 
@@ -68,16 +71,13 @@ def prepare_training_corpus(
             test_data.extend(cat_samples[n_train:])
 
     with open(PROCESSED_DIR / "train.jsonl", "w", encoding="utf-8") as f:
-        for item in train_data:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        f.writelines(json.dumps(item, ensure_ascii=False) + "\n" for item in train_data)
 
     with open(PROCESSED_DIR / "val.jsonl", "w", encoding="utf-8") as f:
-        for item in val_data:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        f.writelines(json.dumps(item, ensure_ascii=False) + "\n" for item in val_data)
 
     with open(PROCESSED_DIR / "test.jsonl", "w", encoding="utf-8") as f:
-        for item in test_data:
-            f.write(json.dumps(item, ensure_ascii=False) + "\n")
+        f.writelines(json.dumps(item, ensure_ascii=False) + "\n" for item in test_data)
 
     summary = {
         "total_samples": len(samples),
