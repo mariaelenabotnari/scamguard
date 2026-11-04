@@ -1,5 +1,6 @@
 """Dependency injection wiring for services, security primitives, and repositories."""
 
+from pathlib import Path
 from typing import Annotated
 
 from fastapi import Depends, Header
@@ -19,6 +20,7 @@ from app.services.collector_service import (
     FakeTelegramClientAdapter,
     ICollectorService,
     TelegramCollectorService,
+    TelethonClientAdapter,
 )
 from app.services.dashboard_service import DashboardService, IDashboardService
 from app.services.email_service import EmailService
@@ -69,10 +71,21 @@ def get_watchlist_service(db_manager: DatabaseDep) -> IWatchlistService:
 
 
 def get_collector_service(db_manager: DatabaseDep) -> ICollectorService:
+    settings = get_settings()
     watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager)
     message_repo = SqliteMessageRepository(db_manager=db_manager)
     normaliser = TextNormaliser()
-    client = FakeTelegramClientAdapter()
+
+    session_file = Path(settings.telegram_session_path).resolve().with_suffix(".session")
+    if settings.telegram_api_id and settings.telegram_api_hash and session_file.exists():
+        client = TelethonClientAdapter(
+            session_path=settings.telegram_session_path,
+            api_id=settings.telegram_api_id,
+            api_hash=settings.telegram_api_hash,
+        )
+    else:
+        client = FakeTelegramClientAdapter()
+
     return TelegramCollectorService(
         watchlist_repo=watchlist_repo,
         message_repo=message_repo,

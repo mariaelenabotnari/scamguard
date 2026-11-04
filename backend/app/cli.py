@@ -6,7 +6,20 @@ import os
 import sys
 from pathlib import Path
 
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from app.core.config import get_settings
+from app.db.database import get_database_manager
+from app.repositories.message_repository import SqliteMessageRepository
+from app.repositories.watchlist_repository import SqliteWatchlistRepository
+from app.services.collector_service import TelegramCollectorService
+from app.services.telegram_client import FakeTelegramClientAdapter, TelethonClientAdapter
+from app.services.text_normaliser import TextNormaliser
 
 
 async def run_telegram_login(
@@ -101,6 +114,94 @@ async def check_session_status() -> tuple[bool, str]:
         return False, f"Error verifying Telegram session: {exc}"
 
 
+def _get_collector() -> TelegramCollectorService:
+    settings = get_settings()
+    db_manager = get_database_manager()
+    watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager)
+    message_repo = SqliteMessageRepository(db_manager=db_manager)
+    normaliser = TextNormaliser()
+
+    session_file = Path(settings.telegram_session_path).resolve().with_suffix(".session")
+    if settings.telegram_api_id and settings.telegram_api_hash and session_file.exists():
+        client = TelethonClientAdapter(
+            session_path=settings.telegram_session_path,
+            api_id=settings.telegram_api_id,
+            api_hash=settings.telegram_api_hash,
+        )
+    else:
+        client = FakeTelegramClientAdapter()
+
+    return TelegramCollectorService(
+        watchlist_repo=watchlist_repo,
+        message_repo=message_repo,
+        normaliser=normaliser,
+        telegram_client=client,
+    )
+
+
+def run_collect(channel_handle: str, days: int = 7) -> None:
+    collector = _get_collector()
+    clean_handle = channel_handle.strip()
+    if not clean_handle.startswith("@") and "t.me" not in clean_handle:
+        clean_handle = f"@{clean_handle}"
+
+    db_manager = get_database_manager()
+    watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager)
+    channel = watchlist_repo.get_by_handle(clean_handle)
+
+    if channel is None:
+        print(f"[*] Channel {clean_handle} not on watch list. Resolving and adding...")
+        try:
+            channel = collector.resolve_and_add_channel(
+                clean_handle, added_by="admin-cli", backfill_days=days
+            )
+            print(
+                f"[OK] Added channel '{channel.title}' ({channel.handle}) with {channel.subscribers_count} subscribers."
+            )
+        except Exception as exc:
+            print(f"[ERROR] Failed to add channel {clean_handle}: {exc}")
+            sys.exit(1)
+    else:
+        print(f"[*] Backfilling channel '{channel.title}' ({channel.handle}) for last {days} days...")
+        run = collector.backfill_channel(channel.id, days=days)
+        print(
+            f"[OK] Collection status: {run.status} | Messages saved: {run.messages_saved} | Flood waits: {run.flood_waits_count}"
+        )
+        if run.error_message:
+            print(f"[WARN] Errors: {run.error_message}")
+
+
+def run_collect_all() -> None:
+    collector = _get_collector()
+    print("[*] Running collection across all active channels...")
+    run = collector.poll_active_channels()
+    print(
+        f"[OK] Collection status: {run.status} | Channels polled: {run.channels_polled} | Messages saved: {run.messages_saved} | Flood waits: {run.flood_waits_count}"
+    )
+    if run.error_message:
+        print(f"[WARN] Errors: {run.error_message}")
+
+
+def run_check_deleted(channel_handle: str | None = None) -> None:
+    collector = _get_collector()
+    channel_id = None
+    if channel_handle:
+        clean_handle = channel_handle.strip()
+        if not clean_handle.startswith("@") and "t.me" not in clean_handle:
+            clean_handle = f"@{clean_handle}"
+        db_manager = get_database_manager()
+        watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager)
+        channel = watchlist_repo.get_by_handle(clean_handle)
+        if not channel:
+            print(f"[ERROR] Channel {clean_handle} not found in database.")
+            sys.exit(1)
+        channel_id = channel.id
+
+    print("[*] Checking for messages deleted at source on Telegram...")
+    purged = collector.check_and_purge_deleted_posts(channel_id=channel_id)
+    print(f"[OK] Check completed. Purged raw text for {purged} deleted post(s).")
+
+
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):
         try:
@@ -123,6 +224,24 @@ def main() -> None:
     # session-status command
     subparsers.add_parser("session-status", help="Check if Telegram session is authorized")
 
+    # collect command
+    collect_parser = subparsers.add_parser(
+        "collect", help="Collect messages from a single Telegram channel"
+    )
+    collect_parser.add_argument("--channel", type=str, required=True, help="Channel handle or URL (@name)")
+    collect_parser.add_argument("--days", type=int, default=7, help="Number of past days to backfill (default: 7)")
+
+    # collect-all command
+    subparsers.add_parser(
+        "collect-all", help="Poll new messages from all active channels on the watch list"
+    )
+
+    # check-deleted command
+    del_parser = subparsers.add_parser(
+        "check-deleted", help="Check if recent posts were deleted on Telegram and purge raw text"
+    )
+    del_parser.add_argument("--channel", type=str, default=None, help="Optional channel handle to check")
+
     args = parser.parse_args()
 
     if args.command == "telegram-login":
@@ -141,6 +260,12 @@ def main() -> None:
         else:
             print(f"[WARN] {msg}")
             sys.exit(1)
+    elif args.command == "collect":
+        run_collect(channel_handle=args.channel, days=args.days)
+    elif args.command == "collect-all":
+        run_collect_all()
+    elif args.command == "check-deleted":
+        run_check_deleted(channel_handle=args.channel)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 """Repository layer for monitored Telegram channels on the watch list."""
 
 from datetime import UTC, datetime
+import sqlite3
 from typing import Protocol, cast
 
 from app.db.database import DatabaseManager
@@ -21,7 +22,18 @@ class IWatchlistRepository(Protocol):
         language: ChannelLanguage,
         added_by: str,
         subscribers_count: int = 1200,
+        telegram_channel_id: int | None = None,
     ) -> WatchlistChannelDto: ...
+    def update_last_collection(
+        self, channel_id: str, last_collected_at: str, last_error: str | None = None
+    ) -> None: ...
+    def update_metadata(
+        self,
+        channel_id: str,
+        telegram_channel_id: int | None = None,
+        title: str | None = None,
+        subscribers_count: int | None = None,
+    ) -> None: ...
     def update_status(
         self, channel_id: str, status: WatchlistStatus
     ) -> WatchlistChannelDto | None: ...
@@ -140,14 +152,15 @@ class SqliteWatchlistRepository:
         language: ChannelLanguage,
         added_by: str,
         subscribers_count: int = 1200,
+        telegram_channel_id: int | None = None,
     ) -> WatchlistChannelDto:
         today_str = datetime.now(UTC).strftime("%Y-%m-%d")
         cursor = self._db.connection.cursor()
         cursor.execute(
             """
             INSERT INTO watchlist_channels (
-                id, handle, title, language, status, added_by, added_at, subscribers_count
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                id, handle, title, language, status, added_by, added_at, subscribers_count, telegram_channel_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 channel_id,
@@ -158,6 +171,7 @@ class SqliteWatchlistRepository:
                 added_by,
                 today_str,
                 subscribers_count,
+                telegram_channel_id,
             ),
         )
         self._db.connection.commit()
@@ -170,7 +184,49 @@ class SqliteWatchlistRepository:
             addedBy=added_by,
             addedAt=today_str,
             subscribersCount=subscribers_count,
+            telegramChannelId=telegram_channel_id,
         )
+
+    def update_last_collection(
+        self, channel_id: str, last_collected_at: str, last_error: str | None = None
+    ) -> None:
+        cursor = self._db.connection.cursor()
+        cursor.execute(
+            """
+            UPDATE watchlist_channels
+            SET last_collected_at = ?, last_error = ?
+            WHERE id = ?
+            """,
+            (last_collected_at, last_error, channel_id),
+        )
+        self._db.connection.commit()
+
+    def update_metadata(
+        self,
+        channel_id: str,
+        telegram_channel_id: int | None = None,
+        title: str | None = None,
+        subscribers_count: int | None = None,
+    ) -> None:
+        cursor = self._db.connection.cursor()
+        updates: list[str] = []
+        params: list[object] = []
+        if telegram_channel_id is not None:
+            updates.append("telegram_channel_id = ?")
+            params.append(telegram_channel_id)
+        if title is not None:
+            updates.append("title = ?")
+            params.append(title)
+        if subscribers_count is not None:
+            updates.append("subscribers_count = ?")
+            params.append(subscribers_count)
+        if updates:
+            params.append(channel_id)
+            cursor.execute(
+                f"UPDATE watchlist_channels SET {', '.join(updates)} WHERE id = ?",
+                tuple(params),
+            )
+            self._db.connection.commit()
 
     def update_status(self, channel_id: str, status: WatchlistStatus) -> WatchlistChannelDto | None:
         cursor = self._db.connection.cursor()
@@ -190,7 +246,10 @@ class SqliteWatchlistRepository:
 
     @staticmethod
     def _row_to_dto(row: object) -> WatchlistChannelDto:
-        mapping = cast(dict[str, object], row)
+        mapping = dict(cast(sqlite3.Row, row))
+        tg_id = mapping.get("telegram_channel_id")
+        last_coll = mapping.get("last_collected_at")
+        last_err = mapping.get("last_error")
         return WatchlistChannelDto(
             id=str(mapping["id"]),
             handle=str(mapping["handle"]),
@@ -200,4 +259,7 @@ class SqliteWatchlistRepository:
             addedBy=str(mapping["added_by"]),
             addedAt=str(mapping["added_at"]),
             subscribersCount=int(str(mapping["subscribers_count"])),
+            telegramChannelId=int(tg_id) if tg_id is not None else None,
+            lastCollectedAt=str(last_coll) if last_coll is not None else None,
+            lastError=str(last_err) if last_err is not None else None,
         )

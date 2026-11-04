@@ -36,10 +36,24 @@ class DatabaseManager:
     def run_migrations(self) -> str:
         migrations = _load_migrations()
         cursor = self._conn.cursor()
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS schema_migrations (
+                revision TEXT PRIMARY KEY,
+                applied_at TEXT NOT NULL
+            );
+            """
+        )
+        cursor.execute("SELECT revision FROM schema_migrations")
+        applied_revisions = {row[0] for row in cursor.fetchall()}
         latest_revision = "none"
 
         for index, migration in enumerate(migrations):
             revision_id = str(migration.REVISION_ID)
+            if revision_id in applied_revisions:
+                latest_revision = revision_id
+                continue
+
             statements: tuple[str, ...] = tuple(migration.UPGRADE_SQL)
             for statement in statements:
                 cursor.execute(statement)
