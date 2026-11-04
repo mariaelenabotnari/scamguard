@@ -42,6 +42,7 @@ class NarrativePredictionDto(BaseModel):
     matched_claim: str = Field(..., alias="matchedClaim")
     model_version: str = Field(..., alias="modelVersion")
     fake_news_score: float = Field(default=0.85, alias="fakeNewsScore")
+    narrative_match: float = Field(default=0.85, alias="narrativeMatch")
     narrative_match_confidence: float = Field(default=0.85, alias="narrativeMatchConfidence")
     is_disinformation: bool = Field(default=True, alias="isDisinformation")
     sub_narrative: str | None = Field(default=None, alias="subNarrative")

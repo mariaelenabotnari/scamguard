@@ -125,7 +125,7 @@ export function ClusterComparePage({
                       >
                         {/* Delay Pill */}
                         <span className="mb-2 text-[10px] font-bold text-ink-secondary">
-                          {idx === 0 ? 'First Source' : `+${post.delaySeconds}s`}
+                          {idx === 0 ? 'First seen in watchlist' : `+${post.delaySeconds}s`}
                         </span>
 
                         {/* Node Bubble */}

@@ -174,7 +174,7 @@ class IMultilingualEmbedder(Protocol):
 
 
 class DeterministicMultilingualEmbedder:
-    """Projects Romanian and Russian text into a shared concept vector space."""
+    """Projects Romanian and Russian text into a shared concept vector space (Baseline Lexicon)."""
 
     def __init__(self, dim: int = 48) -> None:
         self._dim = dim
@@ -201,6 +201,52 @@ class DeterministicMultilingualEmbedder:
         norm = math.sqrt(sum(v * v for v in vec))
         if norm > 0:
             vec = [v / norm for v in vec]
+        return vec
+
+
+# Alias for explicit baseline comparison in evaluation harness
+BaselineLexiconEmbedder = DeterministicMultilingualEmbedder
+
+
+class SentenceTransformerEmbedder:
+    """Dense neural multilingual sentence encoder with memory cache and baseline fallback."""
+
+    def __init__(self, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2") -> None:
+        self._model_name = model_name
+        self._model = None
+        self._cache: dict[str, list[float]] = {}
+        self._fallback = DeterministicMultilingualEmbedder()
+
+    def _ensure_loaded(self) -> None:
+        if self._model is None:
+            try:
+                from sentence_transformers import SentenceTransformer
+                # Try loading from local cache first to avoid network timeout
+                try:
+                    self._model = SentenceTransformer(self._model_name, device="cpu", local_files_only=True)
+                except Exception:
+                    self._model = SentenceTransformer(self._model_name, device="cpu")
+            except Exception:
+                self._model = False
+
+    def embed(self, text: str) -> list[float]:
+        clean = text.strip()
+        if not clean:
+            return [0.0] * 48
+        if clean in self._cache:
+            return self._cache[clean]
+
+        self._ensure_loaded()
+        if self._model:
+            try:
+                vec = self._model.encode(clean, normalize_embeddings=True, show_progress_bar=False).tolist()
+                self._cache[clean] = vec
+                return vec
+            except Exception:
+                pass
+
+        vec = self._fallback.embed(clean)
+        self._cache[clean] = vec
         return vec
 
 

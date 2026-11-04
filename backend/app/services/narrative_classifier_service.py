@@ -39,6 +39,12 @@ _CURATED_PATH = (
     / "moldova_debunk_claims.jsonl"
 )
 CURATED_DEBUNKS_PATH = _SEED_PATH if _SEED_PATH.exists() else _CURATED_PATH
+_MODEL_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "ml"
+    / "models"
+    / "narrative_classifier.joblib"
+)
 
 
 @dataclass(frozen=True)
@@ -341,6 +347,7 @@ class NarrativeClassifierService:
         self._embedder = DeterministicMultilingualEmbedder()
         self._debunks: list[dict[str, object]] = []
         self._debunk_vectors: list[list[float]] = []
+        self._trained_model = None
         self._is_loaded = False
 
     @property
@@ -350,7 +357,17 @@ class NarrativeClassifierService:
     def _ensure_loaded(self) -> None:
         if not self._is_loaded:
             self._load_curated_debunks()
+            self._load_trained_model()
             self._is_loaded = True
+
+    def _load_trained_model(self) -> None:
+        if _MODEL_PATH.exists():
+            try:
+                import joblib
+
+                self._trained_model = joblib.load(_MODEL_PATH)
+            except Exception:
+                self._trained_model = None
 
     def _load_curated_debunks(self) -> None:
         if not CURATED_DEBUNKS_PATH.exists():
@@ -401,43 +418,98 @@ class NarrativeClassifierService:
                 best_debunk_sim = sim
                 nearest_debunk = d_item
 
-        # 2. Multi-label category scoring
-        cat_scores: list[tuple[_CategoryRule, float]] = []
+        # 2. Extract probability distribution from trained ML model if available
+        ml_probs: dict[int, float] = {}
+        if self._trained_model is not None:
+            try:
+                probs = self._trained_model.predict_proba([raw_text])[0]
+                classes = self._trained_model.classes_
+                for cls_id, p_val in zip(classes, probs, strict=False):
+                    ml_probs[int(cls_id)] = float(p_val)
+            except Exception:
+                ml_probs = {}
+
+        # 3. Multi-signal category scoring (Keyword evidence + Prototype alignment + Debunk retrieval + Learned ML)
+        cat_scores: list[tuple[_CategoryRule, float, bool]] = []
         for rule in _NARRATIVE_CATEGORIES:
-            hits = sum(
+            distinct_kw_hits = sum(
                 1
-                for tok in tokens
-                if any(tok.startswith(kw) or kw in tok for kw in rule.keywords)
+                for kw in rule.keywords
+                if any(tok.startswith(kw) or kw in tok for tok in tokens)
             )
             proto_vec = self._embedder.embed(rule.prototype_claim)
             proto_sim = cosine_similarity(text_vec, proto_vec)
 
-            score = 0.0
-            if hits > 0:
-                score += 0.55 + min(0.35, (hits - 1) * 0.12)
-            score += proto_sim * 0.35
+            debunk_sim = (
+                best_debunk_sim
+                if (
+                    nearest_debunk
+                    and nearest_debunk.get("category_id") == rule.cat_id
+                    and rule.cat_id != 10
+                    and nearest_debunk.get("category_id") != 10
+                )
+                else 0.0
+            )
 
-            if (
-                nearest_debunk
-                and nearest_debunk.get("category_id") == rule.cat_id
-                and best_debunk_sim >= 0.70
-            ):
-                score += 0.20
+            ml_prob = ml_probs.get(rule.cat_id, 0.0)
 
-            cat_scores.append((rule, round(min(0.99, score), 4)))
+            # Signal 1: Normalized keyword evidence
+            if distinct_kw_hits >= 3:
+                kw_evidence = 0.65
+            elif distinct_kw_hits == 2:
+                kw_evidence = 0.55
+            elif distinct_kw_hits == 1:
+                kw_evidence = 0.15
+            else:
+                kw_evidence = 0.0
+
+            # Signal 2: Prototype claim semantic alignment
+            proto_evidence = proto_sim * 0.35
+
+            # Signal 3: Fact-check debunk matching
+            debunk_evidence = (debunk_sim * 0.40) if debunk_sim >= 0.65 else (debunk_sim * 0.15)
+
+            # Signal 4: Machine learned calibrated model probability
+            ml_evidence = ml_prob * 0.45
+
+            combined_score = kw_evidence + proto_evidence + debunk_evidence + ml_evidence
+
+            # Multi-signal gating: Disinformation categories require at least TWO distinct signals or strong ML
+            has_multi_signal = False
+            if rule.cat_id == 10:
+                has_multi_signal = True
+            else:
+                strong_debunk = debunk_sim >= 0.65
+                moderate_claim = (distinct_kw_hits >= 2) or (distinct_kw_hits >= 1 and proto_sim >= 0.35)
+                ml_confident = ml_prob >= 0.30
+                has_multi_signal = strong_debunk or moderate_claim or ml_confident
+
+            # If ML model confidently flags post as benign news (cat 10) and no multiple disinfo keywords exist, suppress
+            if ml_probs.get(10, 0.0) >= 0.70 and rule.cat_id != 10 and distinct_kw_hits < 3:
+                has_multi_signal = False
+                combined_score *= 0.35
+
+            final_cat_score = round(min(0.99, combined_score), 4) if has_multi_signal else round(combined_score * 0.35, 4)
+            cat_scores.append((rule, final_cat_score, has_multi_signal))
 
         cat_scores.sort(key=lambda x: x[1], reverse=True)
-        best_rule, top_score = cat_scores[0]
+        best_rule, top_score, has_signals = cat_scores[0]
 
         # Multi-label secondary categories
         secondary = [
             r.name
-            for r, s in cat_scores[1:]
-            if s >= 0.55 and r.cat_id != 10
+            for r, s, sig in cat_scores[1:]
+            if s >= 0.50 and sig and r.cat_id != 10
         ]
 
-        # Out-of-scope / Unknown threshold
-        if top_score < confidence_threshold:
+        # Topic vs Claim check: If top disinformation candidate lacks multi-signal assertion, classify as benign / unknown
+        if best_rule.cat_id != 10 and not has_signals:
+            category_name = "Other / not disinformation"
+            matched_claim = "Neutral topic mention without asserted disinformation claim"
+            sub_narrative = None
+            is_disinfo = False
+            conf = round(max(0.20, 1.0 - top_score), 4)
+        elif top_score < confidence_threshold:
             category_name = "unknown"
             matched_claim = "Below minimum narrative confidence threshold"
             sub_narrative = None
@@ -446,9 +518,9 @@ class NarrativeClassifierService:
         elif best_rule.cat_id == 10:
             category_name = best_rule.name
             matched_claim = best_rule.prototype_claim
-            sub_narrative = best_rule.sub_narratives[0]
+            sub_narrative = best_rule.sub_narratives[0] if best_rule.sub_narratives else None
             is_disinfo = False
-            conf = top_score
+            conf = round(max(0.60, top_score), 4)
         else:
             category_name = best_rule.name
             matched_claim = best_rule.prototype_claim
@@ -462,13 +534,13 @@ class NarrativeClassifierService:
         debunk_claim = None
         debunk_source = None
         debunk_url = None
-        if nearest_debunk and best_debunk_sim >= 0.70 and is_disinfo:
+        if nearest_debunk and best_debunk_sim >= 0.65 and is_disinfo:
             debunk_claim = str(nearest_debunk.get("text"))
             debunk_source = str(nearest_debunk.get("source"))
             debunk_url = str(nearest_debunk.get("debunk_url"))
 
-        fake_score = round(conf if is_disinfo else 0.05, 4)
-        narrative_match_conf = round(conf if is_disinfo else 0.05, 4)
+        # Real calibrated narrative match confidence (no constant 0.05 for benign posts)
+        narrative_match_val = round(conf if is_disinfo else (1.0 - conf) * 0.15, 4)
 
         prediction = NarrativePredictionDto(
             targetId=target_id,
@@ -477,8 +549,9 @@ class NarrativeClassifierService:
             confidence=conf,
             matchedClaim=matched_claim,
             modelVersion=MODEL_VERSION,
-            fakeNewsScore=fake_score,
-            narrativeMatchConfidence=narrative_match_conf,
+            fakeNewsScore=narrative_match_val,
+            narrativeMatch=narrative_match_val,
+            narrativeMatchConfidence=narrative_match_val,
             isDisinformation=is_disinfo,
             subNarrative=sub_narrative,
             secondaryCategories=secondary,
@@ -492,12 +565,36 @@ class NarrativeClassifierService:
     def classify_cascade(
         self, texts: list[str], cascade_id: str = "cascade-summary"
     ) -> NarrativePredictionDto:
-        """Classifies a cascade by evaluating consensus across its member messages."""
+        """Classifies a cascade by evaluating consensus across all its member messages."""
         if not texts:
             return self.classify_one(cascade_id, "cluster", "")
-        # Evaluate primary message and combine with cascade length context
-        primary_pred = self.classify_one(cascade_id, "cluster", texts[0])
-        return primary_pred
+        preds = [self.classify_one(f"{cascade_id}-{i}", "message", t) for i, t in enumerate(texts)]
+        disinfo_preds = [p for p in preds if p.is_disinformation]
+        if disinfo_preds:
+            cat_counts: dict[str, list[NarrativePredictionDto]] = {}
+            for p in disinfo_preds:
+                cat_counts.setdefault(p.category, []).append(p)
+            top_cat = max(cat_counts.keys(), key=lambda c: len(cat_counts[c]))
+            representative = cat_counts[top_cat][0]
+            avg_conf = round(sum(p.confidence for p in cat_counts[top_cat]) / len(cat_counts[top_cat]), 4)
+            return NarrativePredictionDto(
+                targetId=cascade_id,
+                targetType="cluster",
+                category=top_cat,
+                confidence=avg_conf,
+                matchedClaim=representative.matched_claim,
+                modelVersion=representative.model_version,
+                fakeNewsScore=avg_conf,
+                narrativeMatch=avg_conf,
+                narrativeMatchConfidence=avg_conf,
+                isDisinformation=True,
+                subNarrative=representative.sub_narrative,
+                secondaryCategories=representative.secondary_categories,
+                nearestDebunkClaim=representative.nearest_debunk_claim,
+                debunkSource=representative.debunk_source,
+                debunkUrl=representative.debunk_url,
+            )
+        return preds[0]
 
     def compute_channel_narrative_profile(
         self, messages: list[str]
