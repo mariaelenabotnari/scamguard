@@ -9,7 +9,7 @@ import { SearchPage } from '../../search/pages/SearchPage';
 import { WatchlistPage } from './WatchlistPage';
 
 describe('SearchPage, WatchlistPage, and ExportModal (Branch 2 of 3)', () => {
-  it('renders unified search results with NFR-13 score explanations and filters by query', async () => {
+  it('renders unified search results with score explanations and filters by query', async () => {
     const searchService = new SearchService();
     render(
       <MemoryRouter initialEntries={['/search']}>
@@ -21,7 +21,7 @@ describe('SearchPage, WatchlistPage, and ExportModal (Branch 2 of 3)', () => {
       expect(screen.getByLabelText('Matching channels')).toBeInTheDocument();
     });
 
-    // Verify NFR-13 explanation text is rendered alongside search results
+    // Verify explanation text is rendered alongside search results
     expect(screen.getAllByText(/Score Explanation/i).length).toBeGreaterThan(0);
 
     const searchInput = screen.getByLabelText('Search channels, messages, and clusters');
@@ -86,14 +86,14 @@ describe('SearchPage, WatchlistPage, and ExportModal (Branch 2 of 3)', () => {
     });
   });
 
-  it('displays NFR-10 export limits and triggers CSV export in ExportModal', async () => {
+  it('displays export limits and triggers CSV export in ExportModal', async () => {
     const exportService = new ExportService();
     render(<ExportModal defaultEntity="clusters" service={exportService} />);
 
     fireEvent.click(screen.getByRole('button', { name: /export data/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/Account Export Quota \(NFR-10\)/i)).toBeInTheDocument();
+      expect(screen.getByText(/Account Export Quota/i)).toBeInTheDocument();
       expect(screen.getByText('250 rows')).toBeInTheDocument();
     });
 

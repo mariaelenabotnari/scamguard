@@ -55,6 +55,46 @@ class ActivityTimelineDto(BaseModel):
     points: list[TimelinePointDto]
 
 
+class TopClusterItemDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    headline: str
+    narrative_category: str = Field(..., alias="narrativeCategory")
+    channels_count: int = Field(..., alias="channelsCount")
+    time_window: str = Field(..., alias="timeWindow")
+    posted_at_label: str = Field(..., alias="postedAtLabel")
+
+
+class RiskiestChannelItemDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    id: str
+    handle: str
+    title: str
+    score: int
+    risk_band: Literal["high", "medium", "low"] = Field(..., alias="riskBand")
+    sparkline: list[int]
+    primary_narrative: str = Field(..., alias="primaryNarrative")
+
+
+class NarrativeCountItemDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    category: str
+    clusters_count: int = Field(..., alias="clustersCount")
+    percentage: int
+
+
+class SystemStatusDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    last_collection_label: str = Field(..., alias="lastCollectionLabel")
+    next_run_label: str = Field(..., alias="nextRunLabel")
+    connection_status: Literal["ok", "degraded", "error"] = Field(..., alias="connectionStatus")
+    analysis_delay_seconds: int = Field(..., alias="analysisDelaySeconds")
+
+
 class DashboardOverviewDto(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -62,6 +102,10 @@ class DashboardOverviewDto(BaseModel):
     banner: DashboardBannerDto
     timeline: ActivityTimelineDto
     stats: list[StatCardMetricDto]
+    top_clusters: list[TopClusterItemDto] = Field(default_factory=list, alias="topClusters")
+    riskiest_channels: list[RiskiestChannelItemDto] = Field(default_factory=list, alias="riskiestChannels")
+    narrative_counts: list[NarrativeCountItemDto] = Field(default_factory=list, alias="narrativeCounts")
+    system_status: SystemStatusDto | None = Field(default=None, alias="systemStatus")
 
 
 class SidebarPulseBarDto(BaseModel):

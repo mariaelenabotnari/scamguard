@@ -1,4 +1,4 @@
-"""Admin parameters service enforcing NFR-01 polling cap and NFR-13 versioned parameters."""
+"""Admin parameters service enforcing polling cap and versioned parameters."""
 
 from typing import Protocol
 
@@ -15,7 +15,7 @@ class IAdminService(Protocol):
 
 
 class AdminService:
-    """Validates and bumps immutable system parameter versions (NFR-01, NFR-13)."""
+    """Validates and bumps immutable system parameter versions."""
 
     def __init__(self, param_repo: IParameterRepository) -> None:
         self._param_repo = param_repo
@@ -30,8 +30,7 @@ class AdminService:
             raise AppError(
                 code="INVALID_COLLECTION_INTERVAL",
                 message=(
-                    "Collection interval must be between 1 and 10 minutes "
-                    "(NFR-01 max 10 min polling interval)."
+                    "Collection interval must be between 1 and 10 minutes."
                 ),
                 status_code=422,
                 details={"max_collection_interval_minutes": 10},

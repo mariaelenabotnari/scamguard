@@ -9,7 +9,7 @@ import { RegisterPage } from '../../auth/pages/RegisterPage';
 import { AdminSettingsPage } from './AdminSettingsPage';
 
 describe('Auth, Admin Settings, and Polish Views (Branch 3 of 3)', () => {
-  it('enforces max 10-minute collection interval (NFR-01) and bumps parameter version on save (NFR-13)', async () => {
+  it('enforces max 10-minute collection interval and bumps parameter version on save', async () => {
     const adminService = new AdminService();
     render(
       <MemoryRouter initialEntries={['/admin']}>

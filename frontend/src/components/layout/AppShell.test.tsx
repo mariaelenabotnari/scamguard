@@ -9,7 +9,7 @@ describe('AppShell Layout (Sidebar, Topbar, Full Width)', () => {
     await authService.login({ email: 'elena.botnari@scamguard.md', password: 'scamguard2026' });
   });
 
-  it('renders ChorusWatch shell with brand logo, 5 nav items, and Topbar with avatar menu', async () => {
+  it('renders ScamGuard shell with brand logo, 5 nav items, and Topbar with avatar menu', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <AppRoutes />
@@ -17,7 +17,7 @@ describe('AppShell Layout (Sidebar, Topbar, Full Width)', () => {
     );
 
     // Brand & Main Header
-    expect(screen.getByText('ChorusWatch')).toBeInTheDocument();
+    expect(screen.getByText('ScamGuard')).toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: /^overview$/i })).toBeInTheDocument();
 
     // Navigation items

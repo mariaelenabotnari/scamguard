@@ -20,7 +20,7 @@ class AuthUserDto(BaseModel):
     account_age_days: int = Field(
         default=0,
         alias="accountAgeDays",
-        description="Account age in days for NFR-10 export quota calculation",
+        description="Account age in days for export quota calculation",
     )
 
 

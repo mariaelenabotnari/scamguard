@@ -42,7 +42,7 @@ export class AdminService implements IAdminService {
     ) {
       return Promise.reject(
         new Error(
-          'Collection interval must be between 1 and 10 minutes (NFR-01 max 10 min polling interval).',
+          'Collection interval must be between 1 and 10 minutes.',
         ),
       );
     }

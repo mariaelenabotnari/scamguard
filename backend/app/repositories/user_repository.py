@@ -328,7 +328,7 @@ class IParameterRepository(Protocol):
 
 
 class SqliteParameterRepository:
-    """Persists immutable parameter versions in `parameter_sets` (NFR-13)."""
+    """Persists immutable parameter versions in `parameter_sets`."""
 
     def __init__(self, db_manager: DatabaseManager) -> None:
         self._db = db_manager

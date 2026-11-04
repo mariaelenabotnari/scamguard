@@ -243,7 +243,7 @@ def test_rbac_enforcement_across_visitor_journalist_and_admin_roles() -> None:
     assert exc_forbidden.value.status_code == 403
     assert exc_forbidden.value.code == "FORBIDDEN"
 
-    # 3. Admin can update parameters (bumps v1.4 -> v1.5) and NFR-01 rejects interval > 10
+    # 3. Admin can update parameters (bumps v1.4 -> v1.5) and rejects interval > 10
     admin_session = login_user(
         payload=LoginInputDto(email="elena.botnari@scamguard.md", password="scamguard2026"),
         auth_service=auth_service,

@@ -12,7 +12,7 @@ describe('StyleguidePage (/styleguide)', () => {
     );
 
     expect(
-      screen.getByRole('heading', { name: /choruswatch design system/i }),
+      screen.getByRole('heading', { name: /scamguard design system/i }),
     ).toBeInTheDocument();
 
     // Buttons & Badges

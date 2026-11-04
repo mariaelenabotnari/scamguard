@@ -43,7 +43,7 @@ describe('Investigation Views (AlertsPage, ChannelDetailPage, ClusterComparePage
       ).toBeInTheDocument();
     });
 
-    // Score & Explanation block (FR-07, NFR-13)
+    // Score & Explanation block
     expect(screen.getByText('HIGH RISK • 91/100')).toBeInTheDocument();
     expect(screen.getByTestId('channel-explanation-block')).toHaveTextContent(
       'Flagged due to high cluster participation',
@@ -57,7 +57,7 @@ describe('Investigation Views (AlertsPage, ChannelDetailPage, ClusterComparePage
     ).toBeInTheDocument();
   });
 
-  it('renders ClusterComparePage with highlighted differences and deleted-post NFR-11 state', async () => {
+  it('renders ClusterComparePage with highlighted differences and deleted-post state', async () => {
     render(
       <MemoryRouter initialEntries={['/clusters/cl-energy-winter-01']}>
         <AppRoutes />
@@ -73,7 +73,7 @@ describe('Investigation Views (AlertsPage, ChannelDetailPage, ClusterComparePage
     // Highlighted diff token in second post
     expect(screen.getByText('majorate cu 100% din 15 noiembrie')).toBeInTheDocument();
 
-    // Deleted post state (NFR-11 / UC-02: raw text purged, normalised text + hash shown)
+    // Deleted post state (raw text purged, normalised text + hash shown)
     const deletedPostBlock = screen.getByTestId('deleted-post-post-103');
     expect(deletedPostBlock).toHaveTextContent(
       'Original no longer available at source (Deleted Post)',

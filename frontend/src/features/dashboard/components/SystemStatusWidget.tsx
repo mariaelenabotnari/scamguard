@@ -1,29 +1,27 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import type { AlertItemDto } from '../../../dtos/alert.dto';
 import type { SystemStatusDto } from '../../../dtos/dashboard.dto';
 import { Card, CardHeader, Icon } from '../../../components/ui';
+import { isMockMode } from '../../../lib/api/http-client';
+import { alertService } from '../../../services/alert.service';
 
 export interface SystemStatusWidgetProps {
   systemStatus?: SystemStatusDto;
 }
 
-const RECENT_ALERTS = [
+const FALLBACK_MOCK_ALERTS = [
   {
     id: 'alt-01',
-    message: 'High coordination detected: 5 channels posted identical gas price message in 8m',
-    time: '12m ago',
-    risk: 'high',
+    title: 'High coordination detected: 5 channels posted identical message in 8m',
+    triggeredAt: '12m ago',
+    severity: 'high' as const,
   },
   {
     id: 'alt-02',
-    message: 'New channel added to high-risk ranking: @gagauzia_voice_md',
-    time: '45m ago',
-    risk: 'medium',
-  },
-  {
-    id: 'alt-03',
-    message: 'Telegram ingestion recovered: 124 missed messages processed',
-    time: '2h ago',
-    risk: 'info',
+    title: 'Channel coordination threshold exceeded for watched channel',
+    triggeredAt: '45m ago',
+    severity: 'medium' as const,
   },
 ];
 
@@ -31,6 +29,24 @@ export function SystemStatusWidget({
   systemStatus,
 }: SystemStatusWidgetProps) {
   const navigate = useNavigate();
+  const [alerts, setAlerts] = useState<readonly AlertItemDto[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    alertService
+      .getAlerts()
+      .then((data) => {
+        if (isMounted) {
+          setAlerts(data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const visibleAlerts = isMockMode() && alerts.length === 0 ? FALLBACK_MOCK_ALERTS : alerts.slice(0, 3);
 
   return (
     <Card tone="default" className="flex flex-col justify-between p-5">
@@ -50,41 +66,49 @@ export function SystemStatusWidget({
           }
         />
 
-        {/* Recent Alerts Feed */}
+        {/* Alerts Feed */}
         <div className="mt-4 space-y-2.5">
-          {RECENT_ALERTS.map((alert) => (
-            <div
-              key={alert.id}
-              onClick={() => navigate('/alerts')}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  navigate('/alerts');
-                }
-              }}
-              className="flex cursor-pointer items-start gap-2.5 rounded-card border border-brand-100/60 bg-surface-card p-3 shadow-xs transition-all hover:border-brand-300 hover:shadow-card"
-            >
-              <span
-                className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
-                  alert.risk === 'high'
-                    ? 'bg-status-dangerText'
-                    : alert.risk === 'medium'
-                    ? 'bg-status-warningText'
-                    : 'bg-brand-500'
-                }`}
-              />
-              <div className="min-w-0 flex-1">
-                <p className="line-clamp-2 text-xs font-semibold text-ink-primary">
-                  {alert.message}
-                </p>
-                <span className="mt-1 block text-[10px] font-medium text-ink-muted">
-                  {alert.time}
-                </span>
-              </div>
+          {visibleAlerts.length === 0 ? (
+            <div className="rounded-card border border-brand-100/40 bg-surface-muted/30 py-5 text-center">
+              <p className="text-xs font-medium text-ink-muted">No active alerts • All channels nominal</p>
             </div>
-          ))}
+          ) : (
+            visibleAlerts.map((alert) => (
+              <div
+                key={alert.id}
+                onClick={() => navigate('/alerts')}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    navigate('/alerts');
+                  }
+                }}
+                className="flex cursor-pointer items-start gap-2.5 rounded-card border border-brand-100/60 bg-surface-card p-3 shadow-xs transition-all hover:border-brand-300 hover:shadow-card"
+              >
+                <span
+                  className={`mt-1 h-2 w-2 shrink-0 rounded-full ${
+                    alert.severity === 'high'
+                      ? 'bg-status-dangerText'
+                      : alert.severity === 'medium'
+                      ? 'bg-status-warningText'
+                      : 'bg-brand-500'
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="line-clamp-2 text-xs font-semibold text-ink-primary">
+                    {alert.title}
+                  </p>
+                  <span className="mt-1 block text-[10px] font-medium text-ink-muted">
+                    {alert.triggeredAt?.includes('T')
+                      ? new Date(alert.triggeredAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                      : alert.triggeredAt || 'Recent'}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* System Health Indicators */}
@@ -112,7 +136,7 @@ export function SystemStatusWidget({
                 Last Run
               </span>
               <p className="mt-1 font-bold text-ink-secondary">
-                {systemStatus?.lastCollectionLabel || '2m ago'}
+                {systemStatus?.lastCollectionLabel || 'Active'}
               </p>
             </div>
           </div>
