@@ -14,6 +14,10 @@ from app.repositories.user_repository import SqliteParameterRepository, SqliteUs
 from app.repositories.watchlist_repository import SqliteWatchlistRepository
 from app.services.admin_service import AdminService, IAdminService
 from app.services.alert_service import AlertService, IAlertService
+from app.services.analysis_pipeline_service import (
+    AnalysisPipelineService,
+    IAnalysisPipelineService,
+)
 from app.services.auth_service import AuthService, IAuthService
 from app.services.clustering_service import ClusteringService, IClusteringService
 from app.services.collector_service import (
@@ -100,11 +104,32 @@ def get_clustering_service(db_manager: DatabaseDep) -> IClusteringService:
     cluster_repo = SqliteClusterRepository(db_manager=db_manager)
     param_repo = SqliteParameterRepository(db_manager=db_manager)
     similarity_service = SimilarityService()
+    narrative_classifier = get_narrative_classifier_service(db_manager=db_manager)
     return ClusteringService(
         message_repo=message_repo,
         cluster_repo=cluster_repo,
         param_repo=param_repo,
         similarity_service=similarity_service,
+        narrative_classifier=narrative_classifier,
+    )
+
+
+def get_analysis_pipeline_service(db_manager: DatabaseDep) -> IAnalysisPipelineService:
+    param_repo = SqliteParameterRepository(db_manager=db_manager)
+    message_repo = SqliteMessageRepository(db_manager=db_manager)
+    normaliser = TextNormaliser()
+    classifier = get_narrative_classifier_service(db_manager=db_manager)
+    clustering = get_clustering_service(db_manager=db_manager)
+    scoring = get_scoring_service(db_manager=db_manager)
+    alert = get_alert_service(db_manager=db_manager)
+    return AnalysisPipelineService(
+        param_repo=param_repo,
+        message_repo=message_repo,
+        normaliser=normaliser,
+        clustering_service=clustering,
+        narrative_classifier=classifier,
+        scoring_service=scoring,
+        alert_service=alert,
     )
 
 
@@ -165,6 +190,9 @@ AuthServiceDep = Annotated[IAuthService, Depends(get_auth_service)]
 AdminServiceDep = Annotated[IAdminService, Depends(get_admin_service)]
 WatchlistServiceDep = Annotated[IWatchlistService, Depends(get_watchlist_service)]
 CollectorServiceDep = Annotated[ICollectorService, Depends(get_collector_service)]
+AnalysisPipelineServiceDep = Annotated[
+    IAnalysisPipelineService, Depends(get_analysis_pipeline_service)
+]
 ClusteringServiceDep = Annotated[IClusteringService, Depends(get_clustering_service)]
 NarrativeClassifierServiceDep = Annotated[
     INarrativeClassifierService, Depends(get_narrative_classifier_service)

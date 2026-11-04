@@ -17,6 +17,7 @@ from app.dtos.collector_dto import StoredMessageDto
 from app.repositories.cluster_repository import IClusterRepository
 from app.repositories.message_repository import IMessageRepository
 from app.repositories.user_repository import IParameterRepository
+from app.services.narrative_classifier_service import INarrativeClassifierService
 from app.services.similarity_service import ISimilarityService
 
 
@@ -67,11 +68,13 @@ class ClusteringService:
         cluster_repo: IClusterRepository,
         param_repo: IParameterRepository,
         similarity_service: ISimilarityService,
+        narrative_classifier: INarrativeClassifierService | None = None,
     ) -> None:
         self._message_repo = message_repo
         self._cluster_repo = cluster_repo
         self._param_repo = param_repo
         self._similarity = similarity_service
+        self._narrative_classifier = narrative_classifier
 
     def detect_and_store_clusters(
         self,
@@ -143,6 +146,17 @@ class ClusteringService:
             n_channels = len(distinct_channels)
             headline = f"Same message posted by {n_channels} channels in {span_minutes} minutes"
             category = infer_narrative_category(first_msg.normalised_text)
+            if self._narrative_classifier is not None:
+                try:
+                    pred = self._narrative_classifier.classify(
+                        first_msg.normalised_text,
+                        target_type="cluster",
+                        target_id=cluster_id,
+                    )
+                    if pred.category_name != "Other / not disinformation":
+                        category = pred.category_name
+                except Exception:
+                    pass
             snippet = (first_msg.raw_text or first_msg.normalised_text)[:180]
 
             base_words = set(first_msg.normalised_text.split())

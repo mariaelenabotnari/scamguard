@@ -355,8 +355,44 @@ class ScoringService(IScoringService):
 
         for ch in channels:
             ch_id = str(ch["id"])
-            seed = seed_by_id.get(ch_id)
-            if seed is not None:
+            handle_str = str(ch["handle"])
+
+            # 1. Query real clusters from cluster_messages
+            cm_rows = conn.execute(
+                """
+                SELECT cm.cluster_id, cm.delay_seconds, c.narrative_category
+                FROM cluster_messages cm
+                JOIN clusters c ON c.id = cm.cluster_id
+                WHERE cm.channel_id = ? OR cm.channel_id = ?
+                """,
+                (ch_id, handle_str),
+            ).fetchall()
+
+            if cm_rows:
+                linked_count = len(cm_rows)
+                delays = [int(r["delay_seconds"]) for r in cm_rows]
+                delays.sort()
+                lead_lag = delays[len(delays) // 2] if delays else 0
+
+                peer_rows = conn.execute(
+                    """
+                    SELECT DISTINCT cm2.channel_id
+                    FROM cluster_messages cm1
+                    JOIN cluster_messages cm2 ON cm1.cluster_id = cm2.cluster_id
+                    WHERE (cm1.channel_id = ? OR cm1.channel_id = ?)
+                      AND cm2.channel_id != ? AND cm2.channel_id != ?
+                    """,
+                    (ch_id, handle_str, ch_id, handle_str),
+                ).fetchall()
+                peers = [f"@{r[0]}" if not str(r[0]).startswith("@") else str(r[0]) for r in peer_rows]
+
+                cp = min(100, max(20, linked_count * 25))
+                cd = max(10, 100 - min(90, lead_lag // 5))
+                cm = min(100, max(15, len(peers) * 25))
+                narrative = str(cm_rows[0]["narrative_category"])
+                nw = 85 if any(k in narrative.lower() for k in ("energy", "panic", "gas", "sanction", "election", "war")) else 50
+            elif ch_id in seed_by_id:
+                seed = seed_by_id[ch_id]
                 cp = int(str(seed["cluster_participation_share"]))
                 cd = int(str(seed["copy_delay_factor"]))
                 cm = int(str(seed["co_movement_repetition"]))
@@ -366,11 +402,11 @@ class ScoringService(IScoringService):
                 lead_lag = int(str(seed["median_lead_lag_seconds"]))
                 narrative = str(seed["primary_narrative"])
             else:
-                cp, cd, cm, nw = 35, 30, 25, 30
-                linked_count = 1
-                peers = ["@moldova_puls_actual"]
-                lead_lag = 420
-                narrative = "General Political Commentary"
+                cp, cd, cm, nw = 0, 0, 0, 0
+                linked_count = 0
+                peers = []
+                lead_lag = 0
+                narrative = "No coordinated narratives detected"
 
             score, risk_band, explanation = self.compute_channel_score(
                 channel_id=ch_id,

@@ -412,9 +412,13 @@ class SimilarityService:
 
         for i in range(len(ordered)):
             msg_a = ordered[i]
+            if getattr(msg_a, "skip_similarity", False):
+                continue
             ts_a = _parse_iso_seconds(msg_a.posted_at)
             for j in range(i + 1, len(ordered)):
                 msg_b = ordered[j]
+                if getattr(msg_b, "skip_similarity", False):
+                    continue
                 if msg_a.channel_id == msg_b.channel_id:
                     continue
 
