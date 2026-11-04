@@ -70,10 +70,10 @@ class AnalysisPipelineService:
         # 4. Narrative classification for all detected clusters
         for cl in clusters:
             try:
-                self._narrative_classifier.classify(
-                    text=cl.representative_snippet,
-                    target_type="cluster",
+                self._narrative_classifier.classify_one(
                     target_id=cl.id,
+                    target_type="cluster",
+                    raw_text=cl.representative_snippet,
                 )
             except Exception as exc:
                 logger.warning(f"Narrative classification failed for cluster {cl.id}: {exc}")

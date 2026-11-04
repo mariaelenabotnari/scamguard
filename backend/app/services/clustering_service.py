@@ -148,10 +148,10 @@ class ClusteringService:
             category = infer_narrative_category(first_msg.normalised_text)
             if self._narrative_classifier is not None:
                 try:
-                    pred = self._narrative_classifier.classify(
-                        first_msg.normalised_text,
-                        target_type="cluster",
+                    pred = self._narrative_classifier.classify_one(
                         target_id=cluster_id,
+                        target_type="cluster",
+                        raw_text=first_msg.normalised_text,
                     )
                     if pred.category_name != "Other / not disinformation":
                         category = pred.category_name
