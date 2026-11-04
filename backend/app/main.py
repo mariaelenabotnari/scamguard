@@ -1,5 +1,9 @@
 """FastAPI entry point and application factory for Scamguard."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -17,7 +21,27 @@ from app.api.routes.search_routes import router as search_router
 from app.api.routes.watchlist_routes import router as watchlist_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
-from app.core.logging import configure_logging
+from app.core.logging import configure_logging, get_logger
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    settings = get_settings()
+    logger = get_logger("startup")
+    if not settings.telegram_api_id or not settings.telegram_api_hash:
+        logger.warning(
+            "Telegram MTProto credentials not configured in .env. Live collector will fall back to simulated adapter until configured."
+        )
+    else:
+        session_file = Path(settings.telegram_session_path).resolve().with_suffix(".session")
+        if not session_file.exists():
+            logger.warning(
+                "Telegram MTProto session missing at %s. Run 'python -m app.cli telegram-login' to authorize live collector.",
+                session_file,
+            )
+        else:
+            logger.info("Telegram MTProto session file found at %s. Collector initialized.", session_file)
+    yield
 
 
 def create_app() -> FastAPI:
@@ -30,6 +54,7 @@ def create_app() -> FastAPI:
         description=(
             "Detects coordinated activity and narrative propagation across Telegram channels."
         ),
+        lifespan=lifespan,
     )
 
     application.add_middleware(

@@ -24,7 +24,12 @@ services:
     container_name: scamguard-backend
     restart: unless-stopped
     env_file:
-      - .env.example
+      - path: .env
+        required: false
+      - path: .env.example
+        required: false
+    volumes:
+      - ./sessions:/app/sessions
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:

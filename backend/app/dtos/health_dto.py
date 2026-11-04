@@ -7,6 +7,9 @@ class HealthResponseDto(BaseModel):
     status: str = Field(default="ok", description="Current operational status of the service")
     service: str = Field(default="scamguard-backend", description="Service identifier")
     version: str = Field(default="0.1.0", description="API semantic version")
+    telegram_session_status: str = Field(
+        default="unconfigured", description="Status of the Telegram MTProto collector session"
+    )
 
 
 class MetaResponseDto(BaseModel):
@@ -16,8 +19,8 @@ class MetaResponseDto(BaseModel):
     api_v1_prefix: str = Field(..., description="Base path for v1 endpoints")
     schema_revision: str = Field(..., description="Current applied database migration revision")
     active_parameter_version: str = Field(
-        ..., description="Active versioned coordination parameter set (NFR-13)"
+        ..., description="Active versioned coordination parameter set"
     )
     max_collection_interval_minutes: int = Field(
-        ..., description="Maximum allowed collector polling interval in minutes (NFR-01)"
+        ..., description="Maximum allowed collector polling interval in minutes"
     )

@@ -1,5 +1,6 @@
 """Service layer for system health and metadata diagnostics."""
 
+from pathlib import Path
 from typing import Protocol
 
 from app.core.config import Settings
@@ -19,11 +20,23 @@ class HealthService:
         self._settings = settings
         self._db_manager = db_manager
 
+    def _get_telegram_session_status(self) -> str:
+        if not self._settings.telegram_api_id or not self._settings.telegram_api_hash:
+            return "credentials_unconfigured"
+
+        session_path = Path(self._settings.telegram_session_path).resolve()
+        session_file = session_path.with_suffix(".session")
+        if not session_file.exists():
+            return "session_file_missing"
+
+        return "session_file_present"
+
     def check_health(self) -> HealthResponseDto:
         return HealthResponseDto(
             status="ok",
             service="scamguard-backend",
             version=self._settings.app_version,
+            telegram_session_status=self._get_telegram_session_status(),
         )
 
     def get_meta(self) -> MetaResponseDto:
