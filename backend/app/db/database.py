@@ -79,9 +79,23 @@ class DatabaseManager:
         return str(row["revision"]) if row else str(datetime.now(UTC))
 
 
-_default_db_manager = DatabaseManager()
-_default_db_manager.run_migrations()
+def _create_default_db_manager() -> DatabaseManager:
+    try:
+        from app.core.config import get_settings
+        settings = get_settings()
+        path = settings.sqlite_path if settings.sqlite_path else ":memory:"
+    except Exception:
+        path = ":memory:"
+    mgr = DatabaseManager(sqlite_path=path)
+    mgr.run_migrations()
+    return mgr
+
+
+_default_db_manager: DatabaseManager | None = None
 
 
 def get_database_manager() -> DatabaseManager:
+    global _default_db_manager
+    if _default_db_manager is None:
+        _default_db_manager = _create_default_db_manager()
     return _default_db_manager
