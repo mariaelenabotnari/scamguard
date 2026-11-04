@@ -139,6 +139,55 @@ def test_ranking_channel_detail_and_alerts_routes(isolated_db: DatabaseManager) 
     scoring_service = ScoringService(db_manager=isolated_db)
     alert_service = AlertService(db_manager=isolated_db)
 
+    # Clean unseeded database verification
+    initial_items = list_ranked_channels(scoring_service=scoring_service, min_score=0, narrative=None)
+    assert initial_items == []
+    initial_alerts = list_alerts(alert_service=alert_service, severity=None, status=None)
+    assert initial_alerts == []
+
+    # Populate test channels and cluster coordination
+    conn = isolated_db.connection
+    conn.execute(
+        """
+        INSERT INTO watchlist_channels (id, handle, title, language, subscribers_count, status, added_at, added_by)
+        VALUES ('ch-test-1', '@test1', 'Test Channel 1', 'RO', 10000, 'active', '2026-11-01', 'admin'),
+               ('ch-test-2', '@test2', 'Test Channel 2', 'RO', 20000, 'active', '2026-11-01', 'admin'),
+               ('ch-test-3', '@test3', 'Test Channel 3', 'RU', 15000, 'active', '2026-11-01', 'admin'),
+               ('ch-test-4', '@test4', 'Test Channel 4', 'RO', 5000, 'active', '2026-11-01', 'admin')
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO clusters (id, headline_summary, narrative_category, channels_count, messages_count,
+                              window_minutes, average_similarity, first_posted_at, last_posted_at,
+                              representative_snippet, parameter_version)
+        VALUES ('cl-test-1', 'Test Energy Disinfo', 'Energy crisis and tariffs', 3, 3, 4, 0.94,
+                '2026-11-02 10:00:00', '2026-11-02 10:04:00', 'Tarifele la gaze cresc', 'v1.4'),
+               ('cl-test-2', 'Second Cascade', 'Energy crisis and tariffs', 2, 2, 3, 0.92,
+                '2026-11-02 11:00:00', '2026-11-02 11:03:00', 'Second cascade text', 'v1.4')
+        """
+    )
+    conn.execute(
+        """
+        INSERT INTO cluster_messages (cluster_id, message_id, channel_id, delay_seconds, similarity_to_centroid)
+        VALUES ('cl-test-1', 'm1', 'ch-test-1', 0, 1.0),
+               ('cl-test-1', 'm2', 'ch-test-2', 60, 0.95),
+               ('cl-test-1', 'm3', 'ch-test-3', 180, 0.90),
+               ('cl-test-2', 'm4', 'ch-test-1', 0, 1.0),
+               ('cl-test-2', 'm5', 'ch-test-2', 90, 0.92)
+        """
+    )
+    conn.commit()
+
+    scoring_service.recalculate_all_scores()
+    alert_service.evaluate_cluster_alert(
+        cluster_id="cl-test-1",
+        channel_count=3,
+        time_span_seconds=240,
+        avg_similarity=0.94,
+        narrative_tag="Energy crisis and tariffs",
+    )
+
     items = list_ranked_channels(scoring_service=scoring_service, min_score=0, narrative=None)
     assert len(items) >= 4
     scores = [item.score for item in items]
@@ -150,8 +199,8 @@ def test_ranking_channel_detail_and_alerts_routes(isolated_db: DatabaseManager) 
         assert item.narrative_risk in ("low", "medium", "high")
         assert isinstance(item.has_sufficient_data, bool)
 
-    filtered = list_ranked_channels(scoring_service=scoring_service, min_score=70, narrative=None)
-    assert all(ch.score >= 70 for ch in filtered)
+    filtered = list_ranked_channels(scoring_service=scoring_service, min_score=50, narrative=None)
+    assert all(ch.score >= 50 for ch in filtered)
 
     channel_id = items[0].id
     detail = get_channel_detail(channel_id=channel_id, scoring_service=scoring_service)

@@ -352,7 +352,19 @@ def test_same_channel_messages_are_never_compared_and_clustering_is_reproducible
     rate_limiter = LoginRateLimiter(max_attempts=5)
     user_repo = SqliteUserRepository(db_manager=db_manager, hasher=hasher)
     param_repo = SqliteParameterRepository(db_manager=db_manager)
-    watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager, seed_defaults=True)
+    watchlist_repo = SqliteWatchlistRepository(db_manager=db_manager, seed_defaults=False)
+    for c_id, h, t, l in [
+        ("ch-01", "@moldova_azi_info", "Moldova Azi Info", "RO"),
+        ("ch-02", "@chisinau_express", "Chișinău Express", "RO"),
+        ("ch-03", "@pridnestrovie_pulse", "Приднестровье Пульс", "RU"),
+    ]:
+        watchlist_repo.create_channel(
+            channel_id=c_id,
+            handle=h,
+            title=t,
+            language=l,
+            added_by="admin",
+        )
     message_repo = SqliteMessageRepository(db_manager=db_manager)
     cluster_repo = SqliteClusterRepository(db_manager=db_manager)
     normaliser = TextNormaliser()

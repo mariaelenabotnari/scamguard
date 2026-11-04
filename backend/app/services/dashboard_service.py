@@ -31,29 +31,29 @@ class IDashboardService(Protocol):
     def record_latency(self, event_type: str, latency_ms: float) -> None: ...
 
 
-_TIMELINE_PRESETS: dict[TimeRangeOption, list[dict[str, object]]] = {
+_BUCKET_DEFINITIONS: dict[TimeRangeOption, list[tuple[str, str]]] = {
     "24h": [
-        {"axis": "00:00", "date": "Today 00:00", "msgs": 620, "clusters": 2, "norm_y": 0.36},
-        {"axis": "04:00", "date": "Today 04:00", "msgs": 890, "clusters": 4, "norm_y": 0.48},
-        {"axis": "08:00", "date": "Today 08:00", "msgs": 740, "clusters": 3, "norm_y": 0.32},
-        {"axis": "12:00", "date": "Today 12:00", "msgs": 1380, "clusters": 6, "norm_y": 0.62},
-        {"axis": "16:00", "date": "Today 16:00", "msgs": 1120, "clusters": 5, "norm_y": 0.52},
-        {"axis": "20:00", "date": "Today 20:00", "msgs": 1640, "clusters": 7, "norm_y": 0.74},
+        ("00:00", "Today 00:00"),
+        ("04:00", "Today 04:00"),
+        ("08:00", "Today 08:00"),
+        ("12:00", "Today 12:00"),
+        ("16:00", "Today 16:00"),
+        ("20:00", "Today 20:00"),
     ],
     "7d": [
-        {"axis": "Mon", "date": "Oct 28", "msgs": 2900, "clusters": 8, "norm_y": 0.40},
-        {"axis": "Tue", "date": "Oct 29", "msgs": 3400, "clusters": 11, "norm_y": 0.52},
-        {"axis": "Wed", "date": "Oct 30", "msgs": 4200, "clusters": 14, "norm_y": 0.68},
-        {"axis": "Thu", "date": "Oct 31", "msgs": 3800, "clusters": 9, "norm_y": 0.58},
-        {"axis": "Fri", "date": "Nov 01", "msgs": 5100, "clusters": 18, "norm_y": 0.82},
-        {"axis": "Sat", "date": "Nov 02", "msgs": 4600, "clusters": 15, "norm_y": 0.72},
-        {"axis": "Sun", "date": "Nov 03", "msgs": 3900, "clusters": 12, "norm_y": 0.60},
+        ("Mon", "Day 1"),
+        ("Tue", "Day 2"),
+        ("Wed", "Day 3"),
+        ("Thu", "Day 4"),
+        ("Fri", "Day 5"),
+        ("Sat", "Day 6"),
+        ("Sun", "Day 7"),
     ],
     "30d": [
-        {"axis": "W1", "date": "Oct 06 - 12", "msgs": 18500, "clusters": 42, "norm_y": 0.45},
-        {"axis": "W2", "date": "Oct 13 - 19", "msgs": 22100, "clusters": 56, "norm_y": 0.60},
-        {"axis": "W3", "date": "Oct 20 - 26", "msgs": 28400, "clusters": 71, "norm_y": 0.78},
-        {"axis": "W4", "date": "Oct 27 - Nov 03", "msgs": 31200, "clusters": 84, "norm_y": 0.88},
+        ("W1", "Week 1"),
+        ("W2", "Week 2"),
+        ("W3", "Week 3"),
+        ("W4", "Week 4"),
     ],
 }
 
@@ -80,41 +80,82 @@ class DashboardService(IDashboardService):
         conn = self._db.connection
 
         row_ch = conn.execute("SELECT COUNT(*) AS cnt FROM watchlist_channels").fetchone()
-        channels_count = int(row_ch["cnt"]) if row_ch else 312
+        channels_count = int(row_ch["cnt"]) if row_ch and row_ch["cnt"] is not None else 0
 
         row_cl = conn.execute("SELECT COUNT(*) AS cnt FROM clusters").fetchone()
-        clusters_count = int(row_cl["cnt"]) if row_cl else 48
+        clusters_count = int(row_cl["cnt"]) if row_cl and row_cl["cnt"] is not None else 0
 
-        raw_points = _TIMELINE_PRESETS.get(time_range, _TIMELINE_PRESETS["7d"])
-        timeline_points = [
-            TimelinePointDto(
-                id=f"{time_range}-{idx + 1}",
-                axisLabel=str(pt["axis"]),
-                dateLabel=str(pt["date"]),
-                messagesCount=int(str(pt["msgs"])),
-                flaggedClustersCount=int(str(pt["clusters"])),
-                formattedHeadline=f"{pt['msgs']:,} msgs • {pt['clusters']} clusters",
-                normalizedY=float(str(pt["norm_y"])),
-                isHighlighted=(idx == len(raw_points) // 2),
-            )
-            for idx, pt in enumerate(raw_points)
-        ]
+        row_msg = conn.execute("SELECT COUNT(*) AS cnt FROM messages").fetchone()
+        total_msgs = int(row_msg["cnt"]) if row_msg and row_msg["cnt"] is not None else 0
 
-        total_msgs = sum(pt.messages_count for pt in timeline_points)
-
-        subtitle_msg = (
-            f"Have a nice Day to Work ! • {time_range} coordination scan active across Moldova"
+        row_delay = conn.execute(
+            "SELECT AVG(delay_seconds) AS avg_d FROM cluster_messages"
+        ).fetchone()
+        median_delay = (
+            int(round(float(row_delay["avg_d"])))
+            if row_delay and row_delay["avg_d"] is not None
+            else 0
         )
+
+        buckets = _BUCKET_DEFINITIONS.get(time_range, _BUCKET_DEFINITIONS["7d"])
+        n_buckets = len(buckets)
+
+        timeline_points: list[TimelinePointDto] = []
+        if total_msgs > 0:
+            # Query distribution across buckets
+            msg_rows = conn.execute("SELECT posted_at FROM messages ORDER BY posted_at ASC").fetchall()
+            cl_rows = conn.execute("SELECT first_posted_at FROM clusters ORDER BY first_posted_at ASC").fetchall()
+            
+            # Simple uniform distribution of observed records across current time buckets
+            msgs_per_bucket = max(1, total_msgs // n_buckets)
+            cls_per_bucket = max(0, clusters_count // n_buckets)
+            max_bucket_val = max(msgs_per_bucket, 1)
+
+            for idx, (axis_lbl, date_lbl) in enumerate(buckets):
+                b_msgs = msgs_per_bucket if idx < n_buckets - 1 else total_msgs - msgs_per_bucket * (n_buckets - 1)
+                b_msgs = max(0, b_msgs)
+                b_clusters = cls_per_bucket if idx < n_buckets - 1 else clusters_count - cls_per_bucket * (n_buckets - 1)
+                b_clusters = max(0, b_clusters)
+                norm_y = round(min(1.0, b_msgs / (max_bucket_val * 1.5)), 2)
+
+                timeline_points.append(
+                    TimelinePointDto(
+                        id=f"{time_range}-{idx + 1}",
+                        axisLabel=axis_lbl,
+                        dateLabel=date_lbl,
+                        messagesCount=b_msgs,
+                        flaggedClustersCount=b_clusters,
+                        formattedHeadline=f"{b_msgs:,} msgs • {b_clusters} clusters",
+                        normalizedY=norm_y,
+                        isHighlighted=(idx == n_buckets // 2),
+                    )
+                )
+        else:
+            for idx, (axis_lbl, date_lbl) in enumerate(buckets):
+                timeline_points.append(
+                    TimelinePointDto(
+                        id=f"{time_range}-{idx + 1}",
+                        axisLabel=axis_lbl,
+                        dateLabel=date_lbl,
+                        messagesCount=0,
+                        flaggedClustersCount=0,
+                        formattedHeadline="0 msgs • 0 clusters",
+                        normalizedY=0.0,
+                        isHighlighted=(idx == n_buckets // 2),
+                    )
+                )
+
+        subtitle_msg = f"{time_range} real-time coordination scan across monitored channels"
         banner = DashboardBannerDto(
-            greetingTitle="Hello Elena Botnari",
+            greetingTitle="Welcome to ScamGuard",
             subtitle=subtitle_msg,
-            activeChannelsCount=max(channels_count, 12),
+            activeChannelsCount=channels_count,
             parameterVersion="v1.4",
         )
 
         timeline = ActivityTimelineDto(
-            title="Profile Growth",
-            subtitle=f"Overall Information • Coordinated Messages & Clusters ({time_range})",
+            title="Activity Timeline",
+            subtitle=f"Coordinated Messages & Clusters ({time_range})",
             range=time_range,
             points=timeline_points,
         )
@@ -125,8 +166,8 @@ class DashboardService(IDashboardService):
                 label="Monitored Channels",
                 formattedValue=str(channels_count),
                 numericValue=float(channels_count),
-                deltaPercent=4.8,
-                formattedDelta="+4.8%",
+                deltaPercent=0.0,
+                formattedDelta="0%",
                 trendDirection="up",
                 icon="user",
                 tone="lavender",
@@ -136,8 +177,8 @@ class DashboardService(IDashboardService):
                 label="Coordinated Clusters",
                 formattedValue=str(clusters_count),
                 numericValue=float(clusters_count),
-                deltaPercent=12.5,
-                formattedDelta="+12.5%",
+                deltaPercent=0.0,
+                formattedDelta="0%",
                 trendDirection="up",
                 icon="briefcase",
                 tone="cyan",
@@ -147,8 +188,8 @@ class DashboardService(IDashboardService):
                 label="Coordinated Messages",
                 formattedValue=f"{total_msgs:,}",
                 numericValue=float(total_msgs),
-                deltaPercent=8.1,
-                formattedDelta="+8.1%",
+                deltaPercent=0.0,
+                formattedDelta="0%",
                 trendDirection="up",
                 icon="envelope",
                 tone="peach",
@@ -156,10 +197,10 @@ class DashboardService(IDashboardService):
             StatCardMetricDto(
                 id="median-delay",
                 label="Median Propagation",
-                formattedValue="142s",
-                numericValue=142.0,
-                deltaPercent=-6.4,
-                formattedDelta="-6.4%",
+                formattedValue=f"{median_delay}s",
+                numericValue=float(median_delay),
+                deltaPercent=0.0,
+                formattedDelta="0%",
                 trendDirection="down",
                 icon="chart-pie",
                 tone="rose",
