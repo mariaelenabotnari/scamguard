@@ -159,3 +159,4 @@ To train a robust narrative classifier and support fair evaluation, the real dat
 2. **`feat/ml-label-map`**: Construct `ml/scripts/label_map.yaml` mapping multi-source external labels and EUvsDisinfo topics into ScamGuard's 12 categories plus `other_disinformation`.
 3. **`feat/ml-dataset-build`**: Implement leak-proof grouped splitting, min-hash deduplication, cross-lingual similarity checking, and build verification tests (`ml/tests/test_no_leakage.py`).
 4. **`feat/ml-gold-set`**: Sample held-out public Telegram messages from independent surveillance timeframes for double-blind human annotation.
+
