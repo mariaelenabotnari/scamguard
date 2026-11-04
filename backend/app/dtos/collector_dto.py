@@ -1,4 +1,4 @@
-"""DTOs for Telegram message collection, text normalisation, and NFR-11 data minimisation."""
+"""DTOs for Telegram message collection, text normalisation, and data minimisation."""
 
 from typing import Literal
 
@@ -17,6 +17,19 @@ class RawTelegramPostDto(BaseModel):
     posted_at: str = Field(..., alias="postedAt")
     forwarded_from: str | None = Field(default=None, alias="forwardedFrom")
     view_count: int = Field(default=0, alias="viewCount")
+    has_media: bool = Field(default=False, alias="hasMedia")
+    media_type: str | None = Field(default=None, alias="mediaType")
+    forwards: int = Field(default=0, alias="forwards")
+    edit_date: str | None = Field(default=None, alias="editDate")
+    grouped_id: str | None = Field(default=None, alias="groupedId")
+    is_forward: bool = Field(default=False, alias="isForward")
+    forward_source_channel_id: str | None = Field(default=None, alias="forwardSourceChannelId")
+    forward_source_name: str | None = Field(default=None, alias="forwardSourceName")
+    forward_source_date: str | None = Field(default=None, alias="forwardSourceDate")
+    reply_to_id: int | None = Field(default=None, alias="replyToId")
+    post_link: str | None = Field(default=None, alias="postLink")
+    first_seen_at: str | None = Field(default=None, alias="firstSeenAt")
+    last_seen_at: str | None = Field(default=None, alias="lastSeenAt")
 
 
 class NormalisedTextDto(BaseModel):
@@ -48,12 +61,28 @@ class StoredMessageDto(BaseModel):
     text_model: str | None = Field(default=None, alias="textModel")
     text_display: str | None = Field(default=None, alias="textDisplay")
     is_mixed_script: bool = Field(default=False, alias="isMixedScript")
+    has_media: bool = Field(default=False, alias="hasMedia")
+    media_type: str | None = Field(default=None, alias="mediaType")
+    forwards: int = Field(default=0, alias="forwards")
+    edit_date: str | None = Field(default=None, alias="editDate")
+    grouped_id: str | None = Field(default=None, alias="groupedId")
+    is_forward: bool = Field(default=False, alias="isForward")
+    forward_source_channel_id: str | None = Field(default=None, alias="forwardSourceChannelId")
+    forward_source_name: str | None = Field(default=None, alias="forwardSourceName")
+    forward_source_date: str | None = Field(default=None, alias="forwardSourceDate")
+    reply_to_id: int | None = Field(default=None, alias="replyToId")
+    post_link: str | None = Field(default=None, alias="postLink")
+    first_seen_at: str | None = Field(default=None, alias="firstSeenAt")
+    last_seen_at: str | None = Field(default=None, alias="lastSeenAt")
+    deleted_at: str | None = Field(default=None, alias="deletedAt")
+    skip_similarity: bool = Field(default=False, alias="skipSimilarity")
 
 
 class CollectionRunDto(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
     id: str
+    channel_id: str | None = Field(default=None, alias="channelId")
     started_at: str = Field(..., alias="startedAt")
     finished_at: str = Field(..., alias="finishedAt")
     status: CollectionRunStatus
@@ -61,6 +90,17 @@ class CollectionRunDto(BaseModel):
     messages_saved: int = Field(..., alias="messagesSaved")
     flood_waits_count: int = Field(default=0, alias="floodWaitsCount")
     error_message: str | None = Field(default=None, alias="errorMessage")
+
+
+class ResolvedChannelDto(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+
+    telegram_channel_id: int = Field(..., alias="telegramChannelId")
+    handle: str
+    title: str
+    subscribers_count: int = Field(default=0, alias="subscribersCount")
+    language_guess: str = Field(default="RO", alias="languageGuess")
+    is_public: bool = Field(default=True, alias="isPublic")
 
 
 class PurgeDeletedPostInputDto(BaseModel):

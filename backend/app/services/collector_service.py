@@ -1,5 +1,7 @@
-"""Telegram public channel collector service with FloodWait backoff and NFR-11 purge."""
+"""Telegram public channel collector service with live MTProto support, FloodWait backoff, and data minimisation."""
 
+import random
+import re
 import secrets
 import time
 from collections.abc import Callable
@@ -13,106 +15,63 @@ from app.dtos.collector_dto import (
     CollectionRunStatus,
     PurgeDeletedPostReceiptDto,
     RawTelegramPostDto,
+    ResolvedChannelDto,
     StoredMessageDto,
 )
+from app.dtos.watchlist_dto import ChannelLanguage, WatchlistChannelDto
 from app.repositories.message_repository import IMessageRepository
 from app.repositories.watchlist_repository import IWatchlistRepository
+from app.services.telegram_client import (
+    FakeTelegramClientAdapter,
+    FloodWaitError,
+    ITelegramClientAdapter,
+    TelethonClientAdapter,
+)
 from app.services.text_normaliser import ITextNormaliser
 
 logger = get_logger("collector")
 
-
-class FloodWaitError(Exception):
-    """Represents Telegram MTProto FloodWaitError with required wait seconds."""
-
-    def __init__(self, seconds: int) -> None:
-        super().__init__(f"Telegram FloodWaitError: wait {seconds} seconds")
-        self.seconds = seconds
-
-
-class ITelegramClientAdapter(Protocol):
-    def fetch_messages_since(
-        self, channel_id: str, handle: str, min_message_id: int
-    ) -> list[RawTelegramPostDto]: ...
+_STANDARD_FOOTER_PATTERNS = [
+    re.compile(
+        r"^(?:.*?(?:Подписывайтесь|Следите|Abonați|Urmăriți|Canalul|Наш канал|Contact|Info|Sursa|Источник).*?)?(?:https?://)?(?:www\.)?t\.me/[a-zA-Z0-9_]+/?$",
+        re.IGNORECASE,
+    ),
+    re.compile(r"^(?:Pentru detalii|Detalii|Подробнее|Читай дальше)[\s:]*(?:https?://\S+)?$", re.IGNORECASE),
+]
 
 
-class FakeTelegramClientAdapter:
-    """Deterministic Telegram client adapter for testing 5+ channels and FloodWait recovery."""
+def strip_channel_boilerplate(raw_text: str, known_patterns: list[str]) -> str:
+    """Strips channel signatures, promo footers, and contact lines so they don't produce fake similarity."""
+    cleaned = raw_text
+    for pat in known_patterns:
+        cleaned = cleaned.replace(pat, "")
 
-    def __init__(
-        self,
-        channel_posts: dict[str, list[RawTelegramPostDto]] | None = None,
-        flood_wait_once_channels: dict[str, int] | None = None,
-    ) -> None:
-        self._posts = channel_posts if channel_posts is not None else self._default_posts()
-        self._flood_wait_once = dict(flood_wait_once_channels or {})
-
-    def fetch_messages_since(
-        self, channel_id: str, handle: str, min_message_id: int
-    ) -> list[RawTelegramPostDto]:
-        if channel_id in self._flood_wait_once:
-            wait_sec = self._flood_wait_once.pop(channel_id)
-            raise FloodWaitError(seconds=wait_sec)
-
-        posts = self._posts.get(channel_id, [])
-        return [p for p in posts if p.telegram_message_id > min_message_id]
-
-    @staticmethod
-    def _default_posts() -> dict[str, list[RawTelegramPostDto]]:
-        return {
-            "ch-01": [
-                RawTelegramPostDto(
-                    channelId="ch-01",
-                    telegramMessageId=101,
-                    rawText=(
-                        "URGENT! Tarifele la energie în Chișinău vor exploda cu 300% "
-                        "după directiva de la Bruxelles! https://t.me/moldova_azi_info/101"
-                    ),
-                    postedAt="2026-11-02T10:01:00Z",
-                    forwardedFrom=None,
-                    viewCount=4120,
-                ),
-            ],
-            "ch-02": [
-                RawTelegramPostDto(
-                    channelId="ch-02",
-                    telegramMessageId=201,
-                    rawText=(
-                        "URGENT: Tarifele la energie în Chişinău vor exploda cu 300% "
-                        "după directiva de la Bruxelles!"
-                    ),
-                    postedAt="2026-11-02T10:03:00Z",
-                    forwardedFrom="@moldova_azi_info",
-                    viewCount=3890,
-                ),
-            ],
-            "ch-03": [
-                RawTelegramPostDto(
-                    channelId="ch-03",
-                    telegramMessageId=301,
-                    rawText=(
-                        "СРОЧНО! Тарифы на газ и свет в Молдове вырастут на 300% "
-                        "по требованию ЕС! https://t.me/pridnestrovie_pulse/301"
-                    ),
-                    postedAt="2026-11-02T10:04:00Z",
-                    forwardedFrom=None,
-                    viewCount=6100,
-                ),
-            ],
-        }
+    lines = cleaned.split("\n")
+    kept_lines = []
+    for line in lines:
+        stripped = line.strip()
+        if any(pat.match(stripped) for pat in _STANDARD_FOOTER_PATTERNS):
+            continue
+        kept_lines.append(line)
+    return "\n".join(kept_lines).strip()
 
 
 class ICollectorService(Protocol):
+    def resolve_and_add_channel(
+        self, handle_or_url: str, added_by: str, backfill_days: int = 7
+    ) -> WatchlistChannelDto: ...
     def poll_active_channels(self) -> CollectionRunDto: ...
+    def backfill_channel(self, channel_id: str, days: int = 7) -> CollectionRunDto: ...
+    def check_and_purge_deleted_posts(self, channel_id: str | None = None) -> int: ...
     def list_messages(
         self, channel_id: str | None = None, limit: int = 100
     ) -> list[StoredMessageDto]: ...
-    def list_runs(self, limit: int = 20) -> list[CollectionRunDto]: ...
+    def list_runs(self, channel_id: str | None = None, limit: int = 20) -> list[CollectionRunDto]: ...
     def purge_deleted_post(self, message_id: str) -> PurgeDeletedPostReceiptDto: ...
 
 
 class TelegramCollectorService:
-    """Polls active watchlist channels, normalises messages, and purges deleted posts."""
+    """Polls active watchlist channels, cleans messy posts, and logs collection runs."""
 
     def __init__(
         self,
@@ -122,6 +81,7 @@ class TelegramCollectorService:
         telegram_client: ITelegramClientAdapter,
         sleep_fn: Callable[[float], None] = time.sleep,
         max_retries: int = 3,
+        add_jitter: bool = False,
     ) -> None:
         self._watchlist_repo = watchlist_repo
         self._message_repo = message_repo
@@ -129,8 +89,93 @@ class TelegramCollectorService:
         self._client = telegram_client
         self._sleep_fn = sleep_fn
         self._max_retries = max_retries
+        self._add_jitter = add_jitter
+
+    def resolve_and_add_channel(
+        self, handle_or_url: str, added_by: str, backfill_days: int = 7
+    ) -> WatchlistChannelDto:
+        """Resolves a public channel, adds it to watchlist, and initiates backfill."""
+        resolved: ResolvedChannelDto = self._client.resolve_channel(handle_or_url)
+
+        existing = self._watchlist_repo.get_by_handle(resolved.handle)
+        if existing is not None:
+            raise AppError(
+                code="DUPLICATE_CHANNEL",
+                message=f"Channel '{resolved.handle}' is already on the watch list.",
+                status_code=409,
+            )
+
+        channel_id = f"ch-{resolved.handle.lstrip('@').lower().replace('_', '-')}"
+        ch_lang: ChannelLanguage = "RO"
+        if resolved.language_guess in ("RO", "RU", "MIXED"):
+            ch_lang = resolved.language_guess  # type: ignore
+
+        channel = self._watchlist_repo.create_channel(
+            channel_id=channel_id,
+            handle=resolved.handle,
+            title=resolved.title,
+            language=ch_lang,
+            added_by=added_by,
+            subscribers_count=resolved.subscribers_count,
+            telegram_channel_id=resolved.telegram_channel_id,
+        )
+
+        # Backfill initial messages
+        try:
+            self.backfill_channel(channel_id=channel.id, days=backfill_days)
+        except Exception as exc:
+            logger.warning(f"Initial backfill failed for {channel.handle}: {exc}")
+
+        return channel
+
+    def backfill_channel(self, channel_id: str, days: int = 7) -> CollectionRunDto:
+        """Loads the last N days of messages in batches, oldest first."""
+        channel = self._watchlist_repo.get_by_id(channel_id)
+        if channel is None:
+            raise AppError(
+                code="CHANNEL_NOT_FOUND",
+                message=f"Channel '{channel_id}' not found.",
+                status_code=404,
+            )
+
+        started_at = datetime.now(UTC).isoformat()
+        messages_saved = 0
+        flood_waits_count = 0
+        errors: list[str] = []
+
+        try:
+            posts = self._client.fetch_messages_backfill(
+                channel_id=channel.id, handle=channel.handle, days=days
+            )
+            messages_saved = self._store_fetched_posts(channel.id, posts)
+            now_iso = datetime.now(UTC).isoformat()
+            self._watchlist_repo.update_last_collection(channel.id, now_iso, last_error=None)
+        except FloodWaitError as flood_err:
+            flood_waits_count += 1
+            errors.append(f"FloodWait: wait {flood_err.seconds}s")
+        except Exception as exc:
+            errors.append(str(exc))
+            self._watchlist_repo.update_last_collection(
+                channel.id, datetime.now(UTC).isoformat(), last_error=str(exc)
+            )
+
+        finished_at = datetime.now(UTC).isoformat()
+        status: CollectionRunStatus = "completed" if not errors else "failed"
+        run = CollectionRunDto(
+            id=f"run-{secrets.token_hex(4)}",
+            channelId=channel.id,
+            startedAt=started_at,
+            finishedAt=finished_at,
+            status=status,
+            channelsPolled=1,
+            messagesSaved=messages_saved,
+            floodWaitsCount=flood_waits_count,
+            errorMessage="; ".join(errors) if errors else None,
+        )
+        return self._message_repo.record_collection_run(run)
 
     def poll_active_channels(self) -> CollectionRunDto:
+        """Incremental polling of active channels with retry, exponential backoff, and run logging."""
         started_at = datetime.now(UTC).isoformat()
         channels, _ = self._watchlist_repo.list_paginated(page=1, page_size=500)
         active_channels = [ch for ch in channels if ch.status == "active"]
@@ -156,15 +201,25 @@ class TelegramCollectorService:
                     break
                 except FloodWaitError as flood_err:
                     flood_waits_count += 1
+                    wait_time = float(flood_err.seconds)
+                    if self._add_jitter:
+                        wait_time += random.uniform(1.0, 3.0)
                     logger.warning(
-                        f"FloodWaitError on {channel.handle}: sleeping {flood_err.seconds}s"
+                        f"FloodWaitError on {channel.handle}: sleeping {wait_time:.1f}s"
                     )
-                    self._sleep_fn(float(flood_err.seconds))
+                    self._sleep_fn(wait_time)
                 except Exception as exc:
                     backoff = float(2 ** (attempt - 1))
+                    if self._add_jitter:
+                        backoff += random.uniform(0.5, 1.5)
                     logger.error(f"Error polling {channel.handle} (attempt {attempt}): {exc}")
                     if attempt >= self._max_retries:
                         errors.append(f"{channel.handle}: {exc}")
+                        # Pause channel collection if persistent failure, without stopping others
+                        self._watchlist_repo.update_status(channel.id, "paused")
+                        self._watchlist_repo.update_last_collection(
+                            channel.id, datetime.now(UTC).isoformat(), last_error=str(exc)
+                        )
                     else:
                         self._sleep_fn(backoff)
 
@@ -172,17 +227,11 @@ class TelegramCollectorService:
                 continue
 
             channels_polled += 1
-            highest_id = last_id
-            for post in sorted(fetched_posts, key=lambda p: p.telegram_message_id):
-                norm = self._normaliser.normalise(post.raw_text)
-                _, created = self._message_repo.save_message(post=post, norm=norm)
-                if created:
-                    messages_saved += 1
-                if post.telegram_message_id > highest_id:
-                    highest_id = post.telegram_message_id
-
-            if highest_id > last_id:
-                self._message_repo.update_last_message_id(channel.id, highest_id)
+            saved = self._store_fetched_posts(channel.id, fetched_posts)
+            messages_saved += saved
+            self._watchlist_repo.update_last_collection(
+                channel.id, datetime.now(UTC).isoformat(), last_error=None
+            )
 
         finished_at = datetime.now(UTC).isoformat()
         status: CollectionRunStatus = (
@@ -190,6 +239,7 @@ class TelegramCollectorService:
         )
         run = CollectionRunDto(
             id=f"run-{secrets.token_hex(4)}",
+            channelId=None,
             startedAt=started_at,
             finishedAt=finished_at,
             status=status,
@@ -200,13 +250,90 @@ class TelegramCollectorService:
         )
         return self._message_repo.record_collection_run(run)
 
+    def _store_fetched_posts(self, channel_id: str, posts: list[RawTelegramPostDto]) -> int:
+        """Stores posts, strips boilerplate, handles edits, and advances channel checkpoint."""
+        last_id = self._message_repo.get_last_message_id(channel_id)
+        highest_id = last_id
+        messages_saved = 0
+
+        known_boilerplates = self._message_repo.get_channel_boilerplates(channel_id)
+        self._detect_and_register_boilerplates(channel_id, posts)
+
+        for post in sorted(posts, key=lambda p: p.telegram_message_id):
+            cleaned_text = strip_channel_boilerplate(post.raw_text, known_boilerplates)
+            norm = self._normaliser.normalise(cleaned_text)
+
+            _, created = self._message_repo.save_message(post=post, norm=norm)
+            if created:
+                messages_saved += 1
+            if post.telegram_message_id > highest_id:
+                highest_id = post.telegram_message_id
+
+        if highest_id > last_id:
+            self._message_repo.update_last_message_id(channel_id, highest_id)
+
+        return messages_saved
+
+    def _detect_and_register_boilerplates(
+        self, channel_id: str, posts: list[RawTelegramPostDto]
+    ) -> None:
+        """Detects recurring lines across posts (>50% frequency) and registers as boilerplate."""
+        if len(posts) < 4:
+            return
+
+        line_counts: dict[str, int] = {}
+        for post in posts:
+            for line in post.raw_text.split("\n"):
+                stripped = line.strip()
+                if len(stripped) > 15:
+                    line_counts[stripped] = line_counts.get(stripped, 0) + 1
+
+        threshold = max(3, int(len(posts) * 0.5))
+        for line, count in line_counts.items():
+            if count >= threshold:
+                self._message_repo.add_channel_boilerplate(channel_id, line)
+
+    def check_and_purge_deleted_posts(self, channel_id: str | None = None) -> int:
+        """Checks if recent messages exist at source. If deleted, purges raw text and sets deleted_at."""
+        channels: list[WatchlistChannelDto] = []
+        if channel_id:
+            ch = self._watchlist_repo.get_by_id(channel_id)
+            if ch:
+                channels = [ch]
+        else:
+            paged, _ = self._watchlist_repo.list_paginated(page=1, page_size=500)
+            channels = [c for c in paged if c.status == "active"]
+
+        total_purged = 0
+        for channel in channels:
+            recent_msgs = self._message_repo.get_messages_for_deletion_check(channel.id, limit=50)
+            if not recent_msgs:
+                continue
+
+            ids = [m.telegram_message_id for m in recent_msgs]
+            try:
+                existing_ids = self._client.check_messages_exist(channel.id, channel.handle, ids)
+            except Exception as exc:
+                logger.error(f"Failed to check message existence for {channel.handle}: {exc}")
+                continue
+
+            for msg in recent_msgs:
+                if msg.telegram_message_id not in existing_ids:
+                    logger.info(
+                        f"Post {msg.id} ({channel.handle}/{msg.telegram_message_id}) was deleted at source. Purging raw text."
+                    )
+                    self._message_repo.mark_message_deleted(msg.id)
+                    total_purged += 1
+
+        return total_purged
+
     def list_messages(
         self, channel_id: str | None = None, limit: int = 100
     ) -> list[StoredMessageDto]:
         return self._message_repo.list_messages(channel_id=channel_id, limit=limit)
 
-    def list_runs(self, limit: int = 20) -> list[CollectionRunDto]:
-        return self._message_repo.list_collection_runs(limit=limit)
+    def list_runs(self, channel_id: str | None = None, limit: int = 20) -> list[CollectionRunDto]:
+        return self._message_repo.list_collection_runs(channel_id=channel_id, limit=limit)
 
     def purge_deleted_post(self, message_id: str) -> PurgeDeletedPostReceiptDto:
         receipt = self._message_repo.purge_deleted_post_raw_text(message_id)

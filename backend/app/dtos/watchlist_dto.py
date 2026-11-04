@@ -39,6 +39,15 @@ class WatchlistChannelDto(BaseModel):
     subscribers_count: int = Field(
         default=0, alias="subscribersCount", description="Subscriber count snapshot"
     )
+    telegram_channel_id: int | None = Field(
+        default=None, alias="telegramChannelId", description="Stable Telegram MTProto channel ID"
+    )
+    last_collected_at: str | None = Field(
+        default=None, alias="lastCollectedAt", description="ISO timestamp of last collection"
+    )
+    last_error: str | None = Field(
+        default=None, alias="lastError", description="Last collection error message if any"
+    )
 
 
 class AddWatchlistChannelInputDto(BaseModel):
