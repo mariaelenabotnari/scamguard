@@ -79,8 +79,19 @@ async def run_telegram_login(
 
     if not await client.is_user_authorized():
         if not resolved_phone:
-            resolved_phone = input("Enter your phone number in international format (+373...): ").strip()
-        await client.start(phone=resolved_phone)
+            resolved_phone = input("Enter your phone number in international format (e.g. +37362005858): ").strip()
+        if not resolved_phone.startswith("+"):
+            if len(resolved_phone) == 8 and resolved_phone.startswith(("6", "7", "2")):
+                resolved_phone = f"+373{resolved_phone}"
+            else:
+                resolved_phone = f"+{resolved_phone}"
+        print(f"Connecting with phone number: {resolved_phone}")
+        try:
+            await client.start(phone=resolved_phone)
+        except Exception as exc:
+            print(f"\n❌ Telegram authentication error: {exc}")
+            print("Please ensure your number includes the full country code (e.g. +373 for Moldova, +40 for Romania).\n")
+            sys.exit(1)
     else:
         print("ℹ️ Existing session is already authorized.")
 
