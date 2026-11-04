@@ -3,6 +3,7 @@
 import asyncio
 import concurrent.futures
 import re
+import threading
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol, cast
@@ -226,6 +227,17 @@ class TelethonClientAdapter:
         self._api_id = api_id
         self._api_hash = api_hash
         self._client: Any = None
+        self._loop = asyncio.new_event_loop()
+        self._thread = threading.Thread(target=self._run_loop, daemon=True, name="TelethonLoopThread")
+        self._thread.start()
+
+    def _run_loop(self) -> None:
+        asyncio.set_event_loop(self._loop)
+        self._loop.run_forever()
+
+    def _execute(self, coro: Any) -> Any:
+        future = asyncio.run_coroutine_threadsafe(coro, self._loop)
+        return future.result()
 
     async def _get_connected_client(self) -> Any:
         try:
@@ -254,7 +266,7 @@ class TelethonClientAdapter:
         return self._client
 
     def resolve_channel(self, handle_or_url: str) -> ResolvedChannelDto:
-        return cast(ResolvedChannelDto, _run_async(self._resolve_channel_async(handle_or_url)))
+        return cast(ResolvedChannelDto, self._execute(self._resolve_channel_async(handle_or_url)))
 
     async def _resolve_channel_async(self, handle_or_url: str) -> ResolvedChannelDto:
         import telethon.errors as tele_errors
@@ -335,7 +347,7 @@ class TelethonClientAdapter:
     ) -> list[RawTelegramPostDto]:
         return cast(
             list[RawTelegramPostDto],
-            _run_async(self._fetch_messages_since_async(channel_id, handle, min_message_id)),
+            self._execute(self._fetch_messages_since_async(channel_id, handle, min_message_id)),
         )
 
     async def _fetch_messages_since_async(
@@ -362,7 +374,7 @@ class TelethonClientAdapter:
     ) -> list[RawTelegramPostDto]:
         return cast(
             list[RawTelegramPostDto],
-            _run_async(self._fetch_messages_backfill_async(channel_id, handle, days)),
+            self._execute(self._fetch_messages_backfill_async(channel_id, handle, days)),
         )
 
     async def _fetch_messages_backfill_async(
@@ -376,7 +388,9 @@ class TelethonClientAdapter:
         raw_msgs = []
 
         try:
-            async for message in client.iter_messages(username, offset_date=cutoff, reverse=True):
+            async for message in client.iter_messages(username, limit=1000):
+                if getattr(message, "date", None) and message.date < cutoff:
+                    break
                 raw_msgs.append(message)
                 if len(raw_msgs) % 100 == 0:
                     await asyncio.sleep(0.3)
@@ -386,6 +400,7 @@ class TelethonClientAdapter:
             logger.error(f"Error backfilling messages for {handle}: {exc}")
             raise
 
+        raw_msgs.reverse()
         return self._process_telethon_messages(channel_id, username, raw_msgs)
 
     def check_messages_exist(
@@ -393,7 +408,7 @@ class TelethonClientAdapter:
     ) -> set[int]:
         return cast(
             set[int],
-            _run_async(self._check_messages_exist_async(channel_id, handle, message_ids)),
+            self._execute(self._check_messages_exist_async(channel_id, handle, message_ids)),
         )
 
     async def _check_messages_exist_async(
