@@ -92,7 +92,7 @@ def _calculate_channel_metrics(
     cm = _clamp_0_100(co_movement_repetition)
     nw = _clamp_0_100(narrative_weight)
 
-    has_sufficient_data = linked_clusters_count >= 2
+    has_sufficient_data = linked_clusters_count >= 3
 
     # Coordination score purely behavioral (0-100)
     raw_coord = 0.45 * cp + 0.35 * cd + 0.20 * cm
@@ -107,13 +107,15 @@ def _calculate_channel_metrics(
         raw_score = raw_score * 0.55
 
     if not has_sufficient_data:
-        # Shrink toward empirical median (30) to prevent outlier false positives
-        raw_coord = 0.5 * raw_coord + 0.5 * 30.0
-        raw_score = 0.5 * raw_score + 0.5 * 30.0
+        # Bayesian shrinkage toward population median (30) for low-sample channels (< 3 cascades)
+        shrinkage_weight = linked_clusters_count / 3.0
+        raw_coord = shrinkage_weight * raw_coord + (1.0 - shrinkage_weight) * 30.0
+        raw_score = shrinkage_weight * raw_score + (1.0 - shrinkage_weight) * 30.0
 
     score = _clamp_0_100(round(raw_score))
     coord_score = _clamp_0_100(round(raw_coord))
-    risk_band = _determine_risk_band(score)
+    # Coordination behavior drives the alert risk band!
+    risk_band = _determine_risk_band(coord_score)
     narrative_risk = _determine_risk_band(nw)
 
     return score, coord_score, risk_band, narrative_risk, has_sufficient_data
@@ -274,11 +276,13 @@ class ScoringService(IScoringService):
                     """,
                     (ch_id, handle_str),
                 ).fetchall()
+                wire_matches = 0
                 for mt in msg_texts:
                     has_wire, _ = detect_syndication_wire(str(mt[0]))
                     if has_wire:
-                        is_syndicated = True
-                        break
+                        wire_matches += 1
+                # Must have at least 2 wire citations AND at least 40% of observed messages citing wires
+                is_syndicated = (wire_matches >= 2 and (wire_matches / max(1, len(msg_texts))) >= 0.40)
 
                 cp = min(100, max(20, linked_count * 25))
                 cd = max(10, 100 - min(90, lead_lag // 5))

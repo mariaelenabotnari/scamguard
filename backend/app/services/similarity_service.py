@@ -333,23 +333,46 @@ def jaccard_similarity(shingles_a: set[str], shingles_b: set[str]) -> float:
     return len(shingles_a & shingles_b) / union_len
 
 
+_TIME_PATTERN = re.compile(r"\b(?:ora\s+)?(?:[01]?\d|2[0-3])[:.][0-5]\d\b", re.IGNORECASE)
+_DATE_PATTERN = re.compile(r"\b\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?\b")
+_PERCENT_PATTERN = re.compile(r"\b\d+(?:[\.,]\d+)?%\b")
+_SIGNIFICANT_NUMBER_PATTERN = re.compile(r"\b\d{2,}(?:[\.,]\d+)?\b")
+
+_PREDICATE_NEG_PATTERNS: tuple[re.Pattern[str], ...] = (
+    re.compile(r"\bnu\s+(?:va|vor|este|sunt|au|exista|există|se|poate|trebuie|s-a|mai)\b", re.IGNORECASE),
+    re.compile(r"\bне\s+(?:будет|будут|является|было|может|должен|существует|станет|хочет)\b", re.IGNORECASE),
+    re.compile(r"\b(?:fără|без|niciun|niciuna|никаких|никогда)\b", re.IGNORECASE),
+)
+
+
 def check_detail_conflict(text_a: str, text_b: str) -> tuple[bool, str | None]:
-    """Detail guard: detects conflicting numbers, dates, or negation flips."""
+    """Detail guard: detects conflicting numbers, key metrics, or assertion negation flips."""
     clean_a = re.sub(r"(?:https?://\S+|www\.\S+|t\.me/\S+)", " ", text_a)
     clean_b = re.sub(r"(?:https?://\S+|www\.\S+|t\.me/\S+)", " ", text_b)
-    words_a = set(clean_a.lower().split())
-    words_b = set(clean_b.lower().split())
 
-    # 1. Negation mismatch
-    has_neg_a = bool(words_a & _NEG_TOKENS)
-    has_neg_b = bool(words_b & _NEG_TOKENS)
-    if has_neg_a != has_neg_b:
-        return True, "negation_conflict"
+    # 1. Predicate negation conflict on overlapping sentence assertions
+    neg_a = any(p.search(clean_a) for p in _PREDICATE_NEG_PATTERNS)
+    neg_b = any(p.search(clean_b) for p in _PREDICATE_NEG_PATTERNS)
+    words_a = set(re.findall(r"\w+", clean_a.lower())) - _NEG_TOKENS
+    words_b = set(re.findall(r"\w+", clean_b.lower())) - _NEG_TOKENS
+    common_content = words_a & words_b
+    if common_content and len(common_content) >= 3:
+        j_content = len(common_content) / len(words_a | words_b)
+        if j_content >= 0.35 and neg_a != neg_b:
+            return True, "negation_conflict"
 
-    # 2. Number/date mismatch (excluding URLs)
-    nums_a = sorted(set(_NUM_PATTERN.findall(clean_a)))
-    nums_b = sorted(set(_NUM_PATTERN.findall(clean_b)))
-    if nums_a and nums_b and nums_a != nums_b:
+    # 2. Key numerical metrics conflict (excluding incidental times and dates)
+    no_time_a = _TIME_PATTERN.sub(" ", _DATE_PATTERN.sub(" ", clean_a))
+    no_time_b = _TIME_PATTERN.sub(" ", _DATE_PATTERN.sub(" ", clean_b))
+
+    pct_a = set(_PERCENT_PATTERN.findall(no_time_a))
+    pct_b = set(_PERCENT_PATTERN.findall(no_time_b))
+    if pct_a and pct_b and pct_a != pct_b:
+        return True, "number_date_conflict"
+
+    sig_nums_a = set(_SIGNIFICANT_NUMBER_PATTERN.findall(no_time_a))
+    sig_nums_b = set(_SIGNIFICANT_NUMBER_PATTERN.findall(no_time_b))
+    if sig_nums_a and sig_nums_b and not (sig_nums_a & sig_nums_b):
         return True, "number_date_conflict"
 
     return False, None
