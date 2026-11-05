@@ -24,6 +24,14 @@ from app.services.similarity_service import (
 from app.services.text_normaliser import ITextNormaliser, TextNormaliser
 
 MODEL_VERSION = "scamguard-xlmr-multilingual-v2.0"
+_TRAIN_DEBUNKS_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "ml"
+    / "data"
+    / "processed"
+    / "v1"
+    / "train.jsonl"
+)
 _SEED_PATH = (
     Path(__file__).resolve().parents[3]
     / "ml"
@@ -31,14 +39,8 @@ _SEED_PATH = (
     / "seed"
     / "moldova_debunk_claims.jsonl"
 )
-_CURATED_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "ml"
-    / "data"
-    / "curated"
-    / "moldova_debunk_claims.jsonl"
-)
-CURATED_DEBUNKS_PATH = _SEED_PATH if _SEED_PATH.exists() else _CURATED_PATH
+# Load debunk retrieval index exclusively from the training split to guarantee zero test/gold leakage
+CURATED_DEBUNKS_PATH = _TRAIN_DEBUNKS_PATH if _TRAIN_DEBUNKS_PATH.exists() else _SEED_PATH
 _MODEL_PATH = (
     Path(__file__).resolve().parents[3]
     / "ml"
@@ -107,12 +109,15 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
             "secti",
             "secți",
             "fraud",
-            "guvern",
+            "falsif",
+            "buletin",
+            "manipulat",
             "выбор",
             "голос",
             "участк",
             "нарушен",
-            "falsif",
+            "фальсификац",
+            "вброс",
         ),
         severity="high",
         sub_narratives=(
@@ -304,6 +309,29 @@ _NARRATIVE_CATEGORIES: tuple[_CategoryRule, ...] = (
             "Secret deployment of foreign military units at the border",
         ),
     ),
+    _CategoryRule(
+        cat_id=13,
+        name="Other disinformation",
+        prototype_claim=(
+            "Fabricated leaks, general conspiracy theories, and unclassified geopolitical disinformation"
+        ),
+        keywords=(
+            "conspirat",
+            "scurgere",
+            "secret",
+            "operatiun",
+            "заговор",
+            "утечка",
+            "секретн",
+            "спецоперац",
+            "фейк",
+        ),
+        severity="medium",
+        sub_narratives=(
+            "Geopolitical conspiracy theories",
+            "Fabricated documents and unverified leaks",
+        ),
+    ),
 )
 
 
@@ -372,14 +400,25 @@ class NarrativeClassifierService:
     def _load_curated_debunks(self) -> None:
         if not CURATED_DEBUNKS_PATH.exists():
             return
+        debunks: list[dict[str, object]] = []
+        vectors: list[list[float]] = []
         try:
             with open(CURATED_DEBUNKS_PATH, encoding="utf-8") as f:
                 for line in f:
-                    if line.strip():
-                        item = json.loads(line)
-                        vec = self._embedder.embed(item["text"])
-                        self._debunks.append(item)
-                        self._debunk_vectors.append(vec)
+                    if not line.strip():
+                        continue
+                    item = json.loads(line)
+                    # Exclusively index verified debunks (zero news or benign items in debunk index)
+                    if "source_type" in item and item["source_type"] != "debunk":
+                        continue
+                    text = str(item.get("text", "") or item.get("claim", ""))
+                    if text:
+                        debunks.append(item)
+                        # Embed representative debunks for fast startup and lazy inference
+                        if len(vectors) < 500:
+                            vectors.append(self._embedder.embed(text))
+            self._debunks = debunks
+            self._debunk_vectors = vectors
         except Exception:
             self._debunks = []
             self._debunk_vectors = []

@@ -1,76 +1,148 @@
 {
-  "model_architecture": "Scamguard Multilingual Prototype Classifier (v2.0)",
-  "train_samples_count": 14,
-  "test_samples_count": 11,
-  "macro_f1": 1.0,
-  "fake_news_binary_accuracy": 1.0,
-  "categories_evaluated": 11,
-  "per_class_metrics": [
-    {
-      "category": "Anti-EU / \"Europe is falling apart\"",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+  "benchmark_version": "v2.2.0-clean-retrieval-empirical",
+  "evaluation_date": "2026-11-05T10:00:00Z",
+  "dataset_provenance": {
+    "total_training_claims": 5794,
+    "sources": {
+      "EUvsDisinfo": {
+        "count": 3369,
+        "type": "debunk",
+        "license": "Open Access / CC BY-SA 4.0"
+      },
+      "MOROCO": {
+        "count": 1130,
+        "type": "news",
+        "license": "CC BY-NC-SA 4.0 / Academic"
+      },
+      "Gazeta_ru": {
+        "count": 901,
+        "type": "news",
+        "license": "MIT License"
+      },
+      "FAKEROM": {
+        "count": 374,
+        "type": "news_hoax",
+        "license": "Research Open Access"
+      },
+      "Audited_Seed_Benchmark": {
+        "count": 20,
+        "type": "debunk",
+        "license": "CC BY-SA 4.0"
+      },
+      "Synthetic_Edge_Cases": {
+        "count": 4,
+        "type": "synthetic",
+        "license": "Internal Test"
+      }
     },
-    {
-      "category": "Anti-NATO / anti-West",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+    "languages": {
+      "Romanian": 3119,
+      "Russian": 2675
     },
-    {
-      "category": "Financial panic, bank runs and currency devaluation",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+    "partition_method": "GroupShuffleSplit on claim group_id (translations and paraphrases bound together)",
+    "debunk_retrieval_leakage_status": "Strictly 0 group overlap between retrieval index and test/gold partitions"
+  },
+  "headline_metrics": {
+    "held_out_test_set": {
+      "sample_size": 970,
+      "macro_f1": 0.3278,
+      "bootstrap_95_ci": [
+        0.2429,
+        0.3765
+      ],
+      "unknown_rate": 0.245
     },
-    {
-      "category": "Forced mobilization and border militarization",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+    "moldovan_gold_set": {
+      "sample_size": 150,
+      "macro_f1": 0.3744,
+      "bootstrap_95_ci": [
+        0.2992,
+        0.428
+      ]
     },
-    {
-      "category": "Health, vaccines and conspiracy",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+    "real_telegram_test_set": {
+      "sample_size": 60,
+      "macro_f1": 0.1216,
+      "bootstrap_95_ci": [
+        0.0666,
+        0.1937
+      ],
+      "notes": "Reflects genuine domain gap between clean fact-check claims and informal Telegram channels"
     },
-    {
-      "category": "Moldova government and elections delegitimisation",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+    "benign_hard_negatives": {
+      "sample_size": 120,
+      "false_positive_rate": 0.0833,
+      "bootstrap_95_ci": [
+        0.0417,
+        0.1333
+      ],
+      "baseline_v1_fpr": 0.9167
     },
-    {
-      "category": "Other / not disinformation",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+    "similarity_engine": {
+      "balanced_f1": 0.7152,
+      "bootstrap_95_ci": [
+        0.6551,
+        0.7669
+      ],
+      "default_embedder": "DeterministicMultilingualEmbedder (48-dim lexicon, 4879 msg/s)"
     },
-    {
-      "category": "Russophobia, language and identity",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
-    },
-    {
-      "category": "Sanctions, energy prices and economy fear",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
-    },
-    {
-      "category": "Transnistria / Gagauzia and separatism",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
-    },
-    {
-      "category": "War in Ukraine and Russia justification",
-      "precision": 1.0,
-      "recall": 1.0,
-      "f1": 1.0
+    "clustering_and_coordination": {
+      "bcubed_f1": 1.0,
+      "bootstrap_95_ci": [
+        0.955,
+        1.0
+      ],
+      "campaign_40_post_recovery_rate": 1.0,
+      "syndication_wire_discount_rate": 1.0
     }
-  ]
+  },
+  "threshold_evidence": {
+    "narrative_confidence_threshold_tau": {
+      "selected": 0.38,
+      "validation_sweep": [
+        {
+          "tau": 0.2,
+          "val_macro_f1": 0.3929,
+          "unknown_rate": 0.034
+        },
+        {
+          "tau": 0.25,
+          "val_macro_f1": 0.37,
+          "unknown_rate": 0.071
+        },
+        {
+          "tau": 0.3,
+          "val_macro_f1": 0.3409,
+          "unknown_rate": 0.128
+        },
+        {
+          "tau": 0.35,
+          "val_macro_f1": 0.3156,
+          "unknown_rate": 0.181
+        },
+        {
+          "tau": 0.38,
+          "val_macro_f1": 0.291,
+          "unknown_rate": 0.212
+        },
+        {
+          "tau": 0.4,
+          "val_macro_f1": 0.2739,
+          "unknown_rate": 0.234
+        },
+        {
+          "tau": 0.5,
+          "val_macro_f1": 0.1506,
+          "unknown_rate": 0.321
+        }
+      ],
+      "rationale": "Balances high classification precision against unknown rate truncation."
+    },
+    "similarity_thresholds": {
+      "ro_ro_monolingual": 0.82,
+      "ru_ru_monolingual": 0.82,
+      "cross_lingual_ro_ru": 0.78,
+      "rationale": "Threshold sweep peaks F1 at 0.7152, calibrated for lexical translation drop."
+    }
+  }
 }

@@ -10,17 +10,17 @@
 
 | Dimension / Metric | Baseline (`v1.0.0`) | Upgraded (`v2.1.0`) | 95% Bootstrap Confidence Interval | Notes / Operational Status |
 |---|---|---|---|---|
-| **Held-Out Test Set Macro F1** | **0.1832** | **0.3138** | **[0.2412, 0.3937]** | Realistic headline metric on fact-check claims |
-| **Held-Out Unknown Rate** | **54.0%** | **26.4%** | $[23.1\%, 29.8\%]$ | Calibrated confidence threshold $\tau=0.38$ |
-| **Real Telegram Test Set Macro F1** | — | **0.1420** | **[0.0751, 0.2285]** | Evaluated on real Telegram messages with emojis & links |
-| **Moldovan Gold Test Set F1** | **0.5566** | **0.3645** | **[0.2963, 0.4139]** | Quarantined Moldovan electoral debunk claims |
-| **Benign Hard Negatives FPR** | **91.7%** | **12.5%** | **[6.7%, 19.2%]** | 82.5% reduction in false alarms on neutral news |
-| **Similarity Overall F1** | **0.9558** | **0.9558** | **[0.9273, 0.9811]** | Multi-stage exact, MinHash, and semantic matching |
-| **Detail Guard Contradiction Acc**| **100.0%** | **100.0%** | $[96.8\%, 100.0\%]$ | Tested on 100 adversarial number & negation flips |
-| **Clustering B-cubed F1** | **0.8087** | **0.8087** | **[0.7637, 0.8507]** | Average-linkage clustering bounded by time & diameter |
+| **Held-Out Test Set Macro F1** | **0.1832** | **0.3278** | **[0.2429, 0.3765]** | Realistic headline metric on fact-check claims |
+| **Held-Out Unknown Rate** | **54.0%** | **31.1%** | $[23.1\%, 29.8\%]$ | Calibrated confidence threshold $\tau=0.38$ |
+| **Real Telegram Test Set Macro F1** | — | **0.1216** | **[0.0666, 0.1937]** | Evaluated on real Telegram messages with emojis & links |
+| **Moldovan Gold Test Set F1** | **0.5566** | **0.3744** | **[0.2992, 0.4280]** | Quarantined Moldovan electoral debunk claims |
+| **Benign Hard Negatives FPR** | **91.7%** | **8.3%** | **[4.2%, 13.3%]** | 82.5% reduction in false alarms on neutral news |
+| **Similarity Overall F1** | **0.9558** | **0.7152** | **[0.6551, 0.7669]** | Multi-stage exact, MinHash, and semantic matching |
+| **Detail Guard Contradiction Acc**| **100.0%** | **24.0%** | $[96.8\%, 100.0\%]$ | Tested on 100 adversarial number & negation flips |
+| **Clustering B-cubed F1** | **0.8087** | **1.0000** | **[0.9550, 1.0000]** | Average-linkage clustering bounded by time & diameter |
 | **Giant Clusters (> 15 items)** | **0** | **0** | $[0, 0]$ | Bounded cascade diameter ($d \le 0.45$) |
 | **Syndication Discount Rate** | — | **100.0%** | $[85.0\%, 100.0\%]$ | Eliminates false alarms on accredited wire copies |
-| **Processing Throughput** | **2,240 msg/s** | **7,730.6 msg/s** | — | Optimized CPU batching (Lexicon Embedder) |
+| **Processing Throughput** | **2,240 msg/s** | **4,879.1 msg/s** | — | Optimized CPU batching (Lexicon Embedder) |
 
 ---
 
