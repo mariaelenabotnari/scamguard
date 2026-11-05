@@ -36,6 +36,32 @@ def detect_syndication_wire(text: str) -> tuple[bool, str | None]:
     return False, None
 
 
+def verify_wire_against_releases(
+    text: str,
+    verified_releases: list[str] | None = None,
+    min_word_overlap: float = 0.30,
+) -> bool:
+    """Verifies whether a post claiming agency attribution matches an authentic agency dispatch.
+
+    Prevents citation spoofing where covert networks append 'conform Moldpres' to evade detection.
+    """
+    if not verified_releases:
+        # When no release database is provided, fallback to true for backwards compatibility
+        return True
+
+    words = set(re.findall(r"\b\w{4,}\b", text.lower()))
+    if not words:
+        return False
+
+    for release in verified_releases:
+        rel_words = set(re.findall(r"\b\w{4,}\b", release.lower()))
+        if rel_words:
+            overlap = len(words & rel_words) / max(1, min(len(words), len(rel_words)))
+            if overlap >= min_word_overlap:
+                return True
+    return False
+
+
 class IScoringService(Protocol):
     def compute_channel_score(
         self,
@@ -50,6 +76,7 @@ class IScoringService(Protocol):
         median_lead_lag_seconds: int,
         primary_narrative: str,
         is_syndicated_agency: bool = False,
+        has_unverified_wire_citation: bool = False,
         parameter_version: str = DEFAULT_SCORING_PARAMETER_VERSION,
     ) -> tuple[int, RiskBand, ScoreExplanationDto]: ...
 
@@ -160,12 +187,26 @@ class ScoringService(IScoringService):
         median_lead_lag_seconds: int,
         primary_narrative: str,
         is_syndicated_agency: bool = False,
+        has_unverified_wire_citation: bool = False,
         parameter_version: str = DEFAULT_SCORING_PARAMETER_VERSION,
     ) -> tuple[int, RiskBand, ScoreExplanationDto]:
         cp = _clamp_0_100(cluster_participation_share)
         cd = _clamp_0_100(copy_delay_factor)
         cm = _clamp_0_100(co_movement_repetition)
         nw = _clamp_0_100(narrative_weight)
+
+        # Anti-spoofing guard: If an unverified wire citation was detected without matching an authentic
+        # agency release dispatch, deny the syndication discount. Prevents malicious networks from gaming
+        # the system by appending "conform Moldpres" to evade high risk alerts.
+        if has_unverified_wire_citation:
+            is_syndicated_agency = False
+
+        # Review-first safety guard: If verified accredited news agency attribution is detected,
+        # never auto-escalate to HIGH based solely on an unverified narrative classification.
+        # This prevents breaking news releases from being falsely branded as covert disinfo networks.
+        has_narrative_conflict = is_syndicated_agency and (nw >= 60 and primary_narrative not in ("Other / not disinformation", "No coordinated narratives detected", "unknown"))
+
+        effective_syndication = is_syndicated_agency and not has_narrative_conflict
 
         score, coord_score, risk_band, narrative_risk, has_sufficient_data = (
             _calculate_channel_metrics(
@@ -174,9 +215,14 @@ class ScoringService(IScoringService):
                 co_movement_repetition=cm,
                 narrative_weight=nw,
                 linked_clusters_count=linked_clusters_count,
-                is_syndicated_agency=is_syndicated_agency,
+                is_syndicated_agency=effective_syndication or has_narrative_conflict,
             )
         )
+
+        # If wire agency is cited alongside an unverified narrative match, enforce medium review status
+        if has_narrative_conflict:
+            risk_band = "medium"
+
         dominant_factor = _select_dominant_factor(cp, cd, cm, nw)
 
         peers_str = (
@@ -185,13 +231,16 @@ class ScoringService(IScoringService):
         data_qualifier = (
             ""
             if has_sufficient_data
-            else " (insufficient data: < 2 clusters, score shrunk to median)"
+            else " (insufficient data: < 3 clusters, score shrunk to median)"
         )
-        syndication_qualifier = (
-            " (syndicated news agency reporting detected; coordination risk discounted)"
-            if is_syndicated_agency
-            else ""
-        )
+        if effective_syndication:
+            syndication_qualifier = " (syndicated news agency reporting verified; coordination risk discounted)"
+        elif has_narrative_conflict:
+            syndication_qualifier = " (accredited agency cited alongside potential narrative match; auto-escalation suppressed, human review required)"
+        elif has_unverified_wire_citation:
+            syndication_qualifier = " (unverified agency citation detected: spoofing guard active, discount denied; human review required)"
+        else:
+            syndication_qualifier = ""
         summary = (
             f"Channel {channel_id} shows coordination index {coord_score}/100 and "
             f"{narrative_risk} narrative alignment across {linked_clusters_count} observed "
@@ -263,8 +312,9 @@ class ScoringService(IScoringService):
                 ).fetchall()
                 peers = [f"@{r[0]}" if not str(r[0]).startswith("@") else str(r[0]) for r in peer_rows]
 
-                # Check for syndication wire attribution
+                # Check for syndication wire attribution and match against official releases
                 is_syndicated = False
+                has_unverified = False
                 msg_texts = conn.execute(
                     """
                     SELECT t.raw_text
@@ -276,13 +326,33 @@ class ScoringService(IScoringService):
                     """,
                     (ch_id, handle_str),
                 ).fetchall()
+                # Query pool of authentic accredited agency messages from DB if present
+                agency_msg_rows = conn.execute(
+                    """
+                    SELECT t.raw_text
+                    FROM messages m
+                    JOIN message_texts t ON m.id = t.message_id
+                    JOIN watchlist_channels w ON m.channel_id = w.id
+                    WHERE lower(w.handle) LIKE '%moldpres%' OR lower(w.handle) LIKE '%ipn%'
+                    LIMIT 50
+                    """
+                ).fetchall()
+                verified_pool = [str(r[0]) for r in agency_msg_rows]
+
                 wire_matches = 0
+                verified_matches = 0
                 for mt in msg_texts:
-                    has_wire, _ = detect_syndication_wire(str(mt[0]))
+                    raw_post_text = str(mt[0])
+                    has_wire, _ = detect_syndication_wire(raw_post_text)
                     if has_wire:
                         wire_matches += 1
-                # Must have at least 2 wire citations AND at least 40% of observed messages citing wires
-                is_syndicated = (wire_matches >= 2 and (wire_matches / max(1, len(msg_texts))) >= 0.40)
+                        if verify_wire_against_releases(raw_post_text, verified_pool):
+                            verified_matches += 1
+
+                # Must have verified matches against authentic releases to earn the legitimate discount
+                is_syndicated = (verified_matches >= 2 and (verified_matches / max(1, len(msg_texts))) >= 0.40)
+                # If a channel claims wire attribution without any matching verified release, flag spoofing
+                has_unverified = (wire_matches >= 2 and verified_matches == 0 and len(verified_pool) > 0)
 
                 cp = min(100, max(20, linked_count * 25))
                 cd = max(10, 100 - min(90, lead_lag // 5))
@@ -291,6 +361,7 @@ class ScoringService(IScoringService):
                 nw = 85 if any(k in narrative.lower() for k in ("energy", "panic", "gas", "sanction", "election", "war")) else 50
             else:
                 is_syndicated = False
+                has_unverified = False
                 cp, cd, cm, nw = 0, 0, 0, 0
                 linked_count = 0
                 peers = []
@@ -308,6 +379,7 @@ class ScoringService(IScoringService):
                 median_lead_lag_seconds=lead_lag,
                 primary_narrative=narrative,
                 is_syndicated_agency=is_syndicated,
+                has_unverified_wire_citation=has_unverified,
             )
             conn.execute(
                 """

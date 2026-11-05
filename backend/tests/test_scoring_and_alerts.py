@@ -231,7 +231,11 @@ def test_ranking_channel_detail_and_alerts_routes(isolated_db: DatabaseManager) 
 
 
 def test_syndication_wire_detection_and_discount(isolated_db: DatabaseManager) -> None:
-    from app.services.scoring_service import ScoringService, detect_syndication_wire
+    from app.services.scoring_service import (
+        ScoringService,
+        detect_syndication_wire,
+        verify_wire_against_releases,
+    )
 
     # Test wire detection
     is_wire, agency = detect_syndication_wire("Conform agenției Moldpres, Comisia Electorală a anunțat rezultatele.")
@@ -245,9 +249,22 @@ def test_syndication_wire_detection_and_discount(isolated_db: DatabaseManager) -
     is_wire_none, _ = detect_syndication_wire("Mesaj anonim despre sabotaj și panică totală!")
     assert is_wire_none is False
 
+    # Test release verification against authentic pool
+    authentic_releases = [
+        "Comisia Electorală Centrală a recepționat procesele-verbale din secțiile de votare din capitală și suburbii.",
+        "Guvernul a aprobat compensații pentru consumul de gaze naturale în sezonul rece.",
+    ]
+    # Authentic repost: matches release content
+    repost_text = "Conform Moldpres, Comisia Electorală Centrală a recepționat procesele-verbale din secțiile de votare."
+    assert verify_wire_against_releases(repost_text, authentic_releases) is True
+
+    # Spoofed fabrication: cites Moldpres but release does not exist
+    spoofed_text = "Conform Moldpres, toate depozitele bancare sunt blocate începând de mâine!"
+    assert verify_wire_against_releases(spoofed_text, authentic_releases) is False
+
     service = ScoringService(db_manager=isolated_db)
 
-    # Coordinated disinfo channel
+    # 1. Coordinated disinfo channel (no wire claims)
     disinfo_score, disinfo_band, _ = service.compute_channel_score(
         channel_id="ch-disinfo",
         cluster_participation_share=85,
@@ -263,7 +280,7 @@ def test_syndication_wire_detection_and_discount(isolated_db: DatabaseManager) -
     assert disinfo_score >= 70
     assert disinfo_band == "high"
 
-    # Syndicated news agency reposting (same raw metrics, but accredited wire)
+    # 2. Authentic syndicated news agency reposting (verified wire releases)
     syndicated_score, syndicated_band, explanation = service.compute_channel_score(
         channel_id="ch-syndicated",
         cluster_participation_share=85,
@@ -276,7 +293,45 @@ def test_syndication_wire_detection_and_discount(isolated_db: DatabaseManager) -
         primary_narrative="Other / not disinformation",
         is_syndicated_agency=True,
     )
-    # The syndication discount ensures it does NOT trigger false high risk alert
+    # The syndication discount ensures verified news wires do NOT trigger false high risk alerts
     assert syndicated_score < 70
     assert syndicated_band != "high"
-    assert "syndicated news agency reporting detected" in explanation.summary
+    assert "syndicated news agency reporting verified" in explanation.summary
+
+    # 3. Verified wire citing potential breaking news alongside narrative classification
+    # auto-escalation to HIGH is strictly suppressed to medium with human review required
+    conflict_score, conflict_band, conflict_explanation = service.compute_channel_score(
+        channel_id="ch-conflict",
+        cluster_participation_share=85,
+        copy_delay_factor=90,
+        co_movement_repetition=80,
+        narrative_weight=85,
+        linked_clusters_count=5,
+        co_moving_channels=["@peer1", "@peer2"],
+        median_lead_lag_seconds=60,
+        primary_narrative="War in Ukraine and Russia justification",
+        is_syndicated_agency=True,
+    )
+    assert conflict_band == "medium"
+    assert "auto-escalation suppressed, human review required" in conflict_explanation.summary
+
+    # 4. Citation spoofing attack: Channel adds 'Conform Moldpres' to evade detection,
+    # but release was unverified in official dispatches.
+    # Anti-spoofing guard rejects the discount and preserves HIGH risk alert!
+    spoofed_score, spoofed_band, spoofed_explanation = service.compute_channel_score(
+        channel_id="ch-spoofed",
+        cluster_participation_share=85,
+        copy_delay_factor=90,
+        co_movement_repetition=80,
+        narrative_weight=85,
+        linked_clusters_count=5,
+        co_moving_channels=["@peer1", "@peer2"],
+        median_lead_lag_seconds=60,
+        primary_narrative="War in Ukraine and Russia justification",
+        is_syndicated_agency=False,
+        has_unverified_wire_citation=True,
+    )
+    # Spoofing attack fails: discount denied, stays HIGH
+    assert spoofed_score >= 70
+    assert spoofed_band == "high"
+    assert "unverified agency citation detected: spoofing guard active, discount denied" in spoofed_explanation.summary

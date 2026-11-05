@@ -541,19 +541,20 @@ class NarrativeClassifierService:
             if s >= 0.50 and sig and r.cat_id != 10
         ]
 
-        # Topic vs Claim check: If top disinformation candidate lacks multi-signal assertion, classify as benign / unknown
-        if best_rule.cat_id != 10 and not has_signals:
-            category_name = "Other / not disinformation"
-            matched_claim = "Neutral topic mention without asserted disinformation claim"
-            sub_narrative = None
-            is_disinfo = False
-            conf = round(max(0.20, 1.0 - top_score), 4)
-        elif top_score < confidence_threshold:
+        # Below confidence threshold returns unknown
+        if top_score < confidence_threshold:
             category_name = "unknown"
             matched_claim = "Below minimum narrative confidence threshold"
             sub_narrative = None
             is_disinfo = False
             conf = round(top_score * 0.7, 4)
+        # Topic vs Claim check: If top disinformation candidate lacks multi-signal assertion, classify as benign
+        elif best_rule.cat_id != 10 and not has_signals:
+            category_name = "Other / not disinformation"
+            matched_claim = "Neutral topic mention without asserted disinformation claim"
+            sub_narrative = None
+            is_disinfo = False
+            conf = round(max(0.20, 1.0 - top_score), 4)
         elif best_rule.cat_id == 10:
             category_name = best_rule.name
             matched_claim = best_rule.prototype_claim
