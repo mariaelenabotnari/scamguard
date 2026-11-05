@@ -167,14 +167,12 @@ class ScoringService(IScoringService):
         cm = _clamp_0_100(co_movement_repetition)
         nw = _clamp_0_100(narrative_weight)
 
-        # Anti-spoofing guard: Wire syndication discount is strictly disallowed if the channel asserts disinformation
-        effective_syndication = (
-            is_syndicated_agency
-            and (
-                primary_narrative in ("Other / not disinformation", "No coordinated narratives detected", "unknown")
-                or nw < 60
-            )
-        )
+        # Review-first safety guard: If accredited news agency attribution is detected,
+        # never auto-escalate to HIGH based solely on an unverified narrative classification.
+        # This prevents breaking news releases from being falsely branded as covert disinfo networks.
+        has_narrative_conflict = is_syndicated_agency and (nw >= 60 and primary_narrative not in ("Other / not disinformation", "No coordinated narratives detected", "unknown"))
+
+        effective_syndication = is_syndicated_agency and not has_narrative_conflict
 
         score, coord_score, risk_band, narrative_risk, has_sufficient_data = (
             _calculate_channel_metrics(
@@ -183,9 +181,14 @@ class ScoringService(IScoringService):
                 co_movement_repetition=cm,
                 narrative_weight=nw,
                 linked_clusters_count=linked_clusters_count,
-                is_syndicated_agency=effective_syndication,
+                is_syndicated_agency=effective_syndication or has_narrative_conflict,
             )
         )
+
+        # If wire agency is cited alongside an unverified narrative match, enforce medium review status
+        if has_narrative_conflict:
+            risk_band = "medium"
+
         dominant_factor = _select_dominant_factor(cp, cd, cm, nw)
 
         peers_str = (
@@ -196,11 +199,12 @@ class ScoringService(IScoringService):
             if has_sufficient_data
             else " (insufficient data: < 3 clusters, score shrunk to median)"
         )
-        syndication_qualifier = (
-            " (syndicated news agency reporting detected; coordination risk discounted)"
-            if effective_syndication
-            else ""
-        )
+        if effective_syndication:
+            syndication_qualifier = " (syndicated news agency reporting detected; coordination risk discounted)"
+        elif has_narrative_conflict:
+            syndication_qualifier = " (accredited agency cited alongside potential narrative match; auto-escalation suppressed, human review required)"
+        else:
+            syndication_qualifier = ""
         summary = (
             f"Channel {channel_id} shows coordination index {coord_score}/100 and "
             f"{narrative_risk} narrative alignment across {linked_clusters_count} observed "

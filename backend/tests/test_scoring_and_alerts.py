@@ -294,7 +294,7 @@ def test_syndication_wire_detection_and_discount(isolated_db: DatabaseManager) -
         primary_narrative="War in Ukraine and Russia justification",
         is_syndicated_agency=True,
     )
-    # Anti-spoofing guard rejects the discount because the narrative is disinformation!
-    assert spoofed_score >= 70
-    assert spoofed_band == "high"
-    assert "syndicated news agency reporting detected" not in spoofed_explanation.summary
+    # When wire attribution is cited alongside an unverified narrative match,
+    # auto-escalation to HIGH is strictly suppressed to prevent false accusations on breaking news
+    assert spoofed_band == "medium"
+    assert "auto-escalation suppressed, human review required" in spoofed_explanation.summary
