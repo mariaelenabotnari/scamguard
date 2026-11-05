@@ -280,3 +280,21 @@ def test_syndication_wire_detection_and_discount(isolated_db: DatabaseManager) -
     assert syndicated_score < 70
     assert syndicated_band != "high"
     assert "syndicated news agency reporting detected" in explanation.summary
+
+    # Spoofed disinformation channel adding wire keyword to disinfo narrative
+    spoofed_score, spoofed_band, spoofed_explanation = service.compute_channel_score(
+        channel_id="ch-spoofed",
+        cluster_participation_share=85,
+        copy_delay_factor=90,
+        co_movement_repetition=80,
+        narrative_weight=85,
+        linked_clusters_count=5,
+        co_moving_channels=["@peer1", "@peer2"],
+        median_lead_lag_seconds=60,
+        primary_narrative="War in Ukraine and Russia justification",
+        is_syndicated_agency=True,
+    )
+    # Anti-spoofing guard rejects the discount because the narrative is disinformation!
+    assert spoofed_score >= 70
+    assert spoofed_band == "high"
+    assert "syndicated news agency reporting detected" not in spoofed_explanation.summary

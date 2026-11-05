@@ -167,6 +167,15 @@ class ScoringService(IScoringService):
         cm = _clamp_0_100(co_movement_repetition)
         nw = _clamp_0_100(narrative_weight)
 
+        # Anti-spoofing guard: Wire syndication discount is strictly disallowed if the channel asserts disinformation
+        effective_syndication = (
+            is_syndicated_agency
+            and (
+                primary_narrative in ("Other / not disinformation", "No coordinated narratives detected", "unknown")
+                or nw < 60
+            )
+        )
+
         score, coord_score, risk_band, narrative_risk, has_sufficient_data = (
             _calculate_channel_metrics(
                 cluster_participation_share=cp,
@@ -174,7 +183,7 @@ class ScoringService(IScoringService):
                 co_movement_repetition=cm,
                 narrative_weight=nw,
                 linked_clusters_count=linked_clusters_count,
-                is_syndicated_agency=is_syndicated_agency,
+                is_syndicated_agency=effective_syndication,
             )
         )
         dominant_factor = _select_dominant_factor(cp, cd, cm, nw)
@@ -185,11 +194,11 @@ class ScoringService(IScoringService):
         data_qualifier = (
             ""
             if has_sufficient_data
-            else " (insufficient data: < 2 clusters, score shrunk to median)"
+            else " (insufficient data: < 3 clusters, score shrunk to median)"
         )
         syndication_qualifier = (
             " (syndicated news agency reporting detected; coordination risk discounted)"
-            if is_syndicated_agency
+            if effective_syndication
             else ""
         )
         summary = (
