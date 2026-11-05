@@ -1,0 +1,30 @@
+{
+  "baseline_unaugmented": {
+    "Generalization Test Set (test.jsonl)": {
+      "macro_f1": 0.521,
+      "accuracy": 0.7546
+    },
+    "Quarantined Moldovan Gold Set (gold.jsonl)": {
+      "macro_f1": 0.0331,
+      "accuracy": 0.24
+    },
+    "Real Telegram Test Set (telegram_test.jsonl)": {
+      "macro_f1": 0.095,
+      "accuracy": 0.6133
+    }
+  },
+  "retrained_balanced_augmented": {
+    "Generalization Test Set (test.jsonl)": {
+      "macro_f1": 0.5245,
+      "accuracy": 0.7598
+    },
+    "Quarantined Moldovan Gold Set (gold.jsonl)": {
+      "macro_f1": 0.0916,
+      "accuracy": 0.3
+    },
+    "Real Telegram Test Set (telegram_test.jsonl)": {
+      "macro_f1": 0.2629,
+      "accuracy": 0.6333
+    }
+  }
+}
