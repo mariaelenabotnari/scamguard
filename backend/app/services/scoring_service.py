@@ -326,7 +326,6 @@ class ScoringService(IScoringService):
                     """,
                     (ch_id, handle_str),
                 ).fetchall()
-
                 # Query pool of authentic accredited agency messages from DB if present
                 agency_msg_rows = conn.execute(
                     """
