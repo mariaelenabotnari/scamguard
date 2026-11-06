@@ -55,6 +55,7 @@ ml/data/raw/*
 !ml/data/raw/.gitkeep
 ml/data/processed/*
 !ml/data/processed/.gitkeep
+ml/data/cache/
 ml/models/*
 !ml/models/.gitkeep
 *.bin
@@ -62,6 +63,7 @@ ml/models/*
 *.pth
 *.onnx
 *.safetensors
+*.npy
 
 # IDEs & OS
 .idea/
