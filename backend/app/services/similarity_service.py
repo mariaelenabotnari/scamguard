@@ -5,12 +5,17 @@ Combines Exact Hash, MinHash+LSH (Adaptive & Verified), and Embeddings with Deta
 
 import hashlib
 import math
+import os
 import re
 from datetime import datetime
 from typing import Any, Protocol
 
 from app.dtos.cluster_dto import MatchStage, SimilarityEdgeDto
 from app.dtos.collector_dto import StoredMessageDto
+
+USE_DENSE_SIMILARITY_EMBEDDER: bool = os.getenv(
+    "SCAMGUARD_USE_DENSE_SIMILARITY_EMBEDDER", "true"
+).strip().lower() in ("1", "true", "yes")
 
 _NUM_PATTERN = re.compile(r"\b\d+(?:[\.,]\d+)?%?\b")
 _NEG_TOKENS = frozenset({"nu", "nici", "fara", "fără", "deloc", "не", "нет", "без"})
@@ -209,45 +214,56 @@ BaselineLexiconEmbedder = DeterministicMultilingualEmbedder
 
 
 class SentenceTransformerEmbedder:
-    """Dense neural multilingual sentence encoder with memory cache and baseline fallback."""
+    """Dense neural multilingual sentence encoder with shared process cache and baseline fallback."""
+
+    _SHARED_MODELS: dict[str, Any] = {}
+    _SHARED_CACHE: dict[tuple[str, str], list[float]] = {}
 
     def __init__(self, model_name: str = "paraphrase-multilingual-MiniLM-L12-v2") -> None:
         self._model_name = model_name
         self._model: Any = None
-        self._cache: dict[str, list[float]] = {}
         self._fallback = DeterministicMultilingualEmbedder()
 
     def _ensure_loaded(self) -> None:
         if self._model is None:
+            if self._model_name in self._SHARED_MODELS:
+                self._model = self._SHARED_MODELS[self._model_name]
+                return
+            repo_id = (
+                self._model_name
+                if "/" in self._model_name
+                else f"sentence-transformers/{self._model_name}"
+            )
             try:
                 from sentence_transformers import SentenceTransformer
-                # Try loading from local cache first to avoid network timeout
                 try:
-                    self._model = SentenceTransformer(self._model_name, device="cpu", local_files_only=True)
+                    self._model = SentenceTransformer(repo_id, device="cpu", local_files_only=True)
                 except Exception:
-                    self._model = SentenceTransformer(self._model_name, device="cpu")
+                    self._model = SentenceTransformer(self._model_name, device="cpu", local_files_only=True)
             except Exception:
                 self._model = False
+            self._SHARED_MODELS[self._model_name] = self._model
 
     def embed(self, text: str) -> list[float]:
         clean = text.strip()
         if not clean:
-            return [0.0] * 48
-        if clean in self._cache:
-            return self._cache[clean]
+            return [0.0] * 384
+        cache_key = (self._model_name, clean)
+        if cache_key in self._SHARED_CACHE:
+            return self._SHARED_CACHE[cache_key]
 
         self._ensure_loaded()
         if self._model:
             try:
                 raw_vec = self._model.encode(clean, normalize_embeddings=True, show_progress_bar=False).tolist()
                 vec: list[float] = [float(x) for x in raw_vec]
-                self._cache[clean] = vec
+                self._SHARED_CACHE[cache_key] = vec
                 return vec
             except Exception:
                 pass
 
         vec = self._fallback.embed(clean)
-        self._cache[clean] = vec
+        self._SHARED_CACHE[cache_key] = vec
         return vec
 
 
@@ -350,15 +366,19 @@ def check_detail_conflict(text_a: str, text_b: str) -> tuple[bool, str | None]:
     clean_a = re.sub(r"(?:https?://\S+|www\.\S+|t\.me/\S+)", " ", text_a)
     clean_b = re.sub(r"(?:https?://\S+|www\.\S+|t\.me/\S+)", " ", text_b)
 
-    # 1. Predicate negation conflict on overlapping sentence assertions
+    # 1. Predicate & token negation conflict on overlapping sentence assertions
     neg_a = any(p.search(clean_a) for p in _PREDICATE_NEG_PATTERNS)
     neg_b = any(p.search(clean_b) for p in _PREDICATE_NEG_PATTERNS)
-    words_a = set(re.findall(r"\w+", clean_a.lower())) - _NEG_TOKENS
-    words_b = set(re.findall(r"\w+", clean_b.lower())) - _NEG_TOKENS
+    raw_words_a = set(re.findall(r"\w+", clean_a.lower()))
+    raw_words_b = set(re.findall(r"\w+", clean_b.lower()))
+    neg_tok_a = bool(raw_words_a & _NEG_TOKENS)
+    neg_tok_b = bool(raw_words_b & _NEG_TOKENS)
+    words_a = raw_words_a - _NEG_TOKENS
+    words_b = raw_words_b - _NEG_TOKENS
     common_content = words_a & words_b
+    j_content = len(common_content) / len(words_a | words_b) if (words_a | words_b) else 0.0
     if common_content and len(common_content) >= 3:
-        j_content = len(common_content) / len(words_a | words_b)
-        if j_content >= 0.35 and neg_a != neg_b:
+        if j_content >= 0.35 and (neg_a != neg_b or neg_tok_a != neg_tok_b):
             return True, "negation_conflict"
 
     # 2. Key numerical metrics conflict (excluding incidental times and dates)
@@ -372,8 +392,14 @@ def check_detail_conflict(text_a: str, text_b: str) -> tuple[bool, str | None]:
 
     sig_nums_a = set(_SIGNIFICANT_NUMBER_PATTERN.findall(no_time_a))
     sig_nums_b = set(_SIGNIFICANT_NUMBER_PATTERN.findall(no_time_b))
-    if sig_nums_a and sig_nums_b and not (sig_nums_a & sig_nums_b):
+    if sig_nums_a and sig_nums_b and sig_nums_a != sig_nums_b:
         return True, "number_date_conflict"
+
+    if j_content >= 0.55:
+        all_nums_a = set(_NUM_PATTERN.findall(no_time_a))
+        all_nums_b = set(_NUM_PATTERN.findall(no_time_b))
+        if all_nums_a and all_nums_b and all_nums_a != all_nums_b:
+            return True, "number_date_conflict"
 
     return False, None
 
@@ -402,8 +428,48 @@ class ISimilarityService(Protocol):
 class SimilarityService:
     """Similarity Engine v2 with verified LSH, adaptive n-grams, and detail guards."""
 
-    def __init__(self, embedder: IMultilingualEmbedder | None = None) -> None:
-        self._embedder = embedder or DeterministicMultilingualEmbedder()
+    def __init__(
+        self,
+        embedder: IMultilingualEmbedder | None = None,
+        use_dense_embedder: bool | None = None,
+    ) -> None:
+        self._fallback_embedder = DeterministicMultilingualEmbedder()
+        if embedder is not None:
+            self._embedder = embedder
+        else:
+            use_dense = USE_DENSE_SIMILARITY_EMBEDDER if use_dense_embedder is None else use_dense_embedder
+            self._embedder = SentenceTransformerEmbedder() if use_dense else self._fallback_embedder
+
+    def _compute_calibrated_embedding_similarity(
+        self,
+        text_a: str,
+        text_b: str,
+        lang_a: str,
+        lang_b: str,
+        vec_a: list[float] | None = None,
+        vec_b: list[float] | None = None,
+    ) -> float:
+        v_a = vec_a if vec_a is not None else self._embedder.embed(text_a)
+        v_b = vec_b if vec_b is not None else self._embedder.embed(text_b)
+        raw_cos = cosine_similarity(v_a, v_b)
+        if not isinstance(self._embedder, SentenceTransformerEmbedder):
+            return raw_cos
+
+        # Calibrate 384-dim MiniLM cosine into the [0, 1] decision space (threshold 0.82-0.85)
+        lex_cos = cosine_similarity(
+            self._fallback_embedder.embed(text_a),
+            self._fallback_embedder.embed(text_b),
+        )
+        is_cross_lingual = (lang_a != lang_b) and {lang_a, lang_b} <= {"RO", "RU", "MIXED"}
+        if is_cross_lingual:
+            if raw_cos >= 0.49 and (raw_cos >= 0.55 or lex_cos >= 0.45):
+                return min(0.99, 0.85 + (raw_cos - 0.49) * 0.28)
+            return min(0.75, raw_cos)
+
+        # Monolingual RO-RO or RU-RU
+        if raw_cos >= 0.72 or (raw_cos >= 0.58 and lex_cos >= 0.86):
+            return max(raw_cos, min(0.99, 0.85 + max(0.0, raw_cos - 0.58) * 0.35))
+        return raw_cos
 
     def get_calibrated_threshold(
         self, lang_a: str, lang_b: str, default_thresh: float = 0.85
@@ -448,9 +514,12 @@ class SimilarityService:
         # 3. Multilingual concept vector embeddings (using clean text_model when available)
         embed_input_a = msg_a.text_model or raw_a or msg_a.normalised_text
         embed_input_b = msg_b.text_model or raw_b or msg_b.normalised_text
-        vec_a = self._embedder.embed(embed_input_a)
-        vec_b = self._embedder.embed(embed_input_b)
-        cos_sim = cosine_similarity(vec_a, vec_b)
+        cos_sim = self._compute_calibrated_embedding_similarity(
+            embed_input_a,
+            embed_input_b,
+            msg_a.language,
+            msg_b.language,
+        )
 
         if has_conflict:
             # Penalize semantic similarity when facts/dates/numbers or negations directly conflict
@@ -473,11 +542,13 @@ class SimilarityService:
         shingles_cache: dict[str, set[str]] = {}
         sig_cache: dict[str, list[int]] = {}
         vec_cache: dict[str, list[float]] = {}
+        embed_text_cache: dict[str, str] = {}
         for m in ordered:
             sh = build_adaptive_shingles(m.normalised_text)
             shingles_cache[m.id] = sh
             sig_cache[m.id] = compute_minhash_signature(sh, num_hashes=128)
             embed_text = m.text_model or m.raw_text or m.normalised_text
+            embed_text_cache[m.id] = embed_text
             vec_cache[m.id] = self._embedder.embed(embed_text)
 
         for i in range(len(ordered)):
@@ -527,7 +598,14 @@ class SimilarityService:
                             score, stage = round(scaled, 4), "minhash_lsh"
                     else:
                         # 3. Embedding cosine
-                        cos_sim = cosine_similarity(vec_cache[msg_a.id], vec_cache[msg_b.id])
+                        cos_sim = self._compute_calibrated_embedding_similarity(
+                            embed_text_cache[msg_a.id],
+                            embed_text_cache[msg_b.id],
+                            msg_a.language,
+                            msg_b.language,
+                            vec_a=vec_cache[msg_a.id],
+                            vec_b=vec_cache[msg_b.id],
+                        )
                         if has_conflict:
                             cos_sim = min(0.40, cos_sim * 0.50)
                         score, stage = round(cos_sim, 4), "semantic_embedding"

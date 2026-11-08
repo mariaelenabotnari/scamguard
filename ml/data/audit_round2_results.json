@@ -1,0 +1,733 @@
+{
+  "q1_hard_negatives": {
+    "v1_total": 120,
+    "v1_exact_in_train_jsonl": 120,
+    "v1_sources": {
+      "MOROCO": 34,
+      "Gazeta (IlyaGusev/gazeta)": 36,
+      "FAKEROM": 50
+    },
+    "v1_languages": {
+      "ro": 84,
+      "ru": 36
+    },
+    "v1_dates": {
+      "nan": 84,
+      "2010-06-01 10:35:49": 1,
+      "2010-06-02 20:54:56": 1,
+      "2010-06-03 22:02:17": 1,
+      "2010-06-04 14:19:13": 1,
+      "2010-06-04 17:57:37": 1,
+      "2010-06-07 11:19:49": 1,
+      "2010-06-08 15:43:50": 1,
+      "2010-06-08 16:19:04": 1,
+      "2010-06-10 12:47:25": 1,
+      "2010-06-15 18:03:55": 1,
+      "2010-06-16 11:04:06": 1,
+      "2010-06-16 16:15:57": 1,
+      "2010-06-17 10:26:42": 1,
+      "2010-06-22 12:09:19": 2,
+      "2010-06-22 15:36:58": 1,
+      "2010-06-23 10:37:50": 1,
+      "2010-06-23 10:38:25": 1,
+      "2010-06-23 11:41:10": 1,
+      "2010-06-23 21:24:25": 1,
+      "2010-06-29 18:23:41": 1,
+      "2010-07-02 10:38:56": 1,
+      "2010-07-09 10:59:51": 1,
+      "2010-07-12 11:02:14": 1,
+      "2010-07-14 19:27:10": 1,
+      "2010-07-15 18:22:20": 1,
+      "2010-07-20 15:18:58": 1,
+      "2010-07-24 11:47:04": 1,
+      "2010-07-26 20:05:59": 2,
+      "2010-07-28 13:36:24": 1,
+      "2010-07-28 21:00:48": 1,
+      "2010-07-29 21:07:12": 2,
+      "2010-07-30 18:48:40": 1,
+      "2010-07-31 14:18:01": 1
+    },
+    "v2_total": 160,
+    "v2_overlap_with_any_split": 0,
+    "v2_sources": {
+      "telegram_neutral": 105,
+      "independent_news_wire": 55
+    },
+    "v2_languages": {
+      "ru": 121,
+      "ro": 39
+    },
+    "fpr_with_clopper_pearson_ci": {
+      "TF-IDF + LogisticRegression (Standalone, tau=0.38)": {
+        "hard_negatives_v1": {
+          "fp": 0,
+          "n": 120,
+          "fpr": 0.0,
+          "clopper_pearson_95_ci": [
+            0.0,
+            0.0303
+          ],
+          "fp_moroco_gazeta_70": 0,
+          "fp_fakerom_50": 0
+        },
+        "hard_negatives_v2": {
+          "fp": 6,
+          "n": 160,
+          "fpr": 0.0375,
+          "clopper_pearson_95_ci": [
+            0.0139,
+            0.0798
+          ]
+        }
+      },
+      "Frozen MiniLM + LogisticRegression (Standalone, tau=0.38)": {
+        "hard_negatives_v1": {
+          "fp": 48,
+          "n": 120,
+          "fpr": 0.4,
+          "clopper_pearson_95_ci": [
+            0.3117,
+            0.4934
+          ],
+          "fp_moroco_gazeta_70": 20,
+          "fp_fakerom_50": 28
+        },
+        "hard_negatives_v2": {
+          "fp": 71,
+          "n": 160,
+          "fpr": 0.4437,
+          "clopper_pearson_95_ci": [
+            0.3653,
+            0.5243
+          ]
+        }
+      },
+      "Fine-Tuned MiniLM-L12-v2 (Standalone, tau=0.38)": {
+        "hard_negatives_v1": {
+          "fp": 5,
+          "n": 120,
+          "fpr": 0.0417,
+          "clopper_pearson_95_ci": [
+            0.0137,
+            0.0946
+          ],
+          "fp_moroco_gazeta_70": 0,
+          "fp_fakerom_50": 5
+        },
+        "hard_negatives_v2": {
+          "fp": 8,
+          "n": 160,
+          "fpr": 0.05,
+          "clopper_pearson_95_ci": [
+            0.0218,
+            0.0961
+          ]
+        }
+      },
+      "Hybrid NarrativeClassifierService (Current, tau=0.38)": {
+        "hard_negatives_v1": {
+          "fp": 19,
+          "n": 120,
+          "fpr": 0.1583,
+          "clopper_pearson_95_ci": [
+            0.0981,
+            0.2362
+          ],
+          "fp_moroco_gazeta_70": 4,
+          "fp_fakerom_50": 15
+        },
+        "hard_negatives_v2": {
+          "fp": 47,
+          "n": 160,
+          "fpr": 0.2938,
+          "clopper_pearson_95_ci": [
+            0.2245,
+            0.3708
+          ]
+        }
+      }
+    }
+  },
+  "q2_hybrid_false_alarms": {
+    "total_fp_on_v1": 19,
+    "signal_counts": {
+      "kw_hits>=1": 19,
+      "proto_sim>=0.35": 16,
+      "kw_hits>=2": 9,
+      "kw_hits>=3 (overrides ml_benign>=0.70!)": 2
+    },
+    "signal_combo_counts": {
+      "kw(1) + proto>=0.35": 10,
+      "kw(2)": 3,
+      "kw(2) + proto>=0.35": 4,
+      "kw(3) + proto>=0.35": 2
+    },
+    "fp_items": [
+      {
+        "id": "hard-neg-0036",
+        "source_name": "Gazeta (IlyaGusev/gazeta)",
+        "predicted_category": "Sanctions, energy prices and economy fear",
+        "confidence": 0.4196,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "цен"
+        ],
+        "proto_sim": 0.7115,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0457,
+        "ml_prob_benign_cat10": 0.6842,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "Каждый пятый россиянин убежден, что правительство не способно справиться с проблемами в экономике, а каждый вт"
+      },
+      {
+        "id": "hard-neg-0045",
+        "source_name": "Gazeta (IlyaGusev/gazeta)",
+        "predicted_category": "Anti-EU / \"Europe is falling apart\"",
+        "confidence": 0.5936,
+        "distinct_kw_hits": 2,
+        "matched_kws": [
+          "евросоюз",
+          "ес"
+        ],
+        "proto_sim": 0.0674,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0443,
+        "ml_prob_benign_cat10": 0.6212,
+        "fired_signals": "kw(2)",
+        "text_snippet": "Россияне резко потеплели в своем отношении к Северо-атлантическому альянсу. Треть граждан страны выступают за "
+      },
+      {
+        "id": "hard-neg-0046",
+        "source_name": "Gazeta (IlyaGusev/gazeta)",
+        "predicted_category": "Sanctions, energy prices and economy fear",
+        "confidence": 0.3965,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "цен"
+        ],
+        "proto_sim": 0.6124,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0714,
+        "ml_prob_benign_cat10": 0.6639,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "Всемирный банк понизил прогноз роста российского ВВП в 2010 году с 5,5% до 4,5%, повысив оценку мирового с 2,7"
+      },
+      {
+        "id": "hard-neg-0056",
+        "source_name": "Gazeta (IlyaGusev/gazeta)",
+        "predicted_category": "War in Ukraine and Russia justification",
+        "confidence": 0.5792,
+        "distinct_kw_hits": 2,
+        "matched_kws": [
+          "украин",
+          "сво"
+        ],
+        "proto_sim": 0.0225,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0474,
+        "ml_prob_benign_cat10": 0.6874,
+        "fired_signals": "kw(2)",
+        "text_snippet": "Украинские власти признали свою неправоту в деле об изъятии 11 млрд кубометров газа «Росукрэнерго». Бывший пре"
+      },
+      {
+        "id": "hard-neg-0074",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.8802,
+        "distinct_kw_hits": 2,
+        "matched_kws": [
+          "nato",
+          "militar"
+        ],
+        "proto_sim": 0.8009,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.1109,
+        "ml_prob_benign_cat10": 0.5516,
+        "fired_signals": "kw(2) + proto>=0.35",
+        "text_snippet": "Laboratoarele biologice situate lângă frontierele Rusiei trebuie considerate drept baze militare SUA și NATO c"
+      },
+      {
+        "id": "hard-neg-0076",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.4688,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "nato"
+        ],
+        "proto_sim": 0.7775,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.1037,
+        "ml_prob_benign_cat10": 0.6641,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„Înfrângerea NATO în confruntarea cu Rusia este prognozabilă. Săptămâna aceasta, la sediul NATO din Bruxelles,"
+      },
+      {
+        "id": "hard-neg-0078",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.9238,
+        "distinct_kw_hits": 2,
+        "matched_kws": [
+          "nato",
+          "armat"
+        ],
+        "proto_sim": 0.8537,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.1668,
+        "ml_prob_benign_cat10": 0.6165,
+        "fired_signals": "kw(2) + proto>=0.35",
+        "text_snippet": "Potrivit scenariilor instructorilor NATO, armata ucraineană trebuia să distrugă orașele din Donețk și Luhansk."
+      },
+      {
+        "id": "hard-neg-0085",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-EU / \"Europe is falling apart\"",
+        "confidence": 0.6129,
+        "distinct_kw_hits": 2,
+        "matched_kws": [
+          "uniunea",
+          "european"
+        ],
+        "proto_sim": 0.1265,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0413,
+        "ml_prob_benign_cat10": 0.6494,
+        "fired_signals": "kw(2)",
+        "text_snippet": "„Pentru aderarea la UE, Ucraina ar trebui să înceteze să încalce drepturile rusofonilor, însă, deocamdată, Uni"
+      },
+      {
+        "id": "hard-neg-0097",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.9666,
+        "distinct_kw_hits": 3,
+        "matched_kws": [
+          "nato",
+          "militar",
+          "armat"
+        ],
+        "proto_sim": 0.7808,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0963,
+        "ml_prob_benign_cat10": 0.6237,
+        "fired_signals": "kw(3) + proto>=0.35",
+        "text_snippet": "„Statele NATO în frunte cu SUA furnizează forțelor armate ucrainene echipamente militare învechite pentru a-și"
+      },
+      {
+        "id": "hard-neg-0100",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.4639,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "nato"
+        ],
+        "proto_sim": 0.8177,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0616,
+        "ml_prob_benign_cat10": 0.678,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„Nu există niciun dubiu că ultimul impediment pentru aderarea deschisă a Republicii Moldova la NATO – art. 11 "
+      },
+      {
+        "id": "hard-neg-0101",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.9421,
+        "distinct_kw_hits": 3,
+        "matched_kws": [
+          "nato",
+          "militar",
+          "armat"
+        ],
+        "proto_sim": 0.8071,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0215,
+        "ml_prob_benign_cat10": 0.8612,
+        "fired_signals": "kw(3) + proto>=0.35",
+        "text_snippet": "„Parada militară de Ziua Națională a României nu va mai fi a României. MApN a decis să invite 600 de militari "
+      },
+      {
+        "id": "hard-neg-0103",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.399,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "nato"
+        ],
+        "proto_sim": 0.5971,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.089,
+        "ml_prob_benign_cat10": 0.5829,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„În fiecare zi auzim idei absurde din partea generalilor NATO, a conducerii SUA și aflăm despre diverse planur"
+      },
+      {
+        "id": "hard-neg-0107",
+        "source_name": "FAKEROM",
+        "predicted_category": "Sanctions, energy prices and economy fear",
+        "confidence": 0.7692,
+        "distinct_kw_hits": 2,
+        "matched_kws": [
+          "energie",
+          "preț"
+        ],
+        "proto_sim": 0.5437,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0641,
+        "ml_prob_benign_cat10": 0.6921,
+        "fired_signals": "kw(2) + proto>=0.35",
+        "text_snippet": "„Comisia Europeană se pregătește de un nou asalt în lupta cu prețurile la energie. Asta ca o recunoaștere taci"
+      },
+      {
+        "id": "hard-neg-0110",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.3838,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "militar"
+        ],
+        "proto_sim": 0.6323,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0279,
+        "ml_prob_benign_cat10": 0.6246,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„După ce a format un guvern popular, regiunea Herson va deveni o parte demnă a Rusiei, a afirmat adjunctul șef"
+      },
+      {
+        "id": "hard-neg-0113",
+        "source_name": "FAKEROM",
+        "predicted_category": "War in Ukraine and Russia justification",
+        "confidence": 0.4692,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "ucraina"
+        ],
+        "proto_sim": 0.7796,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.1029,
+        "ml_prob_benign_cat10": 0.5892,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„Statele membre ale UE au decis să trimită în Ucraina avioane, rachete și altă tehnică militară. Nu vom exager"
+      },
+      {
+        "id": "hard-neg-0115",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.4318,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "nato"
+        ],
+        "proto_sim": 0.7189,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0671,
+        "ml_prob_benign_cat10": 0.5995,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„În contextul isteriei în jurul „invaziei” rusești fictive în Ucraina și al degradării rapide a economii acest"
+      },
+      {
+        "id": "hard-neg-0117",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.8859,
+        "distinct_kw_hits": 2,
+        "matched_kws": [
+          "nato",
+          "militar"
+        ],
+        "proto_sim": 0.8646,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.0738,
+        "ml_prob_benign_cat10": 0.6946,
+        "fired_signals": "kw(2) + proto>=0.35",
+        "text_snippet": "<Dacă Ucraina va adera la NATO și își va readuce în componență Crimeea pe cale militară, statele europene în m"
+      },
+      {
+        "id": "hard-neg-0118",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.5203,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "nato"
+        ],
+        "proto_sim": 0.8656,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.1497,
+        "ml_prob_benign_cat10": 0.674,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„NATO a anunțat că trimite mai multe nave și avioane în Europa de Est în timp ce se prezintă ca o alianță defe"
+      },
+      {
+        "id": "hard-neg-0119",
+        "source_name": "FAKEROM",
+        "predicted_category": "Anti-NATO / anti-West",
+        "confidence": 0.5218,
+        "distinct_kw_hits": 1,
+        "matched_kws": [
+          "nato"
+        ],
+        "proto_sim": 0.8687,
+        "debunk_sim": 0.0,
+        "ml_prob_win": 0.1506,
+        "ml_prob_benign_cat10": 0.6018,
+        "fired_signals": "kw(1) + proto>=0.35",
+        "text_snippet": "„Guvernul Republicii Moldova a aprobat noul Plan individual de acțiuni al parteneriatului cu NATO pentru anii "
+      }
+    ],
+    "val_current_macro_f1": 0.2934,
+    "val_current_benign_fp": "8/401"
+  },
+  "q3_gold_provenance": {
+    "total_gold_items": 150,
+    "unique_base_templates": 30,
+    "repetition_factor": 5,
+    "overlap_with_splits": {
+      "train.jsonl": {
+        "exact_text_matches": 0,
+        "group_id_matches": 0
+      },
+      "train_augmented.jsonl": {
+        "exact_text_matches": 0,
+        "group_id_matches": 0
+      },
+      "val.jsonl": {
+        "exact_text_matches": 0,
+        "group_id_matches": 0
+      },
+      "test.jsonl": {
+        "exact_text_matches": 0,
+        "group_id_matches": 0
+      },
+      "debunk_index (500)": {
+        "exact_text_matches": 0,
+        "group_id_matches": 0
+      }
+    },
+    "cross_lingual_minilm_vs_train": {
+      "max_cosine_overall": 0.905,
+      "mean_max_cosine": 0.6117,
+      "count_cosine_ge_090": 1,
+      "count_cosine_ge_085": 1,
+      "count_cosine_ge_080": 1,
+      "top_matches_ge_080": [
+        {
+          "gold_id": "gold-0026",
+          "gold_lang": "ru",
+          "gold_cat": 10,
+          "gold_text": "Национальная сборная Молдовы по футболу проведет товарищеский матч на стадионе Зимбру.",
+          "train_id": "euv-02264",
+          "train_lang": "ro",
+          "train_cat": 5,
+          "train_source": "EUvsDisinfo",
+          "train_text": "Many people resent that Russians are not able to defend the Russian language on Belarusian and Ukrainian territories in such a way so that e",
+          "minilm_cosine": 0.905
+        }
+      ]
+    },
+    "internal_ro_ru_pairs_in_gold": [
+      {
+        "ro_id": "gold-0001",
+        "ru_id": "gold-0002",
+        "category": 1,
+        "ro_group_id": "grp-gold-0000",
+        "ru_group_id": "grp-gold-0001",
+        "minilm_cosine": 0.5275
+      },
+      {
+        "ro_id": "gold-0003",
+        "ru_id": "gold-0004",
+        "category": 2,
+        "ro_group_id": "grp-gold-0002",
+        "ru_group_id": "grp-gold-0003",
+        "minilm_cosine": 0.3296
+      },
+      {
+        "ro_id": "gold-0005",
+        "ru_id": "gold-0006",
+        "category": 3,
+        "ro_group_id": "grp-gold-0004",
+        "ru_group_id": "grp-gold-0005",
+        "minilm_cosine": 0.4853
+      },
+      {
+        "ro_id": "gold-0007",
+        "ru_id": "gold-0008",
+        "category": 4,
+        "ro_group_id": "grp-gold-0006",
+        "ru_group_id": "grp-gold-0007",
+        "minilm_cosine": 0.4832
+      },
+      {
+        "ro_id": "gold-0009",
+        "ru_id": "gold-0010",
+        "category": 5,
+        "ro_group_id": "grp-gold-0008",
+        "ru_group_id": "grp-gold-0009",
+        "minilm_cosine": 0.4691
+      },
+      {
+        "ro_id": "gold-0011",
+        "ru_id": "gold-0012",
+        "category": 6,
+        "ro_group_id": "grp-gold-0010",
+        "ru_group_id": "grp-gold-0011",
+        "minilm_cosine": 0.122
+      },
+      {
+        "ro_id": "gold-0013",
+        "ru_id": "gold-0014",
+        "category": 7,
+        "ro_group_id": "grp-gold-0012",
+        "ru_group_id": "grp-gold-0013",
+        "minilm_cosine": 0.4096
+      },
+      {
+        "ro_id": "gold-0015",
+        "ru_id": "gold-0016",
+        "category": 8,
+        "ro_group_id": "grp-gold-0014",
+        "ru_group_id": "grp-gold-0015",
+        "minilm_cosine": 0.1413
+      },
+      {
+        "ro_id": "gold-0017",
+        "ru_id": "gold-0018",
+        "category": 9,
+        "ro_group_id": "grp-gold-0016",
+        "ru_group_id": "grp-gold-0017",
+        "minilm_cosine": 0.0165
+      },
+      {
+        "ro_id": "gold-0019",
+        "ru_id": "gold-0020",
+        "category": 11,
+        "ro_group_id": "grp-gold-0018",
+        "ru_group_id": "grp-gold-0019",
+        "minilm_cosine": 0.7112
+      },
+      {
+        "ro_id": "gold-0021",
+        "ru_id": "gold-0022",
+        "category": 12,
+        "ro_group_id": "grp-gold-0020",
+        "ru_group_id": "grp-gold-0021",
+        "minilm_cosine": 0.3516
+      }
+    ]
+  },
+  "q4_similarity_embedders": {
+    "DeterministicMultilingualEmbedder (Current Default)": {
+      "ALL": {
+        "n": 317,
+        "tp": 108,
+        "fp": 79,
+        "fn": 7,
+        "tn": 123,
+        "precision": 0.5775,
+        "recall": 0.9391,
+        "f1": 0.7152
+      },
+      "RO-RO": {
+        "n": 129,
+        "tp": 61,
+        "fp": 15,
+        "fn": 0,
+        "tn": 53,
+        "precision": 0.8026,
+        "recall": 1.0,
+        "f1": 0.8905
+      },
+      "RU-RU": {
+        "n": 122,
+        "tp": 39,
+        "fp": 63,
+        "fn": 0,
+        "tn": 20,
+        "precision": 0.3824,
+        "recall": 1.0,
+        "f1": 0.5532
+      },
+      "RO-RU": {
+        "n": 66,
+        "tp": 8,
+        "fp": 1,
+        "fn": 7,
+        "tn": 50,
+        "precision": 0.8889,
+        "recall": 0.5333,
+        "f1": 0.6667
+      },
+      "detail_guard_accuracy": 0.24
+    },
+    "SentenceTransformerEmbedder (paraphrase-multilingual-MiniLM-L12-v2)": {
+      "ALL": {
+        "n": 317,
+        "tp": 103,
+        "fp": 76,
+        "fn": 12,
+        "tn": 126,
+        "precision": 0.5754,
+        "recall": 0.8957,
+        "f1": 0.7007
+      },
+      "RO-RO": {
+        "n": 129,
+        "tp": 61,
+        "fp": 14,
+        "fn": 0,
+        "tn": 54,
+        "precision": 0.8133,
+        "recall": 1.0,
+        "f1": 0.8971
+      },
+      "RU-RU": {
+        "n": 122,
+        "tp": 39,
+        "fp": 62,
+        "fn": 0,
+        "tn": 21,
+        "precision": 0.3861,
+        "recall": 1.0,
+        "f1": 0.5571
+      },
+      "RO-RU": {
+        "n": 66,
+        "tp": 3,
+        "fp": 0,
+        "fn": 12,
+        "tn": 51,
+        "precision": 1.0,
+        "recall": 0.2,
+        "f1": 0.3333
+      },
+      "detail_guard_accuracy": 0.24
+    }
+  },
+  "q5_debunk_index": {
+    "curated_debunks_path": "C:\\Users\\maria\\scamguard\\ml\\data\\processed\\v1\\train.jsonl",
+    "index_size": 500,
+    "embedder_class": "DeterministicMultilingualEmbedder",
+    "overlap_checks": {
+      "test.jsonl": {
+        "exact_text_overlap": 0,
+        "group_id_overlap": 0,
+        "total_items": 970
+      },
+      "gold.jsonl": {
+        "exact_text_overlap": 0,
+        "group_id_overlap": 0,
+        "total_items": 150
+      },
+      "telegram_test.jsonl": {
+        "exact_text_overlap": 0,
+        "group_id_overlap": 0,
+        "total_items": 150
+      }
+    }
+  }
+}

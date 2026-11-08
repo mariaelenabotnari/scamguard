@@ -21,3 +21,14 @@
 1. **Honest Attribution**: Every record specifies its exact `source_name`, `source_type` (`debunk`, `news`, `telegram`, `synthetic`), and verified upstream URL.
 2. **No Invented Citations**: Fictitious URLs and unverified synthetic entries are strictly forbidden in benchmark evaluations.
 3. **Data Leakage Safeguard**: Cross-lingual grouping (`group_id`) ensures that no claim or its translations/paraphrases cross the boundary between training and evaluation splits.
+
+---
+
+## 3. Pretrained Multilingual Transformer Models & Licences
+
+| Model Identifier | Architecture | Parameters | Languages | Licence | Origin / Reference | Role in ScamGuard |
+|---|---|---|---|---|---|---|
+| **`intfloat/multilingual-e5-base`** | XLM-RoBERTa based dense retriever | 278M | 100+ (incl. RO, RU) | MIT | Liang et al. (2023), Microsoft / Hugging Face | Frozen dense text embedding extraction & classification baseline |
+| **`FacebookAI/xlm-roberta-base`** | Masked multilingual transformer | 278M | 100+ (incl. RO, RU) | MIT | Conneau et al. (2020), Meta AI / Hugging Face | Primary cross-lingual sequence classification candidate |
+| **`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`** | Distilled multilingual MiniLM | 118M | 50+ (incl. RO, RU) | Apache-2.0 | Reimers & Gurevych (2019), Hugging Face | Fast CPU-friendly multilingual sentence encoder & fallback |
+

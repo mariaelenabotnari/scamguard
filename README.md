@@ -89,17 +89,16 @@ To process thousands of posts efficiently without false mergers, `SimilarityServ
 2. **Stage 2 (Adaptive MinHash + LSH with Verification)**:
    - Uses **128 deterministic hash permutations** (`_MINHASH_COEFFS`) partitioned into **32 LSH bands**.
    - Requires both an LSH band collision **and** an explicit verification check: estimated Jaccard $\ge 0.65$ **and** actual shingle Jaccard $\ge 0.65$.
-3. **Stage 3 (Multilingual Concept Vector Embeddings)**:
-   - Maps Romanian and Russian stems into a shared 48-dimensional concept vector space (`DeterministicMultilingualEmbedder`) for fast CPU inference (83 pairs/sec), with neural transformers (`paraphrase-multilingual-MiniLM-L12-v2`) available for offline forensics.
+3. **Stage 3 (Dense Multilingual Embeddings with Lexicon Fallback)**:
+   - Uses `SentenceTransformerEmbedder` (`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`, 384-dim L2-normalized vectors) **by default** (`SCAMGUARD_USE_DENSE_SIMILARITY_EMBEDDER=true`) with process-level singleton model and vector caching (`7.0 pairs/sec` cold, cached `O(1)` lookup), and automatically falls back to `DeterministicMultilingualEmbedder` (48-dim concept lexicon, `115.2 pairs/sec`) when disabled (`SCAMGUARD_USE_DENSE_SIMILARITY_EMBEDDER=false`).
    - Evaluated against calibrated language-pair cosine thresholds:
-     - **RO – RO**: $\tau = 0.82$
-     - **RU – RU**: $\tau = 0.82$
-     - **RO – RU (Cross-Lingual)**: $\tau = 0.78$
+     - **RO – RO / RU – RU**: $\tau = 0.75$ (dense MiniLM) / $\tau = 0.82$ (lexicon fallback)
+     - **RO – RU (Cross-Lingual)**: $\tau = 0.50$ (dense MiniLM) / $\tau = 0.78$ (lexicon fallback)
 
 ### Stage 3: Adversarial Detail Guard
 Before any similarity edge is accepted, `check_detail_conflict()` inspects the pair:
-- **Predicate Negation Inversion**: Evaluates overlapping sentence assertions ($J_{\text{assertion}} \ge 0.35$). If one asserts a predicate and the other negates it (*"nu va"*, *"nu este"*, *"не будет"*), the edge is vetoed (`negation_conflict`).
-- **Significant Number Guard**: Strips incidental publication dates and hours (`ora 14:00`), then compares significant numerical quantities ($\ge 10$) and percentages. If metrics diverge, the edge is rejected (`number_date_conflict`).
+- **Predicate Negation Inversion**: Evaluates overlapping sentence assertions ($J_{\text{assertion}} \ge 0.35$). If one asserts a predicate and the other negates it (`"nu"`, `"fără"`, `"не"`, `"нет"`, `"без"`), the edge is vetoed (`negation_conflict`).
+- **Significant Number Guard**: Strips incidental publication dates and hours (`ora 14:00`), then compares numerical quantities and percentages. If metrics diverge, the edge is rejected (`number_date_conflict`).
 
 ### Stage 4: Agglomerative Clustering
 `ClusteringService` forms propagation cascades using **average-linkage agglomerative clustering** (`_cluster_messages`):
@@ -152,103 +151,81 @@ $$\text{CoordScore} = 0.45 \cdot \text{ClusterParticipation} + 0.35 \cdot \text{
 
 ## Coordination & Similarity Pipeline Evaluation
 
-The similarity and clustering stages were evaluated on a benchmark of authentic message pairs and adversarial stress tests:
+The similarity and clustering stages were evaluated on the 317-pair benchmark (`ml/eval/pairs_eval.jsonl`: `129 RO-RO`, `122 RU-RU`, `66 RO-RU`) and 35 propagation cascades (`ml/eval/clusters_eval.jsonl`):
 
-| Pipeline Configuration | Precision | Recall | Balanced F1 | Speed (pairs/sec) | Role in Architecture |
-|---|---|---|---|---|---|
-| **1. Exact Hash Only (SHA-256)** | **1.0000** | 0.3158 | 0.4800 | 125,000 | Immediate $O(1)$ duplicate lookup |
-| **2. Hash + MinHash/LSH (128 perm, 32 bands)** | **1.0000** | 0.8261 | 0.9048 | 12,500 | Captures edits, emojis, and link variants |
-| **3. Hash + LSH + Lexicon Embedder** | 0.9730 | **0.9391** | **0.9558** | 83 | Concept mapping (production CPU pipeline) |
-| **4. Neural Transformer (paraphrase-MiniLM)** | **1.0000** | 0.8957 | 0.9450 | 6.5 | Offline forensics (dense representations) |
+| Pipeline Configuration | Overall Precision | Overall Recall | Overall F1 | `RO-RO` F1 | `RU-RU` F1 | `RO-RU` F1 | Speed (pairs/s) | Role in Architecture |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| **1. Exact Hash Only (SHA-256)** | **1.0000** | 0.3158 | 0.4800 | — | — | — | 125,000 | Immediate $O(1)$ duplicate lookup |
+| **2. Hash + MinHash/LSH (128 perm, 32 bands)** | **1.0000** | 0.8261 | 0.9048 | — | — | — | 12,500 | Captures edits, emojis, and link variants |
+| **3. Dense MiniLM Default (`SentenceTransformerEmbedder`, v2.1)** | 0.9576 | **0.9826** | **0.9700** | 0.9760 | **1.0000** | **0.8667** | 7.0 | **Default (`SCAMGUARD_USE_DENSE_SIMILARITY_EMBEDDER=true`)** |
+| **4. Lexicon Fallback (`DeterministicMultilingualEmbedder`, v2.1)** | **0.9643** | 0.9391 | 0.9515 | **0.9839** | 0.9873 | 0.6667 | 115.2 | Offline / fast fallback (`SCAMGUARD_USE_DENSE_SIMILARITY_EMBEDDER=false`) |
 
 ### Detail Guard Adversarial Testing
 - Evaluated against 100 targeted adversarial perturbations (50 key metric/date shifts and 50 predicate negation inversions):
-  - **Negation conflict detection**: 100% precision on assertions with overlapping content ($J \ge 0.35$).
-  - **Metric divergence detection**: Zero false mergers when significant quantities or percentages diverged.
+  - **Detail Guard Accuracy**: **99.0% (`99 / 100`)** on both Romanian (`"nu"`, `"fără"`) and Russian (`"не"`, `"нет"`, `"без"`) negation inversions and numerical divergences.
 
-### False Positive Rate on Neutral News
-- Evaluated on 120 independent neutral news articles from non-training publishers:
-  - **False Positive Rate = 8.3% (10/120)**.
-
-### Synthetic Campaign Simulation (Algorithmic Unit Stress Test)
-- Tested with `campaign_simulator.py` on a synthetic 40-post campaign spread across 8 channels:
-  - The average-linkage agglomerative clustering recovered the 40-post campaign with **0 giant cluster chaining**, confirming that diameter constraints prevent uncontrolled drift.
-  - *Note*: Designated strictly as an algorithmic unit stress test, not as field evidence.
+### Cascade Clustering (`ml/eval/clusters_eval.jsonl`, 35 Cascades)
+- **Dense MiniLM Default**: B-Cubed Precision = `0.9571`, B-Cubed Recall = `0.6788`, **B-Cubed F1 = `0.7943`**, **`0` giant clusters**.
+- **Lexicon Fallback**: B-Cubed Precision = `1.0000`, B-Cubed Recall = `0.6788`, **B-Cubed F1 = `0.8087`**, **`0` giant clusters**.
 
 ---
 
 ## Machine Learning & Target Domain Benchmarks
 
+Full audit details, bootstrap confidence intervals, and pre-registered replacement criteria are documented in [`docs/results-summary.md`](docs/results-summary.md), [`docs/ml-round2-audit.md`](docs/ml-round2-audit.md), and [`docs/decisions.md`](docs/decisions.md).
+
 ### Datasets & Partition Design
-Partitions enforce **strict `group_id` hashing**, ensuring that translations, paraphrases, and duplicates never cross split boundaries:
+Partitions enforce **strict `group_id` hashing**, ensuring that translations, paraphrases, and duplicates never cross split boundaries (`pytest ml/tests/test_no_leakage.py`):
 
-| Partition | Total Samples | Unique Groups | Romanian | Russian | Description |
-|---|---|---|---|---|---|
-| **`train.jsonl`** | 5,794 | 5,725 | 3,119 (53.8%) | 2,675 (46.2%) | Base training corpus (debunks + news). |
-| **`train_augmented.jsonl`** | 8,194 | 5,975 | 4,382 (53.5%) | 3,812 (46.5%) | Symmetrically augmented training set. |
-| **`val.jsonl`** | 962 | 954 | 496 (51.6%) | 466 (48.4%) | Validation & threshold tuning. |
-| **`test.jsonl`** | 970 | 955 | 508 (52.4%) | 462 (47.6%) | Generalization test benchmark. |
-| **`gold.jsonl`** | 150 | 150 | 75 (50.0%) | 75 (50.0%) | Quarantined Moldovan fact-check benchmark. |
+| Partition | Total Samples | Unique Groups / Claims | Romanian | Russian | Description & Provenance |
+|---|---:|---:|---:|---:|---|
+| **`train.jsonl`** | 4,526 | 4,513 | 2,400 (53.0%) | 2,126 (47.0%) | Fact-check debunks (`EUvsDisinfo`, `StopFals.md`, `Mediacritica`, `FAKEROM`) + benign news (`MOROCO`, `Gazeta`). |
+| **`train_augmented.jsonl`** | 4,776 | 4,661 | 2,487 (52.1%) | 2,289 (47.9%) | `train.jsonl` + 250 script-labeled Telegram posts (`telegram_train.jsonl`). |
+| **`val.jsonl`** | 962 | 954 | 496 (51.6%) | 466 (48.4%) | Held-out validation split for threshold ($\tau=0.38$) and gate tuning. |
+| **`test.jsonl`** | 970 | 955 | 508 (52.4%) | 462 (47.6%) | Held-out generalization test benchmark. |
+| **`gold.jsonl`** | 150 | **30 unique** | 75 (50.0%) | 75 (50.0%) | 30 Moldovan single-sentence claims repeated $5\times$ (`gold_unique_30` $N=30$). |
+| **`telegram_test.jsonl`** | 150 | 150 | 49 (32.7%) | 101 (67.3%) | Held-out real Telegram posts (weak keyword-script labels; blind human batch in `ml/data/labeling/telegram_blind_batch.csv`). |
+| **`hard_negatives_v2.jsonl`** | 160 | 160 | 39 (24.4%) | 121 (75.6%) | Independent neutral news & Telegram hard negatives (`0/160` overlap with all splits). |
 
-### Target Domain Telegram Benchmark (`v1-tg`)
-To evaluate transfer to real broadcast streams, 400 messages were extracted from local database storage of two public Moldovan news channels (790 and 144 messages respectively):
-- **Labeling Protocol**: Labels were assigned based on claim assertions via `label_telegram_messages.py`. A secondary perturbation evaluation on 100 samples yielded **$\kappa = 0.8835$** concordance, confirming rule boundary consistency. Independent double-blind human annotation is planned for a future milestone.
-- **`telegram_train.jsonl`** ($N=250$, 40.8% disinfo, 59.2% benign): Domain-adaptation training set.
-- **`telegram_test.jsonl`** ($N=150$, 38.7% disinfo, 61.3% benign): **Strictly held-out target domain test set**.
+### Narrative Classifier Comparison ($\tau = 0.38$, 95% Bootstrap & Clopper-Pearson CIs)
 
-### Balanced Symmetrical Augmentation
-To prevent the model from learning broadcast noise (e.g. `"🚨 ВНИМАНИЕ"`, `"👉 Подписывайтесь"`) as a shortcut for disinformation:
-- Augmented **34.6% of disinfo** and **36.8% of benign** training items in `train_augmented.jsonl`.
-- Evaluation partitions (`val.jsonl`, `test.jsonl`, `gold.jsonl`, `telegram_test.jsonl`) remain strictly **100% unaugmented natural text**.
+Evaluated via `ml/scripts/train_round2_models.py` and `ml/scripts/evaluate_step25_and_fixed_hybrid.py` (Majority baselines: `test.jsonl = 40.82%`, `gold = 26.67%`, `telegram_test.jsonl = 61.33%`):
 
-### Empirical Results (Baseline vs Retrained)
+| Model ($\tau = 0.38$) | `test.jsonl` ($N=970$) Macro F1 `[95% CI]` | `gold_unique_30` ($N=30$) Macro F1 `[95% CI]` | `telegram_test.jsonl` ($N=150$, Script) Macro F1 `[95% CI]` | Independent `hard_negatives_v2.jsonl` ($N=160$) FPR `[95% CP CI]` |
+|---|---|---|---|---|
+| **0. Baseline: TF-IDF + LR (`narrative_classifier.joblib`)** | `0.3844 [0.3529, 0.4136]` | `0.0897 [0.0256, 0.1253]` | `0.1446 [0.0964, 0.1801]` | **`3.75%`** (`6/160`) `[1.39%, 7.98%]` |
+| **1. Round 1: Frozen MiniLM + LR** | `0.3792 [0.3461, 0.4087]` | **`0.4679 [0.2513, 0.5385]`** | `0.1405 [0.1017, 0.1777]` | `44.38%` (`71/160`) `[36.53%, 52.43%]` |
+| **2. Round 1: Fine-Tuned MiniLM-L12-v2 (CPU 4-layer)** | `0.3366 [0.3144, 0.3578]` | `0.1282 [0.0308, 0.1823]` | `0.0705 [0.0507, 0.0896]` | **`5.00%`** (`8/160`) `[2.18%, 9.61%]` |
+| **3. Approach A: Stacked TF-IDF + Frozen MiniLM** | **`0.4422 [0.4028, 0.4773]`** * | `0.1935 [0.0416, 0.2578]` | **`0.1910 [0.1487, 0.2228]`** * | `6.25%` (`10/160`) `[3.04%, 11.19%]` |
+| **4. Approach B: MiniLM Retrieval ($k$-NN + Centroids)** | `0.3792 [0.3468, 0.4083]` | **`0.4031 [0.1993, 0.4791]`** * | **`0.1924 [0.1170, 0.2505]`** | `5.63%` (`9/160`) `[2.60%, 10.41%]` |
+| **5. Approach C: Two-Step Hierarchical (Bin $\rightarrow$ 12-Cls)** | `0.4293 [0.3911, 0.4631]` * | `0.0324 [0.0181, 0.0465]` | `0.0794 [0.0599, 0.0977]` | **`2.50%`** (`4/160`) `[0.69%, 6.28%]` |
+| **6. Hybrid `NarrativeClassifierService` (Before Gate Fix)** | `0.1753 [0.1518, 0.1973]` | `0.3205` | `0.2119` | `29.38%` (`47/160`) `[22.45%, 37.08%]` |
+| **7. Hybrid `NarrativeClassifierService` (After Gate Fix)** | `0.2638 [0.2311, 0.2900]` | `0.3205 [0.1380, 0.3858]` | `0.1390 [0.0880, 0.1728]` | **`3.12%`** (`5/160`) `[1.02%, 7.14%]` |
 
-Evaluated via `ml/scripts/benchmark_comparison.py`:
-
-| Evaluation Partition | Baseline Macro F1 | Retrained Macro F1 | Absolute $\Delta$ F1 | Retrained Accuracy | Majority Baseline |
-|---|---|---|---|---|---|
-| **Generalization Test Set (`test.jsonl`, $N=970$)** | 0.5210 | **0.5245** | +0.0035 | 76.0% | 40.2% |
-| **Moldovan Gold Set (`gold.jsonl`, $N=150$)** | 0.0331 | **0.0916** | +0.0585 | 30.0% | 50.0% |
-| **Real Telegram Test Set (`telegram_test.jsonl`, $N=150$)** | 0.0950 | **0.2629** | **+0.1679** | **63.3%** | **61.3%** |
-
-#### Target Domain Classification Detail on Real Telegram (`telegram_test.jsonl`):
-- **Category 10 (Benign News / Civic Life)**: Precision = 0.68, Recall = 0.85, **F1 = 0.76**
-- **Category 07 (Transnistria Separatism)**: Precision = 0.75, Recall = 0.43, **F1 = 0.55**
-- **Category 06 (Energy Fear & Tariffs)**: Precision = 0.41, Recall = 0.41, **F1 = 0.41**
-- **Category 01 (War in Ukraine Justification)**: Precision = 0.47, Recall = 0.33, **F1 = 0.39**
-- **Categories 02, 03, 04, 13**: F1 = 0.00 (under-represented in the held-out sample).
-
-> **Analysis**: While domain training increased Telegram test Macro F1 from 0.0950 to 0.2629, overall accuracy (63.3%) remains near the majority-class baseline (61.3%). Detecting *disinformation vs. normal news* (F1 = 0.76) functions reliably, but multi-class distinction across all 12 disinformation narratives on noisy Telegram text remains early-stage.
+*\* Paired 95% bootstrap CI of $\Delta\text{F1}$ vs. TF-IDF baseline excludes zero.*
 
 ---
 
 ## Datasets, Licenses & Redistribution
 
-| Dataset | Primary Role | License | Redistribution Policy |
+| Dataset / Model | Primary Role | License | Redistribution Policy |
 |---|---|---|---|
 | **MOROCO** | Benign newsroom articles (Romanian) | CC BY-NC-SA 4.0 | Non-commercial research. Raw text is **not redistributed**; scripts download/process locally. |
 | **Gazeta.ru** | Benign news articles (Russian) | MIT License | Permissive academic reuse. |
 | **EUvsDisinfo** | Disinformation debunks (RO & RU) | CC BY-SA 4.0 / EU Open Data | European Commission reuse decision (2011/833/EU). |
 | **FAKEROM** | Romanian fake news research | Academic Research | Lucian Blaga University of Sibiu (`grants.ulbsibiu.ro/fakerom`). |
-
-### External Reference Datasets
-*Planned for future background coincidence and style modeling; not currently ingested into v1 model weights:*
-- **`aisbergpublicorganization/telegram-news-ua-dataset` (Hugging Face)**: Multilingual news posts in Ukrainian, Russian, and English.
-- **TeleScope (arXiv:2504.19536)**: Channel metadata (~71K channels, ~120M messages).
-- **TGDataset (arXiv:2303.05345)**: Background corpus (~121K channels, 400M+ messages).
+| **`paraphrase-multilingual-MiniLM-L12-v2`** | Dense multilingual embeddings | Apache-2.0 | Open source (`sentence-transformers`, loaded via Hugging Face Hub). |
 
 ---
 
 ## Known Limitations & Honest Constraints
 
-1. **Domain Gap**: Editorial journalistic debunks differ fundamentally from conversational, emoji-laden Telegram posts.
-2. **Small Target-Domain Sample**: The Telegram benchmark currently comprises 400 posts sampled from two public channels. Expanding to broader monitoring channels is required for statistical depth.
-3. **Rule-Based Initial Labels**: Current Telegram labels were generated by semantic heuristic mapping; formal double-blind human annotation by independent external annotators remains a planned milestone.
-4. **Weak Multi-Class Distinctions**: Several low-resource narrative classes (e.g. Categories 2, 3, 4) scored 0.00 F1 on the Telegram test split.
-5. **Fixed Taxonomy**: Emerging narratives outside the 12 core categories fall into Category 13 until taxonomy updates are defined.
-6. **Language Scope**: Restricted to Romanian and Russian. Ukrainian and Gagauz text are not currently supported.
-7. **Storage Engine**: SQLite is the default zero-config local storage; PostgreSQL with `pgvector` is designed for production multi-container deployments.
-8. **Investigative Support Tool**: ScamGuard produces probabilistic coordination signals to aid human researchers; it is not an automated moderation system.
+1. **Weakly Labeled Telegram Test Set (`telegram_test.jsonl`)**: All 400 Telegram messages (`250` train, `150` test) were labeled by a keyword heuristic script (`ml/scripts/label_telegram_messages.py`), not by humans. Because the Hybrid pipeline also uses keyword signals, Hybrid scores on `telegram_test.jsonl` are partly circular. A blind 150-message file (`ml/data/labeling/telegram_blind_batch.csv`) and annotation guide (`docs/labeling-guide.md`) are provided to evaluate on human ground truth via `ml/scripts/evaluate_human_labels.py`.
+2. **Effective Sample Size of `gold.jsonl` ($N = 30$ Unique Claims)**: `ml/data/processed/v1/gold.jsonl` ($N = 150$) was built in `ml/scripts/build_dataset.py:337-413` by repeating 30 hardcoded single-sentence claims 5 times (`gold_samples * 5`). Effective sample size is $N = 30$ (`gold_unique_30`).
+3. **Legacy `hard_negatives.jsonl` Contamination**: All 120 items in the original `ml/eval/hard_negatives.jsonl` also appear in `train.jsonl`, and items `71–120` are `FAKEROM` records mislabeled as Category `10` due to a `label: null` fallback (`build_dataset.py:265`). Use `ml/eval/hard_negatives_v2.jsonl` ($N = 160$, 0% overlap) with exact Clopper-Pearson intervals for false-alarm benchmarking.
+4. **CPU Fine-Tuning vs. 3-Seed GPU Fine-Tuning**: Round 1 fine-tuning of `MiniLM-L12-v2` was limited to 1 seed, 2 epochs, and 4 unfrozen layers on CPU. A self-contained 3-seed GPU fine-tuning notebook for `FacebookAI/xlm-roberta-base` and `intfloat/multilingual-e5-base` is provided in [`ml/notebooks/finetune_transformers_gpu.ipynb`](ml/notebooks/finetune_transformers_gpu.ipynb).
+5. **Channel Diversity in Local Corpus**: The local SQLite database (`backend/scamguard.db`) contains 934 posts from two public channels (`@realmorarinews` and `@wtfmoldova`). Expanding to 20+ channels via `ml/scripts/collect_more_telegram.py` is needed to cover low-support narrative classes.
+6. **Language Scope & Human-in-the-Loop**: Restricted to Romanian and Russian. ScamGuard outputs probabilistic `narrative_match` and coordination signals to assist human analysts, never automated censorship or "truth/falsehood" verdicts.
 
 ---
 
@@ -281,21 +258,24 @@ cd ..
 
 ```bash
 # Run unit, integration, and leakage-controlled tests
-pytest backend/tests ml/tests
+backend\.venv\Scripts\pytest ml/tests/test_no_leakage.py backend/tests/test_similarity_and_clustering.py backend/tests/test_narrative_classification.py
 
 # Run backend code linter
-ruff check backend
+backend\.venv\Scripts\ruff check backend
 ```
 
-### 3. Reproduce Data Science Benchmarks
+### 3. Reproduce Round 2 Benchmarks
 
 ```bash
-# 1. Generate the 400-post Telegram labeled dataset and compute kappa concordance
-python ml/scripts/label_telegram_messages.py
+# 1. Run Round 2 audit and generate independent hard_negatives_v2.jsonl (N=160)
+backend\.venv\Scripts\python ml/scripts/run_round2_audit.py
 
-# 2. Generate balanced Telegram-augmented training data (symmetrical noise)
-python ml/scripts/augment_telegram.py
+# 2. Train and evaluate Round 2 candidate models (Stacked, Retrieval, Two-Step)
+backend\.venv\Scripts\python ml/scripts/train_round2_models.py
 
-# 3. Train and compare baseline vs retrained models across all evaluation partitions
-python ml/scripts/benchmark_comparison.py
+# 3. Evaluate fixed Hybrid NarrativeClassifierService and Step 2.5 SimilarityService
+backend\.venv\Scripts\python ml/scripts/evaluate_step25_and_fixed_hybrid.py
+
+# 4. Evaluate models on human-labeled Telegram batch once telegram_blind_batch.csv is filled
+backend\.venv\Scripts\python ml/scripts/evaluate_human_labels.py
 ```

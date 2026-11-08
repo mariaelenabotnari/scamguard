@@ -1,0 +1,200 @@
+{
+  "TF-IDF + LogisticRegression (Baseline) (tau=0.38)": {
+    "telegram_test": {
+      "num_samples": 150,
+      "accuracy": 0.6733,
+      "macro_f1_present": 0.4429,
+      "macro_f1_present_ci": [
+        0.3439,
+        0.5193
+      ],
+      "macro_f1_all_13": 0.2726,
+      "macro_f1_all_13_ci": [
+        0.2116,
+        0.3196
+      ],
+      "speed_texts_per_sec": 58.8
+    },
+    "gold": {
+      "num_samples": 150,
+      "accuracy": 0.5333,
+      "macro_f1_present": 0.4543,
+      "macro_f1_present_ci": [
+        0.3757,
+        0.5042
+      ],
+      "macro_f1_all_13": 0.4194,
+      "macro_f1_all_13_ci": [
+        0.3468,
+        0.4654
+      ],
+      "speed_texts_per_sec": 68.5
+    },
+    "hard_negatives_fpr": 0.1583
+  },
+  "TF-IDF + LogisticRegression (Baseline) (tau=0.50)": {
+    "telegram_test": {
+      "num_samples": 150,
+      "accuracy": 0.6533,
+      "macro_f1_present": 0.4188,
+      "macro_f1_present_ci": [
+        0.3186,
+        0.4979
+      ],
+      "macro_f1_all_13": 0.2577,
+      "macro_f1_all_13_ci": [
+        0.196,
+        0.3064
+      ],
+      "speed_texts_per_sec": 64.9
+    },
+    "gold": {
+      "num_samples": 150,
+      "accuracy": 0.4667,
+      "macro_f1_present": 0.3708,
+      "macro_f1_present_ci": [
+        0.3007,
+        0.4186
+      ],
+      "macro_f1_all_13": 0.3423,
+      "macro_f1_all_13_ci": [
+        0.2776,
+        0.3864
+      ],
+      "speed_texts_per_sec": 109.4
+    },
+    "hard_negatives_fpr": 0.0917
+  },
+  "Frozen MiniLM + LogisticRegression (Candidate 1) (tau=0.38)": {
+    "telegram_test": {
+      "num_samples": 150,
+      "accuracy": 0.6133,
+      "macro_f1_present": 0.3993,
+      "macro_f1_present_ci": [
+        0.3045,
+        0.4773
+      ],
+      "macro_f1_all_13": 0.2457,
+      "macro_f1_all_13_ci": [
+        0.1874,
+        0.2937
+      ],
+      "speed_texts_per_sec": 105.8
+    },
+    "gold": {
+      "num_samples": 150,
+      "accuracy": 0.5,
+      "macro_f1_present": 0.4278,
+      "macro_f1_present_ci": [
+        0.3506,
+        0.4797
+      ],
+      "macro_f1_all_13": 0.3949,
+      "macro_f1_all_13_ci": [
+        0.3236,
+        0.4428
+      ],
+      "speed_texts_per_sec": 90.0
+    },
+    "hard_negatives_fpr": 0.4083
+  },
+  "Frozen MiniLM + LogisticRegression (Candidate 1) (tau=0.50)": {
+    "telegram_test": {
+      "num_samples": 150,
+      "accuracy": 0.6,
+      "macro_f1_present": 0.3784,
+      "macro_f1_present_ci": [
+        0.2815,
+        0.4593
+      ],
+      "macro_f1_all_13": 0.2329,
+      "macro_f1_all_13_ci": [
+        0.1732,
+        0.2826
+      ],
+      "speed_texts_per_sec": 108.0
+    },
+    "gold": {
+      "num_samples": 150,
+      "accuracy": 0.4667,
+      "macro_f1_present": 0.3708,
+      "macro_f1_present_ci": [
+        0.3033,
+        0.4189
+      ],
+      "macro_f1_all_13": 0.3423,
+      "macro_f1_all_13_ci": [
+        0.2799,
+        0.3867
+      ],
+      "speed_texts_per_sec": 139.5
+    },
+    "hard_negatives_fpr": 0.2583
+  },
+  "Fine-Tuned MiniLM Transformer (Candidate 2) (tau=0.38)": {
+    "telegram_test": {
+      "num_samples": 150,
+      "accuracy": 0.6133,
+      "macro_f1_present": 0.3755,
+      "macro_f1_present_ci": [
+        0.2759,
+        0.4567
+      ],
+      "macro_f1_all_13": 0.2311,
+      "macro_f1_all_13_ci": [
+        0.1698,
+        0.2811
+      ],
+      "speed_texts_per_sec": 10.8
+    },
+    "gold": {
+      "num_samples": 150,
+      "accuracy": 0.4533,
+      "macro_f1_present": 0.3508,
+      "macro_f1_present_ci": [
+        0.2807,
+        0.4034
+      ],
+      "macro_f1_all_13": 0.3239,
+      "macro_f1_all_13_ci": [
+        0.2591,
+        0.3724
+      ],
+      "speed_texts_per_sec": 16.1
+    },
+    "hard_negatives_fpr": 0.2833
+  },
+  "Fine-Tuned MiniLM Transformer (Candidate 2) (tau=0.50)": {
+    "telegram_test": {
+      "num_samples": 150,
+      "accuracy": 0.6067,
+      "macro_f1_present": 0.3556,
+      "macro_f1_present_ci": [
+        0.2596,
+        0.4381
+      ],
+      "macro_f1_all_13": 0.2188,
+      "macro_f1_all_13_ci": [
+        0.1598,
+        0.2696
+      ],
+      "speed_texts_per_sec": 10.2
+    },
+    "gold": {
+      "num_samples": 150,
+      "accuracy": 0.4133,
+      "macro_f1_present": 0.2911,
+      "macro_f1_present_ci": [
+        0.2339,
+        0.3363
+      ],
+      "macro_f1_all_13": 0.2687,
+      "macro_f1_all_13_ci": [
+        0.2159,
+        0.3104
+      ],
+      "speed_texts_per_sec": 17.2
+    },
+    "hard_negatives_fpr": 0.1833
+  }
+}
