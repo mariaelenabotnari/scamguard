@@ -24,7 +24,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from ml.scripts.benchmark_comparison import ALL_CLASSES, CATEGORY_NAMES, bootstrap_metric_ci
+from ml.scripts.benchmark_comparison import ALL_CLASSES, bootstrap_metric_ci
+from ml.scripts.label_telegram_messages import CATEGORY_NAMES
 
 CSV_PATH = REPO_ROOT / "ml" / "data" / "labeling" / "telegram_blind_batch.csv"
 TG_TEST_PATH = REPO_ROOT / "ml" / "data" / "processed" / "v1" / "telegram_test.jsonl"

@@ -469,23 +469,33 @@ class NarrativeClassifierService:
                 ml_probs = {}
 
         # 3. Multi-signal category scoring (Keyword evidence + Prototype alignment + Debunk retrieval + Learned ML)
-        cat_scores: list[tuple[_CategoryRule, float, bool]] = []
-        for rule in _NARRATIVE_CATEGORIES:
-            distinct_kw_hits = sum(
+        kw_hits_by_cat: dict[int, int] = {
+            rule.cat_id: sum(
                 1
                 for kw in rule.keywords
-                if any(tok.startswith(kw) or kw in tok for tok in tokens)
+                if any(tok == kw if len(kw) <= 3 else tok.startswith(kw) for tok in tokens)
             )
+            for rule in _NARRATIVE_CATEGORIES
+        }
+        max_disinfo_kw_hits = max(
+            (cnt for cid, cnt in kw_hits_by_cat.items() if cid != 10),
+            default=0,
+        )
+
+        cat_scores: list[tuple[_CategoryRule, float, bool]] = []
+        for rule in _NARRATIVE_CATEGORIES:
+            distinct_kw_hits = kw_hits_by_cat[rule.cat_id]
             proto_vec = self._embedder.embed(rule.prototype_claim)
             proto_sim = cosine_similarity(text_vec, proto_vec)
 
+            debunk_cat_id = nearest_debunk.get("category_id") if nearest_debunk else None
             debunk_sim = (
                 best_debunk_sim
                 if (
                     nearest_debunk
-                    and nearest_debunk.get("category_id") == rule.cat_id
+                    and debunk_cat_id == rule.cat_id
                     and rule.cat_id != 10
-                    and nearest_debunk.get("category_id") != 10
+                    and debunk_cat_id != 10
                 )
                 else 0.0
             )
@@ -523,10 +533,18 @@ class NarrativeClassifierService:
                 ml_confident = ml_prob >= 0.30
                 has_multi_signal = strong_debunk or moderate_claim or ml_confident
 
-            # If ML model confidently flags post as benign news (cat 10) and no multiple disinfo keywords exist, suppress
-            if ml_probs.get(10, 0.0) >= 0.70 and rule.cat_id != 10 and distinct_kw_hits < 3:
+            # Validation-tuned gate fix (Round 2): on multi-clause posts/articles (len(tokens) >= 12),
+            # do not let lexical keywords + coarse lexicon prototype alone trigger a disinformation match
+            # unless corroborated by the trained ML model (ml_prob >= 0.30) or a verified debunk claim
+            if (
+                rule.cat_id != 10
+                and len(tokens) >= 12
+                and bool(ml_probs)
+                and ml_prob < 0.30
+                and debunk_sim < 0.65
+            ):
                 has_multi_signal = False
-                combined_score *= 0.35
+                combined_score *= 0.25
 
             final_cat_score = round(min(0.99, combined_score), 4) if has_multi_signal else round(combined_score * 0.35, 4)
             cat_scores.append((rule, final_cat_score, has_multi_signal))

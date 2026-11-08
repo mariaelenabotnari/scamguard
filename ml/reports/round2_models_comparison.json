@@ -1,0 +1,790 @@
+[
+  {
+    "model_name": "0. Baseline: TF-IDF + LogisticRegression",
+    "threshold": 0.38,
+    "splits": {
+      "val": {
+        "n": 962,
+        "macro_f1": 0.3653,
+        "macro_f1_ci_95": [
+          0.3321,
+          0.3942
+        ],
+        "accuracy": 0.6424,
+        "majority_class": 10,
+        "majority_accuracy": 0.4168,
+        "unknown_rate": 0.2723,
+        "texts_per_sec": 2191.0,
+        "paired_delta_vs_tfidf": null
+      },
+      "test": {
+        "n": 970,
+        "macro_f1": 0.3844,
+        "macro_f1_ci_95": [
+          0.3529,
+          0.4136
+        ],
+        "accuracy": 0.6361,
+        "majority_class": 10,
+        "majority_accuracy": 0.4082,
+        "unknown_rate": 0.2742,
+        "texts_per_sec": 2759.2,
+        "paired_delta_vs_tfidf": null
+      },
+      "gold_150": {
+        "n": 150,
+        "macro_f1": 0.0879,
+        "macro_f1_ci_95": [
+          0.059,
+          0.1075
+        ],
+        "accuracy": 0.2667,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.2533,
+        "texts_per_sec": 8348.1,
+        "paired_delta_vs_tfidf": null
+      },
+      "gold_unique_30": {
+        "n": 30,
+        "macro_f1": 0.0897,
+        "macro_f1_ci_95": [
+          0.0256,
+          0.1253
+        ],
+        "accuracy": 0.2667,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.3,
+        "texts_per_sec": 5511.4,
+        "paired_delta_vs_tfidf": null
+      },
+      "telegram_test": {
+        "n": 150,
+        "macro_f1": 0.1446,
+        "macro_f1_ci_95": [
+          0.0964,
+          0.1801
+        ],
+        "accuracy": 0.4867,
+        "majority_class": 10,
+        "majority_accuracy": 0.6133,
+        "unknown_rate": 0.2933,
+        "texts_per_sec": 1244.4,
+        "paired_delta_vs_tfidf": null
+      }
+    },
+    "hard_negatives_v2": {
+      "fp": 6,
+      "n": 160,
+      "fpr": 0.0375,
+      "clopper_pearson_95_ci": [
+        0.0139,
+        0.0798
+      ],
+      "passes_5pct_gate": true
+    },
+    "hard_negatives_v1": {
+      "fp": 0,
+      "n": 120,
+      "fpr": 0.0,
+      "clopper_pearson_95_ci": [
+        0.0,
+        0.0303
+      ],
+      "passes_5pct_gate": true
+    }
+  },
+  {
+    "model_name": "1. Round 1: Frozen MiniLM + LogisticRegression",
+    "threshold": 0.38,
+    "splits": {
+      "val": {
+        "n": 962,
+        "macro_f1": 0.401,
+        "macro_f1_ci_95": [
+          0.3585,
+          0.438
+        ],
+        "accuracy": 0.5582,
+        "majority_class": 10,
+        "majority_accuracy": 0.4168,
+        "unknown_rate": 0.2235,
+        "texts_per_sec": 117138.5,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0357,
+          "paired_bootstrap_95_ci": [
+            -0.0058,
+            0.079
+          ],
+          "excludes_zero": false
+        }
+      },
+      "test": {
+        "n": 970,
+        "macro_f1": 0.3792,
+        "macro_f1_ci_95": [
+          0.3461,
+          0.4087
+        ],
+        "accuracy": 0.5722,
+        "majority_class": 10,
+        "majority_accuracy": 0.4082,
+        "unknown_rate": 0.2041,
+        "texts_per_sec": 139265.8,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0051,
+          "paired_bootstrap_95_ci": [
+            -0.0348,
+            0.0265
+          ],
+          "excludes_zero": false
+        }
+      },
+      "gold_150": {
+        "n": 150,
+        "macro_f1": 0.4601,
+        "macro_f1_ci_95": [
+          0.3966,
+          0.5095
+        ],
+        "accuracy": 0.52,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.2467,
+        "texts_per_sec": 80506.7,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.3722,
+          "paired_bootstrap_95_ci": [
+            0.3051,
+            0.4315
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_unique_30": {
+        "n": 30,
+        "macro_f1": 0.4679,
+        "macro_f1_ci_95": [
+          0.2513,
+          0.5385
+        ],
+        "accuracy": 0.5,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.3333,
+        "texts_per_sec": 34048.3,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.3781,
+          "paired_bootstrap_95_ci": [
+            0.168,
+            0.4746
+          ],
+          "excludes_zero": true
+        }
+      },
+      "telegram_test": {
+        "n": 150,
+        "macro_f1": 0.1405,
+        "macro_f1_ci_95": [
+          0.1017,
+          0.1777
+        ],
+        "accuracy": 0.3333,
+        "majority_class": 10,
+        "majority_accuracy": 0.6133,
+        "unknown_rate": 0.2533,
+        "texts_per_sec": 100013.3,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0041,
+          "paired_bootstrap_95_ci": [
+            -0.0588,
+            0.0538
+          ],
+          "excludes_zero": false
+        }
+      }
+    },
+    "hard_negatives_v2": {
+      "fp": 71,
+      "n": 160,
+      "fpr": 0.4437,
+      "clopper_pearson_95_ci": [
+        0.3653,
+        0.5243
+      ],
+      "passes_5pct_gate": false
+    },
+    "hard_negatives_v1": {
+      "fp": 48,
+      "n": 120,
+      "fpr": 0.4,
+      "clopper_pearson_95_ci": [
+        0.3117,
+        0.4934
+      ],
+      "passes_5pct_gate": false
+    }
+  },
+  {
+    "model_name": "2. Round 1: Fine-Tuned MiniLM-L12-v2 (CPU 4-layer)",
+    "threshold": 0.38,
+    "splits": {
+      "val": {
+        "n": 962,
+        "macro_f1": 0.3343,
+        "macro_f1_ci_95": [
+          0.3118,
+          0.356
+        ],
+        "accuracy": 0.6383,
+        "majority_class": 10,
+        "majority_accuracy": 0.4168,
+        "unknown_rate": 0.289,
+        "texts_per_sec": 13.3,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.031,
+          "paired_bootstrap_95_ci": [
+            -0.0603,
+            -0.0015
+          ],
+          "excludes_zero": true
+        }
+      },
+      "test": {
+        "n": 970,
+        "macro_f1": 0.3366,
+        "macro_f1_ci_95": [
+          0.3144,
+          0.3578
+        ],
+        "accuracy": 0.6423,
+        "majority_class": 10,
+        "majority_accuracy": 0.4082,
+        "unknown_rate": 0.2649,
+        "texts_per_sec": 13.2,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0478,
+          "paired_bootstrap_95_ci": [
+            -0.0728,
+            -0.017
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_150": {
+        "n": 150,
+        "macro_f1": 0.1739,
+        "macro_f1_ci_95": [
+          0.1242,
+          0.2099
+        ],
+        "accuracy": 0.3267,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.2467,
+        "texts_per_sec": 35.8,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.086,
+          "paired_bootstrap_95_ci": [
+            0.0341,
+            0.1337
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_unique_30": {
+        "n": 30,
+        "macro_f1": 0.1282,
+        "macro_f1_ci_95": [
+          0.0308,
+          0.1823
+        ],
+        "accuracy": 0.3,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.2333,
+        "texts_per_sec": 41.1,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0385,
+          "paired_bootstrap_95_ci": [
+            -0.0739,
+            0.1293
+          ],
+          "excludes_zero": false
+        }
+      },
+      "telegram_test": {
+        "n": 150,
+        "macro_f1": 0.0705,
+        "macro_f1_ci_95": [
+          0.0507,
+          0.0896
+        ],
+        "accuracy": 0.4333,
+        "majority_class": 10,
+        "majority_accuracy": 0.6133,
+        "unknown_rate": 0.32,
+        "texts_per_sec": 12.2,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0741,
+          "paired_bootstrap_95_ci": [
+            -0.1137,
+            -0.0237
+          ],
+          "excludes_zero": true
+        }
+      }
+    },
+    "hard_negatives_v2": {
+      "fp": 8,
+      "n": 160,
+      "fpr": 0.05,
+      "clopper_pearson_95_ci": [
+        0.0218,
+        0.0961
+      ],
+      "passes_5pct_gate": true
+    },
+    "hard_negatives_v1": {
+      "fp": 5,
+      "n": 120,
+      "fpr": 0.0417,
+      "clopper_pearson_95_ci": [
+        0.0137,
+        0.0946
+      ],
+      "passes_5pct_gate": true
+    }
+  },
+  {
+    "model_name": "3. Approach A: Stacked TF-IDF + Frozen MiniLM",
+    "threshold": 0.38,
+    "splits": {
+      "val": {
+        "n": 962,
+        "macro_f1": 0.4617,
+        "macro_f1_ci_95": [
+          0.4154,
+          0.4955
+        ],
+        "accuracy": 0.7152,
+        "majority_class": 10,
+        "majority_accuracy": 0.4168,
+        "unknown_rate": 0.1393,
+        "texts_per_sec": 588.0,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0964,
+          "paired_bootstrap_95_ci": [
+            0.0544,
+            0.1328
+          ],
+          "excludes_zero": true
+        }
+      },
+      "test": {
+        "n": 970,
+        "macro_f1": 0.4422,
+        "macro_f1_ci_95": [
+          0.4028,
+          0.4773
+        ],
+        "accuracy": 0.7113,
+        "majority_class": 10,
+        "majority_accuracy": 0.4082,
+        "unknown_rate": 0.1216,
+        "texts_per_sec": 571.4,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0579,
+          "paired_bootstrap_95_ci": [
+            0.0272,
+            0.0909
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_150": {
+        "n": 150,
+        "macro_f1": 0.1873,
+        "macro_f1_ci_95": [
+          0.1342,
+          0.2219
+        ],
+        "accuracy": 0.36,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.1667,
+        "texts_per_sec": 1730.8,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0994,
+          "paired_bootstrap_95_ci": [
+            0.0548,
+            0.1281
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_unique_30": {
+        "n": 30,
+        "macro_f1": 0.1935,
+        "macro_f1_ci_95": [
+          0.0416,
+          0.2578
+        ],
+        "accuracy": 0.3667,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.1333,
+        "texts_per_sec": 1341.0,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.1038,
+          "paired_bootstrap_95_ci": [
+            -0.0065,
+            0.1568
+          ],
+          "excludes_zero": false
+        }
+      },
+      "telegram_test": {
+        "n": 150,
+        "macro_f1": 0.191,
+        "macro_f1_ci_95": [
+          0.1487,
+          0.2228
+        ],
+        "accuracy": 0.6067,
+        "majority_class": 10,
+        "majority_accuracy": 0.6133,
+        "unknown_rate": 0.2133,
+        "texts_per_sec": 213.7,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0464,
+          "paired_bootstrap_95_ci": [
+            0.0105,
+            0.0802
+          ],
+          "excludes_zero": true
+        }
+      }
+    },
+    "hard_negatives_v2": {
+      "fp": 10,
+      "n": 160,
+      "fpr": 0.0625,
+      "clopper_pearson_95_ci": [
+        0.0304,
+        0.1119
+      ],
+      "passes_5pct_gate": false
+    },
+    "hard_negatives_v1": {
+      "fp": 0,
+      "n": 120,
+      "fpr": 0.0,
+      "clopper_pearson_95_ci": [
+        0.0,
+        0.0303
+      ],
+      "passes_5pct_gate": true
+    }
+  },
+  {
+    "model_name": "4. Approach B: MiniLM Retrieval (k-NN + Class Centroids)",
+    "threshold": 0.38,
+    "splits": {
+      "val": {
+        "n": 962,
+        "macro_f1": 0.3662,
+        "macro_f1_ci_95": [
+          0.3338,
+          0.3925
+        ],
+        "accuracy": 0.6154,
+        "majority_class": 10,
+        "majority_accuracy": 0.4168,
+        "unknown_rate": 0.2162,
+        "texts_per_sec": 2094.7,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0009,
+          "paired_bootstrap_95_ci": [
+            -0.0387,
+            0.0351
+          ],
+          "excludes_zero": false
+        }
+      },
+      "test": {
+        "n": 970,
+        "macro_f1": 0.3792,
+        "macro_f1_ci_95": [
+          0.3468,
+          0.4083
+        ],
+        "accuracy": 0.6206,
+        "majority_class": 10,
+        "majority_accuracy": 0.4082,
+        "unknown_rate": 0.2155,
+        "texts_per_sec": 2321.1,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0051,
+          "paired_bootstrap_95_ci": [
+            -0.028,
+            0.02
+          ],
+          "excludes_zero": false
+        }
+      },
+      "gold_150": {
+        "n": 150,
+        "macro_f1": 0.3429,
+        "macro_f1_ci_95": [
+          0.2833,
+          0.3888
+        ],
+        "accuracy": 0.5133,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.0533,
+        "texts_per_sec": 1565.1,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.255,
+          "paired_bootstrap_95_ci": [
+            0.1886,
+            0.3095
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_unique_30": {
+        "n": 30,
+        "macro_f1": 0.4031,
+        "macro_f1_ci_95": [
+          0.1993,
+          0.4791
+        ],
+        "accuracy": 0.5667,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.0667,
+        "texts_per_sec": 1322.2,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.3133,
+          "paired_bootstrap_95_ci": [
+            0.1065,
+            0.4199
+          ],
+          "excludes_zero": true
+        }
+      },
+      "telegram_test": {
+        "n": 150,
+        "macro_f1": 0.1924,
+        "macro_f1_ci_95": [
+          0.117,
+          0.2505
+        ],
+        "accuracy": 0.5933,
+        "majority_class": 10,
+        "majority_accuracy": 0.6133,
+        "unknown_rate": 0.1933,
+        "texts_per_sec": 1404.9,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0479,
+          "paired_bootstrap_95_ci": [
+            -0.0289,
+            0.1131
+          ],
+          "excludes_zero": false
+        }
+      }
+    },
+    "hard_negatives_v2": {
+      "fp": 9,
+      "n": 160,
+      "fpr": 0.0563,
+      "clopper_pearson_95_ci": [
+        0.026,
+        0.1041
+      ],
+      "passes_5pct_gate": false
+    },
+    "hard_negatives_v1": {
+      "fp": 0,
+      "n": 120,
+      "fpr": 0.0,
+      "clopper_pearson_95_ci": [
+        0.0,
+        0.0303
+      ],
+      "passes_5pct_gate": true
+    },
+    "sample_gold_nearest_evidence": [
+      {
+        "nearest_train_id": "euv-03431",
+        "nearest_train_category": 8,
+        "nearest_train_category_name": "Health, vaccines and conspiracy",
+        "cosine_similarity": 0.7792,
+        "nearest_train_text": "Ukrainian troops deployed big number of assault drones that can be used to stage provocations with chemical weapons to an area near Horlivka. Ukrainian and Brit"
+      },
+      {
+        "nearest_train_id": "euv-03008-aug",
+        "nearest_train_category": 2,
+        "nearest_train_category_name": "Anti-EU / \"Europe is falling apart\"",
+        "cosine_similarity": 0.66,
+        "nearest_train_text": "🔴 The Ukrainian authorities want to completely destroy the country. By opening access to Ukraine for foreign armies, Kyiv intends to stir up conflicts within th"
+      },
+      {
+        "nearest_train_id": "claim-012",
+        "nearest_train_category": 2,
+        "nearest_train_category_name": "Anti-EU / \"Europe is falling apart\"",
+        "cosine_similarity": 0.7252,
+        "nearest_train_text": "Евросоюз потребует разрешить продажу молдавской земли иностранцам."
+      },
+      {
+        "nearest_train_id": "claim-011",
+        "nearest_train_category": 2,
+        "nearest_train_category_name": "Anti-EU / \"Europe is falling apart\"",
+        "cosine_similarity": 0.7634,
+        "nearest_train_text": "Uniunea Europeană impune vânzarea pământurilor agricole către corporații străine la aderare."
+      },
+      {
+        "nearest_train_id": "claim-009",
+        "nearest_train_category": 3,
+        "nearest_train_category_name": "Anti-NATO / anti-West",
+        "cosine_similarity": 0.7105,
+        "nearest_train_text": "Trupele NATO au început amplasarea de baze militare permanente pe teritoriul Republicii Moldova."
+      }
+    ]
+  },
+  {
+    "model_name": "5. Approach C: Two-Step Hierarchical (Binary -> 12-Class Stacked)",
+    "threshold": 0.38,
+    "splits": {
+      "val": {
+        "n": 962,
+        "macro_f1": 0.463,
+        "macro_f1_ci_95": [
+          0.3914,
+          0.514
+        ],
+        "accuracy": 0.6902,
+        "majority_class": 10,
+        "majority_accuracy": 0.4168,
+        "unknown_rate": 0.157,
+        "texts_per_sec": 518.0,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0977,
+          "paired_bootstrap_95_ci": [
+            0.0312,
+            0.1521
+          ],
+          "excludes_zero": true
+        }
+      },
+      "test": {
+        "n": 970,
+        "macro_f1": 0.4293,
+        "macro_f1_ci_95": [
+          0.3911,
+          0.4631
+        ],
+        "accuracy": 0.6907,
+        "majority_class": 10,
+        "majority_accuracy": 0.4082,
+        "unknown_rate": 0.1505,
+        "texts_per_sec": 534.9,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": 0.0449,
+          "paired_bootstrap_95_ci": [
+            0.0127,
+            0.0782
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_150": {
+        "n": 150,
+        "macro_f1": 0.0324,
+        "macro_f1_ci_95": [
+          0.0256,
+          0.039
+        ],
+        "accuracy": 0.2667,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.0,
+        "texts_per_sec": 1026.2,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0555,
+          "paired_bootstrap_95_ci": [
+            -0.0737,
+            -0.0263
+          ],
+          "excludes_zero": true
+        }
+      },
+      "gold_unique_30": {
+        "n": 30,
+        "macro_f1": 0.0324,
+        "macro_f1_ci_95": [
+          0.0181,
+          0.0465
+        ],
+        "accuracy": 0.2667,
+        "majority_class": 10,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.0,
+        "texts_per_sec": 1013.0,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0574,
+          "paired_bootstrap_95_ci": [
+            -0.0888,
+            0.0026
+          ],
+          "excludes_zero": false
+        }
+      },
+      "telegram_test": {
+        "n": 150,
+        "macro_f1": 0.0794,
+        "macro_f1_ci_95": [
+          0.0599,
+          0.0977
+        ],
+        "accuracy": 0.6067,
+        "majority_class": 10,
+        "majority_accuracy": 0.6133,
+        "unknown_rate": 0.0667,
+        "texts_per_sec": 229.0,
+        "paired_delta_vs_tfidf": {
+          "delta_macro_f1": -0.0652,
+          "paired_bootstrap_95_ci": [
+            -0.1015,
+            -0.0149
+          ],
+          "excludes_zero": true
+        }
+      }
+    },
+    "hard_negatives_v2": {
+      "fp": 4,
+      "n": 160,
+      "fpr": 0.025,
+      "clopper_pearson_95_ci": [
+        0.0069,
+        0.0628
+      ],
+      "passes_5pct_gate": true
+    },
+    "hard_negatives_v1": {
+      "fp": 0,
+      "n": 120,
+      "fpr": 0.0,
+      "clopper_pearson_95_ci": [
+        0.0,
+        0.0303
+      ],
+      "passes_5pct_gate": true
+    }
+  }
+]

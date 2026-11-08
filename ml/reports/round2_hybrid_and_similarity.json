@@ -1,0 +1,137 @@
+{
+  "fixed_hybrid_narrative_service": {
+    "splits": {
+      "val": {
+        "n": 962,
+        "macro_f1": 0.2299,
+        "ci_95": [
+          0.2022,
+          0.256
+        ],
+        "accuracy": 0.3867,
+        "majority_accuracy": 0.4168,
+        "unknown_rate": 0.5644,
+        "benign_fp": "0/401",
+        "texts_per_sec": 31.4
+      },
+      "test": {
+        "n": 970,
+        "macro_f1": 0.2638,
+        "ci_95": [
+          0.2311,
+          0.29
+        ],
+        "accuracy": 0.4124,
+        "majority_accuracy": 0.4082,
+        "unknown_rate": 0.5392,
+        "benign_fp": "0/396",
+        "texts_per_sec": 40.0
+      },
+      "gold": {
+        "n": 150,
+        "macro_f1": 0.2267,
+        "ci_95": [
+          0.1667,
+          0.2733
+        ],
+        "accuracy": 0.22,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.7467,
+        "benign_fp": "0/40",
+        "texts_per_sec": 110.3
+      },
+      "telegram_test": {
+        "n": 150,
+        "macro_f1": 0.139,
+        "ci_95": [
+          0.088,
+          0.1728
+        ],
+        "accuracy": 0.2067,
+        "majority_accuracy": 0.6133,
+        "unknown_rate": 0.7667,
+        "benign_fp": "2/92",
+        "texts_per_sec": 84.6
+      },
+      "gold_unique_30": {
+        "n": 30,
+        "macro_f1": 0.3205,
+        "ci_95": [
+          0.138,
+          0.3858
+        ],
+        "accuracy": 0.3,
+        "majority_accuracy": 0.2667,
+        "unknown_rate": 0.6667,
+        "benign_fp": "0/8",
+        "texts_per_sec": 118.1
+      }
+    },
+    "hard_negatives": {
+      "hard_negatives_v1": {
+        "fp": 0,
+        "n": 120,
+        "fpr": 0.0,
+        "clopper_pearson_95_ci": [
+          0.0,
+          0.0303
+        ]
+      },
+      "hard_negatives_v2": {
+        "fp": 5,
+        "n": 160,
+        "fpr": 0.0312,
+        "clopper_pearson_95_ci": [
+          0.0102,
+          0.0714
+        ]
+      }
+    }
+  },
+  "step25_similarity_service": {
+    "Dense Default (SentenceTransformerEmbedder: paraphrase-multilingual-MiniLM-L12-v2)": {
+      "pairs_eval": {
+        "precision": 0.9576,
+        "recall": 0.9826,
+        "f1": 0.97,
+        "roro_f1": 0.976,
+        "ruru_f1": 1.0,
+        "roru_f1": 0.8667,
+        "detail_guard_accuracy": 0.99,
+        "detail_guard_pairs_count": 100,
+        "pairs_per_sec": 7.0,
+        "elapsed_sec": 45.534
+      },
+      "clusters_eval": {
+        "bcubed_precision": 0.9571,
+        "bcubed_recall": 0.6788,
+        "bcubed_f1": 0.7943,
+        "largest_cluster_size": 4,
+        "giant_clusters_count": 0,
+        "elapsed_sec": 66.69
+      }
+    },
+    "Lexicon Fallback (DeterministicMultilingualEmbedder)": {
+      "pairs_eval": {
+        "precision": 0.9643,
+        "recall": 0.9391,
+        "f1": 0.9515,
+        "roro_f1": 0.9839,
+        "ruru_f1": 0.9873,
+        "roru_f1": 0.6667,
+        "detail_guard_accuracy": 0.99,
+        "detail_guard_pairs_count": 100,
+        "pairs_per_sec": 115.2,
+        "elapsed_sec": 2.752
+      },
+      "clusters_eval": {
+        "bcubed_precision": 1.0,
+        "bcubed_recall": 0.6788,
+        "bcubed_f1": 0.8087,
+        "largest_cluster_size": 3,
+        "giant_clusters_count": 0,
+        "elapsed_sec": 3.668
+      }
+    }
+  }
+}
